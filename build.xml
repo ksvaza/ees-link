@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="EES-Link" default="build" basedir=".">
+	<target name="clean">
+		<delete includeemptydirs="true" quiet="true">
+			<fileset dir="${basedir}/" includes="bin/**/*" defaultexcludes="false" />
+		</delete>
+	</target>
+	
+	<target name="docker">
+		<mkdir dir="bin" />
+		<exec executable="docker" failonerror="true">
+			<arg line="build" />
+			<arg line="-f Dockerfile" />
+			<arg line="-t ees-link" />
+			<arg line="." />
+		</exec>
+		<exec executable="docker" failonerror="true">
+			<arg line="save" />
+			<arg line="-o bin/ees-link.tar" />
+			<arg line="ees-link" />
+		</exec>
+	</target>
+	
+	<target name="win">
+		<exec executable="docker" failonerror="true">
+			<arg line="build" />
+			<arg line="-f DockerfileAMD64" />
+			<arg line="-t ees-link" />
+			<arg line="." />
+		</exec>
+	</target>
+	
+	<target name="build" depends="clean,docker" />
+</project>

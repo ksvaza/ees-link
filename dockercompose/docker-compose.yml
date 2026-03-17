@@ -1,0 +1,47 @@
+services:
+  server:
+    image: ees-link
+    hostname: ees-link
+    container_name: ees-link
+    restart: unless-stopped
+#    depends_on:
+#      - influxdb
+#    ports:
+#      - "2884:1884"
+#    environment:
+#      - MQTT_HOST=mqtt.svaza.lv
+#      - MQTT_PORT=1883
+#      - MQTT_USER=esp32
+#      - MQTT_PASSWORD=T-SIM7000G
+#      - INFLUXDB_URL=http://influxdb:8086
+#      - INFLUXDB_APIKEY=lGnMEQI7KFmOaE-IYKvn7aGi7raeKew3-wwT6_9iYTuV2SQBrzPMDUuo46z0AsbM5qeJooRMGyp5ZsouIXeSKw==
+#    volumes:
+#        - c:/Users/ksvaz/Documents/Skola/Programmesana/go/src/github.com/ksvaza/server/public:/go/src/public
+      
+#  influxdb:
+#    image: influxdb:2
+#    hostname: influxdb
+#    container_name: influxdb
+#    restart: unless-stopped
+#    ports:
+#      - "8086:8086"
+#    environment:
+#      - DOCKER_INFLUXDB_INIT_MODE=setup
+#      - DOCKER_INFLUXDB_INIT_USERNAME=esp32
+#      - DOCKER_INFLUXDB_INIT_PASSWORD=T-SIM7000G
+#      - DOCKER_INFLUXDB_INIT_ORG=Kaste
+#      - DOCKER_INFLUXDB_INIT_BUCKET=CarData
+#      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=lGnMEQI7KFmOaE-IYKvn7aGi7raeKew3-wwT6_9iYTuV2SQBrzPMDUuo46z0AsbM5qeJooRMGyp5ZsouIXeSKw==
+      
+#  nginx:
+#    image: nginx:1.27.3-alpine
+#    hostname: nginx
+#    container_name: nginx
+#    restart: unless-stopped
+#    ports:
+#      - "8080:80"
+#      - "8443:443"
+#    volumes:
+#      - c:/Docker/Nginx/auth/nginx.conf:/etc/nginx/nginx.conf
+#      - c:/Docker/Nginx/auth/cert.pem:/etc/ssl/certs/cert.pem
+#      - c:/Docker/Nginx/auth/key.pem:/etc/ssl/private/key.pem

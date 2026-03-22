@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
@@ -12,7 +10,7 @@ import (
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
-			logrus.WithError(errors.New(fmt.Sprintf("%v", r))).Error("Panic")
+			logrus.WithError(errors.Errorf("%v", r)).Error("Panic")
 		}
 	}()
 

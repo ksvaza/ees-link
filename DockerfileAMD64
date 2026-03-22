@@ -5,12 +5,10 @@ WORKDIR /go/src
 
 COPY ./go.* /go/src
 RUN tree /go/src
-#RUN go mod download -x
 
 COPY ./cmd /go/src/cmd
 COPY ./logeris /go/src/logeris
-#COPY ./master /go/src/master
-#COPY ./public /go/src/public
+COPY ./envreader /go/src/envreader
 RUN tree /go/src
 RUN go build -o ees-link cmd/ees-link/main.go
 

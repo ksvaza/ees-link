@@ -2,35 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
-
-func setupLogger(logFile string) (f *os.File, err error) {
-
-	logrus.SetFormatter(&logrus.TextFormatter{
-		TimestampFormat: "02.01.2006 15:04:05.000",
-		FullTimestamp:   true,
-		//		DisableColors:   true,
-		DisableQuote: true,
-	})
-
-	f, err = os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-
-	// Output to stdout instead of the default stderr
-	logrus.SetOutput(f)
-
-	//logrus.SetOutput(&logeris.LogWriter{})
-
-	logrus.AddHook(&logeris.StacktraceHook{})
-
-	logrus.SetLevel(logrus.InfoLevel)
-
-	return
-}
 
 func main() {
 	defer func() {
@@ -39,13 +16,22 @@ func main() {
 		}
 	}()
 
-	logfile := "./log.txt"
-	f, err := setupLogger(logfile)
+	err := envreader.SetupEnvreader(".env")
 	if err != nil {
-		fmt.Println("Failed to create logfile" + logfile)
-		panic(err)
+		logrus.WithError(err).Error("Failed to setup environment reader")
+		return
+	}
+
+	logfile := envreader.GetEnvString("LOGFILE")
+	clearlog := envreader.GetEnvBool("CLEARLOG")
+	f, err := logeris.SetupLogger(logfile, clearlog)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to setup logger")
+		return
 	}
 	defer f.Close()
+
+	logrus.Info("\nSveika, pasaule!\n")
 
 	for i := 0; i < 5; i++ {
 		logrus.Tracef("Trace %d", i)

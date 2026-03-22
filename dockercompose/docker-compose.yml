@@ -8,15 +8,17 @@ services:
 #      - influxdb
 #    ports:
 #      - "2884:1884"
-#    environment:
+    environment:
+      - LOGFILE=./logs/log.txt
+      - CLEARLOG=true
 #      - MQTT_HOST=mqtt.svaza.lv
 #      - MQTT_PORT=1883
 #      - MQTT_USER=esp32
 #      - MQTT_PASSWORD=T-SIM7000G
 #      - INFLUXDB_URL=http://influxdb:8086
 #      - INFLUXDB_APIKEY=lGnMEQI7KFmOaE-IYKvn7aGi7raeKew3-wwT6_9iYTuV2SQBrzPMDUuo46z0AsbM5qeJooRMGyp5ZsouIXeSKw==
-#    volumes:
-#        - c:/Users/ksvaz/Documents/Skola/Programmesana/go/src/github.com/ksvaza/server/public:/go/src/public
+    volumes:
+        - ../logs:/logs
       
 #  influxdb:
 #    image: influxdb:2

@@ -3,6 +3,7 @@ package logeris
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/pkg/errors"
@@ -61,4 +62,42 @@ func (h *StacktraceHook) Fire(e *logrus.Entry) error {
 		}
 	}
 	return nil
+}
+
+// kaut kad vēl jāimplementē lumberjack vai kāds cits rotējošs logeris, lai logi neizaugtu bezgalīgi
+func SetupLogger(logFile string, clearlog bool) (f *os.File, err error) {
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "02.01.2006 15.04.05.000",
+		FullTimestamp:   true,
+		DisableQuote:    true,
+	})
+
+	err = os.MkdirAll(filepath.Dir(logFile), 0755)
+	if err != nil {
+		return
+	}
+
+	if clearlog {
+		err = os.Truncate(logFile, 0)
+		if err != nil && !os.IsNotExist(err) {
+			return
+		}
+	}
+
+	f, err = os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return
+	}
+
+	// Output to stdout instead of the default stderr
+	logrus.SetOutput(f)
+
+	//logrus.SetOutput(&logeris.LogWriter{})
+
+	logrus.AddHook(&StacktraceHook{})
+
+	logrus.SetLevel(logrus.InfoLevel)
+
+	return
 }

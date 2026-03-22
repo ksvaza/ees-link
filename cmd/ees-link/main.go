@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -11,21 +10,26 @@ import (
 func main() {
 	defer func() {
 		if r := recover(); r != nil {
-			logrus.WithError(errors.New(fmt.Sprintf("%v", r))).Error("Panic")
+			logrus.WithError(errors.Errorf("%v", r)).Error("Panic")
 		}
 	}()
 
-	logrus.SetFormatter(&logrus.TextFormatter{
-		TimestampFormat: "02.01.2006 15:04:05.000",
-		FullTimestamp:   true,
-		//		DisableColors:   true,
-		DisableQuote: true,
-	})
-	logrus.SetOutput(&logeris.LogWriter{})
+	err := envreader.SetupEnvreader(".env")
+	if err != nil {
+		logrus.WithError(err).Error("Failed to setup environment reader")
+		return
+	}
 
-	logrus.AddHook(&logeris.StacktraceHook{})
+	logfile := envreader.GetEnvString("LOGFILE")
+	clearlog := envreader.GetEnvBool("CLEARLOG")
+	f, err := logeris.SetupLogger(logfile, clearlog)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to setup logger")
+		return
+	}
+	defer f.Close()
 
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.Info("\nSveika, pasaule!\n")
 
 	for i := 0; i < 5; i++ {
 		logrus.Tracef("Trace %d", i)

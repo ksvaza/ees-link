@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+</body>
+</html>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        max-width: 600px;
+        width: 100%;
+        padding: 40px;
+    }
+    
+    .form-header {
+        margin-bottom: 30px;
+    }
+    
+    .form-header h1 {
+        font-size: 32px;
+        font-weight: 400;
+        color: #202124;
+        margin-bottom: 8px;
+    }
+    
+    .form-header p {
+        color: #80868b;
+        font-size: 14px;
+    }
+    
+    .form-group {
+        margin-bottom: 24px;
+    }
+    
+    label {
+        display: block;
+        font-size: 14px;
+        color: #202124;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    
+    input, textarea {
+        width: 100%;
+        padding: 12px 8px;
+        border: none;
+        border-bottom: 1px solid #dadce0;
+        font-size: 14px;
+        font-family: inherit;
+        transition: border-color 0.2s;
+    }
+    
+    input:focus, textarea:focus {
+        outline: none;
+        border-bottom-color: #4285f4;
+    }
+    
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .button-group {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 32px;
+    }
+    
+    button {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-submit {
+        background-color: #4285f4;
+        color: white;
+    }
+    
+    .btn-submit:hover {
+        background-color: #357ae8;
+    }
+    
+    .btn-clear {
+        background-color: #f5f5f5;
+        color: #3c4043;
+    }
+    
+    .btn-clear:hover {
+        background-color: #efefef;
+    }
+    
+    .success-message {
+        display: none;
+        background-color: #d4edda;
+        color: #155724;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-header">
+        <h1>Feedback Form</h1>
+        <p>We'd love to hear from you</p>
+    </div>
+    
+    <div class="success-message" id="successMessage">
+        Your response has been recorded successfully!
+    </div>
+    
+    <form id="feedbackForm">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required></textarea>
+        </div>
+        
+        <div class="button-group">
+            <button type="reset" class="btn-clear">Clear</button>
+            <button type="submit" class="btn-submit">Submit</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            message: document.getElementById('message').value
+        };
+        
+        try {
+            const response = await fetch('/api/submit-form', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('feedbackForm').reset();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+</script>

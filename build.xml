@@ -5,8 +5,15 @@
 			<fileset dir="${basedir}/" includes="bin/**/*" defaultexcludes="false" />
 		</delete>
 	</target>
+
+	<target name="test">
+		<exec executable="go" failonerror="true">
+			<arg line="test" />
+			<arg line="./..." />
+		</exec>
+	</target>
 	
-	<target name="docker">
+	<target name="docker" depends="test">
 		<mkdir dir="bin" />
 		<exec executable="docker" failonerror="true">
 			<arg line="build" />
@@ -21,7 +28,7 @@
 		</exec>
 	</target>
 	
-	<target name="win">
+	<target name="win" depends="test">
 		<exec executable="docker" failonerror="true">
 			<arg line="build" />
 			<arg line="-f DockerfileAMD64" />

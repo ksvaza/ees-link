@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/ksvaza/ees-link/envreader"
+	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -37,6 +38,13 @@ func main() {
 		logrus.Infof("Info %d", i)
 		logrus.Warnf("Warn %d", i)
 		logrus.Errorf("Error %d", i)
+	}
+
+	logrus.Info("\nSveika, http aplikācija!\n")
+
+	err = httpapi.SetupHTTPAPI()
+	if err != nil {
+		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
 	}
 
 	for {

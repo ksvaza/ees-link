@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
@@ -38,6 +41,8 @@ func main() {
 		logrus.Warnf("Warn %d", i)
 		logrus.Errorf("Error %d", i)
 	}
+
+	fmt.Print(db.Kkas())
 
 	for {
 

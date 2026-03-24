@@ -10,24 +10,24 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func errorHandler(w http.ResponseWriter, err error, code int) {
+	logrus.WithError(err).Error("Error")
+	http.Error(w, err.Error(), code)
+}
+
 // Sveika pasaule tipa situācija
 func PointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	logrus.Infof("TestAPI called %+v", ps)
 
-	errorHandler := func(err error, code int) {
-		logrus.WithError(err).Error("Error")
-		http.Error(w, err.Error(), code)
-	}
-
 	if r.Method != http.MethodGet {
-		errorHandler(errors.New("method not allowed"), http.StatusMethodNotAllowed)
+		errorHandler(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Read the request body and return it as the response
 	_, err := io.ReadAll(r.Body)
 	if err != nil {
-		errorHandler(err, http.StatusInternalServerError)
+		errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
@@ -42,19 +42,14 @@ func PointReceiveForm(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 
 	fmt.Printf("Received form data: %+v", ps)
 
-	errorHandler := func(err error, code int) {
-		logrus.WithError(err).Error("Error")
-		http.Error(w, err.Error(), code)
-	}
-
 	if r.Method != http.MethodPost {
-		errorHandler(errors.New("method not allowed"), http.StatusMethodNotAllowed)
+		errorHandler(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
 		return
 	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		errorHandler(err, http.StatusInternalServerError)
+		errorHandler(w, err, http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
@@ -65,4 +60,337 @@ func PointReceiveForm(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"status":"success"}`))
 
+}
+
+func sendNotImplemented(w http.ResponseWriter) {
+	errorHandler(w, errors.New("not implemented"), http.StatusNotImplemented)
+}
+
+func requireMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method != method {
+		errorHandler(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Auth
+// ----
+
+func PointLogin(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointLogin called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement login
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// User
+// ----
+
+func PointGetUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetUsers called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get users
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Competitors
+// -----------
+
+func PointGetCars(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetCars called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get cars
+	sendNotImplemented(w)
+}
+
+func PointPostCars(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostCars called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post cars
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Races
+// -----
+
+func PointRaceStart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointRaceStart called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement race start
+	sendNotImplemented(w)
+}
+
+func PointCarFinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointCarFinish called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement car finish
+	sendNotImplemented(w)
+}
+
+func PointGetRaces(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetRaces called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get races
+	sendNotImplemented(w)
+}
+
+func PointPostRaces(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostRaces called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post races
+	sendNotImplemented(w)
+}
+
+func PointGetRaceConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetRaceConfig called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get race config
+	sendNotImplemented(w)
+}
+
+func PointGetCategories(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetCategories called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get categories
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Results
+// -------
+
+func PointGetRaceResults(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetRaceResults called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get race results
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Points
+// ------
+
+func PointPostPoints(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostPoints called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post points
+	sendNotImplemented(w)
+}
+
+func PointDeletePoints(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointDeletePoints called %+v", ps)
+	if !requireMethod(w, r, http.MethodDelete) {
+		return
+	}
+	// TODO: implement delete points
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Leaderboard
+// -----------
+
+func PointGetLeaderboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetLeaderboard called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get leaderboard
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Admin
+// -----
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// News
+// ----
+
+func PointGetNews(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetNews called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get news
+	sendNotImplemented(w)
+}
+
+func PointPostNews(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostNews called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post news
+	sendNotImplemented(w)
+}
+
+func PointGetNewsByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetNewsByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get news by id
+	sendNotImplemented(w)
+}
+
+func PointPutNewsByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPutNewsByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodPut) {
+		return
+	}
+	// TODO: implement put news by id
+	sendNotImplemented(w)
+}
+
+func PointDeleteNewsByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointDeleteNewsByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodDelete) {
+		return
+	}
+	// TODO: implement delete news by id
+	sendNotImplemented(w)
+}
+
+func PointPostNewsAttachments(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostNewsAttachments called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post news attachments
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Events
+// ------
+
+func PointGetEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetEvents called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get events
+	sendNotImplemented(w)
+}
+
+func PointPostEvents(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostEvents called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post events
+	sendNotImplemented(w)
+}
+
+func PointGetEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetEventByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get event by id
+	sendNotImplemented(w)
+}
+
+func PointPutEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPutEventByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodPut) {
+		return
+	}
+	// TODO: implement put event by id
+	sendNotImplemented(w)
+}
+
+func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointDeleteEventByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodDelete) {
+		return
+	}
+	// TODO: implement delete event by id
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// Applications
+// ------------
+
+func PointGetApplications(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointGetApplications called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement get applications
+	sendNotImplemented(w)
+}
+
+func PointPostApplications(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPostApplications called %+v", ps)
+	if !requireMethod(w, r, http.MethodPost) {
+		return
+	}
+	// TODO: implement post applications
+	sendNotImplemented(w)
+}
+
+func PointPatchApplicationByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointPatchApplicationByID called %+v", ps)
+	if !requireMethod(w, r, http.MethodPatch) {
+		return
+	}
+	// TODO: implement patch application by id
+	sendNotImplemented(w)
+}
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+// WebSocket
+// ---------
+
+func PointWebSocket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("PointWebSocket called %+v", ps)
+	if !requireMethod(w, r, http.MethodGet) {
+		return
+	}
+	// TODO: implement websocket upgrade/handler
+	sendNotImplemented(w)
 }

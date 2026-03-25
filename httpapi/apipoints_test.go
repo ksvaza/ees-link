@@ -18,7 +18,7 @@ func TestTestAPIMethodNotAllowed(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointTestAPI(w, req, ps)
+	httpapi.TestPointTestAPI(w, req, ps)
 
 	require.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
@@ -28,7 +28,7 @@ func TestTestAPISuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointTestAPI(w, req, ps)
+	httpapi.TestPointTestAPI(w, req, ps)
 
 	require.Equal(t, http.StatusOK, w.Code)
 
@@ -42,7 +42,7 @@ func TestTestAPIWithBody(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointTestAPI(w, req, ps)
+	httpapi.TestPointTestAPI(w, req, ps)
 
 	require.Equal(t, http.StatusOK, w.Code)
 	expected := "<h1>Hello, this is a test API!</h1>\n"
@@ -54,7 +54,7 @@ func TestPointReceiveFormMethodNotAllowed(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointReceiveForm(w, req, ps)
+	httpapi.TestPointReceiveForm(w, req, ps)
 
 	require.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
@@ -65,7 +65,7 @@ func TestPointReceiveFormSuccess(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointReceiveForm(w, req, ps)
+	httpapi.TestPointReceiveForm(w, req, ps)
 
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
@@ -79,7 +79,7 @@ func TestPointReceiveFormWithEmptyBody(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointReceiveForm(w, req, ps)
+	httpapi.TestPointReceiveForm(w, req, ps)
 
 	require.Equal(t, http.StatusOK, w.Code)
 }
@@ -90,7 +90,7 @@ func TestPointReceiveFormWithNonJsonBody(t *testing.T) {
 	w := httptest.NewRecorder()
 	ps := httprouter.Params{}
 
-	httpapi.PointReceiveForm(w, req, ps)
+	httpapi.TestPointReceiveForm(w, req, ps)
 
 	require.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))

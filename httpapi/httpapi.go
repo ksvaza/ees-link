@@ -10,8 +10,8 @@ import (
 func setupApiEndpoints(router *httprouter.Router) {
 
 	// Test endpoints
-	router.GET("/api/test", PointTestAPI)
-	router.POST("/api/submit-form", PointReceiveForm)
+	router.GET("/api/test", Handler(test))
+	router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth
 	router.POST("/api/login", PointLogin)
@@ -58,10 +58,10 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.PUT("/api/events/:id", PointPutEventByID)
 	router.DELETE("/api/events/:id", PointDeleteEventByID)
 
-	// Applications
-	router.GET("/api/applications", PointGetApplications)
-	router.POST("/api/applications", PointPostApplications)
-	router.PATCH("/api/applications/:id", PointPatchApplicationByID)
+	// ir -- Pieteikumi
+	router.GET("/api/applications", Handler(PointGetApplications))
+	router.POST("/api/applications", Handler(PointPostApplications))
+	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

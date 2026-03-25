@@ -121,3 +121,25 @@ Dokerizēti laižot, priekšgalam var piekļūt ar `http://localhost:6767`
 ## Sagaidāmā darbība
 
 Palaižot projektu, vajadzētu redzēt log failā ierakstus par servera startu un API izsaukumiem. Piekļūstot `http://localhost:1884/api/test`, vajadzētu redzēt HTML atbildi, un mājaslapā izpildot formu, vajadzētu redzēt JSON atbildi ar nosūtītajiem datiem. Visi šie notikumi tiks ierakstīti log failā ar atbilstošiem līmeņiem.
+Izsaucot atbilstošos API galapunktus, vajadzētu redzēt arī atbilstošus ierakstus log failā, piemēram, `"Received form submission: {name: 'Jānis', email: 'jānis@paraudziņš.lv'}"`
+
+## Dažas curl funkcijas API izsaukumiem
+
+### Pieteikumi
+
+GET /api/applications
+
+```bash
+curl -k -X "GET" "http://localhost:1884/api/applications"
+```
+
+POST /api/applications
+
+```bash
+curl -k -X "POST" "http://localhost:1884/api/applications" -d "{ \"id\": \"1\", \"teamName\": \"Volt Racers\", \"school\": \"Rīgas Valsts 1. ģimnāzija\", \"members\": 4, \"supervisor\": \"A. Bērziņš\", \"appliedAt\": \"2026-01-20\", \"status\": \"accepted\" }"
+```
+
+PATCH /api/applications
+```bash
+curl -k -X "PATCH" "http://localhost:1884/api/applications/1" -d "{ \"status\": \"in_progress\" }"
+```

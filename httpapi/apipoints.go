@@ -1,23 +1,72 @@
 package httpapi
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 func errorHandler(w http.ResponseWriter, err error, code int) {
 	logrus.WithError(err).Error("Error")
-	http.Error(w, err.Error(), code)
+	//http.Error(w, err.Error(), code)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write([]byte(`{"error": "notika kļūme"}`))
+}
+
+type httpResult struct {
+	ResponseType int
+	Headers      map[string]string
+	Body         interface{}
+}
+
+func test(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         "Sveika, pasaule!",
+	}, nil
+
+}
+
+func Handler(fn func(r *http.Request, ps httprouter.Params) (*httpResult, error)) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		result, err := fn(r, ps)
+		if err != nil {
+			errorHandler(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		var body []byte
+		body, err = json.Marshal(result.Body)
+		if err != nil {
+			errorHandler(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		for k, v := range result.Headers {
+			w.Header().Set(k, v)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(result.ResponseType)
+		w.Write(body)
+	}
 }
 
 // Sveika pasaule tipa situācija
-func PointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("TestAPI called %+v", ps)
+func TestPointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("TestPointTestAPI called %+v", ps)
 
 	if r.Method != http.MethodGet {
 		errorHandler(w, errors.New("method not allowed"), http.StatusMethodNotAllowed)
@@ -37,8 +86,8 @@ func PointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Params) 
 }
 
 // tīri tests formu saņemšanai, vēlāk varētu būt noderīgi, lai saņemtu datus no frontend formas
-func PointReceiveForm(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointReceiveForm called %+v", ps)
+func TestPointReceiveForm(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	logrus.Infof("TestPointReceiveForm called %+v", ps)
 
 	fmt.Printf("Received form data: %+v", ps)
 
@@ -351,34 +400,109 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-// Applications
-// ------------
+// Pieteikumi
+// ----------
 
-func PointGetApplications(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+type applicantStatus string
+
+const (
+	InProcess applicantStatus = "in_process"
+	Accepted  applicantStatus = "accepted"
+	Denied    applicantStatus = "denied"
+)
+
+type applicant struct {
+	ID         string      `json:"id"`
+	TeamName   string      `json:"teamName"`
+	School     string      `json:"school"`
+	Members    int         `json:"members"`
+	Supervisor string      `json:"supervisor"`
+	AplliedAt  pgtype.Date `json:"appliedAt"`
+	Status     string      `json:"status"`
+}
+
+func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
-	if !requireMethod(w, r, http.MethodGet) {
-		return
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
 	}
-	// TODO: implement get applications
-	sendNotImplemented(w)
+
+	var applications []applicant
+	applications = append(applications, applicant{
+		ID:         "1",
+		TeamName:   "Team A",
+		School:     "School X",
+		Members:    4,
+		Supervisor: "Supervisor Y",
+		AplliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
+		Status:     string(InProcess),
+	})
+
+	logrus.Info("Returning applications data")
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         applications,
+	}, nil
 }
 
-func PointPostApplications(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointPostApplications called %+v", ps)
-	if !requireMethod(w, r, http.MethodPost) {
-		return
+	if r.Method != http.MethodPost {
+		return nil, errors.New("method not allowed")
 	}
-	// TODO: implement post applications
-	sendNotImplemented(w)
+
+	var newApplicant applicant
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Read body")
+	}
+
+	if err := json.Unmarshal(body, &newApplicant); err != nil {
+		return nil, errors.Wrap(err, "Unmarshal")
+	}
+
+	// New application handling logic here (e.g., save to database)
+	logrus.Infof("Received new application: %+v", newApplicant)
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         "Application submitted",
+	}, nil
 }
 
-func PointPatchApplicationByID(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointPatchApplicationByID called %+v", ps)
-	if !requireMethod(w, r, http.MethodPatch) {
-		return
+	if r.Method != http.MethodPatch {
+		return nil, errors.New("method not allowed")
 	}
-	// TODO: implement patch application by id
-	sendNotImplemented(w)
+
+	ID := ps.ByName("id")
+	if ID == "" {
+		return nil, errors.New("missing application ID")
+	}
+
+	// Get application by ID from database (not implemented, just a placeholder)
+
+	// Check if application exists (not implemented, just a placeholder)
+	var existingApplication applicant
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Read body")
+	}
+
+	if err := json.Unmarshal(body, &existingApplication); err != nil {
+		return nil, errors.Wrap(err, "Unmarshal")
+	}
+
+	// Application patching handling logic here (e.g., save to database)
+	logrus.Infof("Received application update: %+v", existingApplication)
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         "Application updated",
+	}, nil
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------

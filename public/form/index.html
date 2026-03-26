@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EES Link — Komandas pieteikums</title>
+    <link rel="stylesheet" href="../index.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1>Komandas pieteikšanās</h1>
+            <p>Iesniedziet pieteikumu EES sacensībām.</p>
+            <nav>
+                <a href="/">Sākums</a>
+                <a href="/form/" aria-current="page">Pieteikšanās</a>
+                <a href="/admin/">Administrācija</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="form-wrapper">
+            <div class="form-header">
+                <h2>Komandas pieteikuma forma</h2>
+                <p>Uzraksti visus datus pareizi, lai pieteikums tiktu apstrādāts.</p>
+            </div>
+
+            <div class="form-container">
+                <div class="success-message" id="successMessage" role="status" aria-live="polite">
+                    Pieteikums veiksmīgi nosūtīts!
+                </div>
+
+                <form id="applicationForm">
+                    <div class="form-group">
+                        <label for="teamName">Komandas nosaukums <span class="required">*</span></label>
+                        <input type="text" id="teamName" name="teamName" required>
+                        <div class="helper-text">Piemēram: "Volt Racers"</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="school">Skola/Institūcija <span class="required">*</span></label>
+                        <input type="text" id="school" name="school" required>
+                        <div class="helper-text">Skolas nosaukums</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="members">Komandas dalībnieku skaits <span class="required">*</span></label>
+                        <input type="number" id="members" name="members" min="1" required>
+                        <div class="helper-text">Ievadi veselus skaitļus (1+)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supervisor">Mentora/Instruktora vārds <span class="required">*</span></label>
+                        <input type="text" id="supervisor" name="supervisor" required>
+                        <div class="helper-text">Kopējā kontakta persona</div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="reset" class="btn-clear">Notīrīt</button>
+                        <button type="submit" class="btn-submit">Sūtīt pieteikumu</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 EES Link</p>
+    </footer>
+
+    <script src="../form.js"></script>
+</body>
+</html>

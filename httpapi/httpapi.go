@@ -70,6 +70,17 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/ws", PointWebSocket)
 }
 
+func redirectHTTPToHTTPS(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("X-Forwarded-Proto") != "https" && r.Header.Get("X-Forwarded-Proto") != "" {
+		http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
+		return
+	}
+	if r.TLS == nil && r.Header.Get("X-Forwarded-Proto") == "" {
+		http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
+		return
+	}
+}
+
 type neuteredFileSystem struct {
 	fs http.FileSystem
 }
@@ -106,6 +117,8 @@ func setupHTTPHost(router *httprouter.Router) error {
 			router.ServeHTTP(w, r)
 			return
 		}
+
+		redirectHTTPToHTTPS(w, r)
 
 		path := filepath.Join("public", filepath.Clean(r.URL.Path))
 		if strings.HasPrefix(path, "../") || strings.Contains(path, "/../") {

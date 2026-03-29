@@ -11,6 +11,7 @@ COPY ./public /go/src/public
 COPY ./logeris /go/src/logeris
 COPY ./envreader /go/src/envreader
 COPY ./httpapi /go/src/httpapi
+COPY ./db /go/src/db
 RUN tree /go/src
 RUN go build -o ees-link cmd/ees-link/main.go
 

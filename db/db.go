@@ -13,8 +13,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const dbpassword = "AFqw$#leL-31*3A"
-
 type RandomStruct struct {
 	ID         int
 	InstanceID int

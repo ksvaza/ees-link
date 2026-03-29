@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/ksvaza/ees-link/db"
@@ -43,76 +45,67 @@ func main() {
 		logrus.Errorf("Error %d", i)
 	}
 
-	// sūdu aispildīšana
+	// sudi
 
-	// fmt.Printf("karukskigi\n")
-	/*
-		var events []*db.Event
-		numEvents := 1000 // number of events to generate
+	ctx := context.Background()
 
-		for i := 0; i < numEvents; i++ {
-			e := &db.Event{
-				InstanceID: rand.Intn(30) + 1, // random instance 1–30
-				Name:       fmt.Sprintf("metric_%d", rand.Intn(1000)),
-				Value:      rand.Float64() * 100.0, // random float 0–100
-				Timestamp:  time.Now().Add(time.Duration(rand.Intn(1000)) * time.Millisecond),
-			}
-			events = append(events, e)
+	slices := make([]db.RandomStruct, 1000)
+	slices2 := make([]db.Ahh, 1000)
+
+	for i := 0; i < 1000; i++ {
+		slices[i] = db.RandomStruct{
+			ID:         i + 1,
+			InstanceID: (i % 10) + 1,
+			Name:       fmt.Sprintf("Name%d", i+1),
+			Value:      float64(i) * 1.1,
+			Timestamp:  time.Now(),
 		}
-	*/
-
-	events := []*db.Event{
-		{
-			InstanceID: 1,
-			Name:       "temp",
-			Value:      23.5,
+		slices2[i] = db.Ahh{
+			ID:         i + 1,
+			InstanceID: (i % 10) + 1,
+			Name:       fmt.Sprintf("Name%d", i+1),
+			Value:      float64(i) * 1.1,
 			Timestamp:  time.Now(),
-		},
-		{
-			InstanceID: 2,
-			Name:       "humidity",
-			Value:      65.0,
-			Timestamp:  time.Now(),
-		},
+			Nuniga:     fmt.Sprintf("Nuniga%d", i+1),
+		}
 	}
 
-	db.Init("postgres://postgres:postgres@localhost:8086/demo?sslmode=disable")
-	err = db.InsertEventsBatchToTable(events, "dalibnieki")
+	//strukti1 := db.ToAnySlice(slices)
+	//strukti2 := db.ToAnySlice(slices2)
+
+	dsn := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		envreader.GetEnvString("POSTGRES_HOST"),
+		envreader.GetEnvString("POSTGRES_PORT"),
+		envreader.GetEnvString("POSTGRES_USER"),
+		envreader.GetEnvString("POSTGRES_PASSWORD"),
+		envreader.GetEnvString("POSTGRES_DB"),
+	)
+
+	db.Init(dsn)
+
+	//db.BatchInsertIntoTable(ctx, "kkas", strukti1)
+	// db.BatchInsertIntoTable(ctx, "kkas2", strukti2)
+
+	results, err := db.ReadFromTableWhere(ctx, "kkas", db.RandomStruct{}, "instance_i_d", []any{1, 2, 3})
 	if err != nil {
-		logrus.WithError(err).Error("Failed to insert events batch")
+		logrus.WithError(err).Error("Failed to read from table")
 		return
 	}
 
-	dabut, err := db.GetAllEventsByName("temp")
-	if err != nil {
-		logrus.WithError(err).Error("Failed to get all events")
-		return
-	}
-	for _, e := range dabut {
-		fmt.Printf("Event: ID=%d, InstanceID=%d, Name=%s, Value=%.2f, Timestamp=%s\n",
-			e.ID, e.InstanceID, e.Name, e.Value, e.Timestamp.Format(time.RFC3339))
-	}
+	for i, r := range results {
+		v := reflect.ValueOf(r)
+		t := reflect.TypeOf(r)
 
-	/*
-
-		err1 := db.Init("postgres://postgres:postgres@localhost:8086/demo?sslmode=disable")
-		if err1 != nil {
-			log.Fatal(err1)
+		fmt.Printf("--- Row %d ---\n", i+1)
+		for j := 0; j < t.NumField(); j++ {
+			fmt.Printf("%s: %v\n", t.Field(j).Name, v.Field(j).Interface())
 		}
-		defer db.Close()
+	}
 
-		e := db.Event{InstanceID: 1, Name: "temp", Value: 23.5, Timestamp: time.Now()}
-		err = db.InsertEvent(&e)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Inserted event: %+v\n", e)
-
-	*/
+	fmt.Println("sucess")
 
 	for {
-		//fmt.Printf("nig")
-		//time.Sleep(2000) // 2000ms
 
 	}
 }

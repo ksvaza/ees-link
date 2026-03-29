@@ -87,6 +87,7 @@ func SetupLogger(logFile string, clearlog bool) (f *os.File, err error) {
 
 	f, err = os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
+		fmt.Printf("Failed to open log file: %v\n", err)
 		return
 	}
 

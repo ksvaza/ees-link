@@ -7,8 +7,10 @@ WORKDIR /go/src
 
 COPY ./go.* /go/src
 COPY ./cmd /go/src/cmd
+COPY ./public /go/src/public
 COPY ./logeris /go/src/logeris
 COPY ./envreader /go/src/envreader
+COPY ./httpapi /go/src/httpapi
 
 
 RUN go build -o ees-link cmd/ees-link/main.go
@@ -17,7 +19,7 @@ RUN go build -o ees-link cmd/ees-link/main.go
 FROM --platform=linux/arm/v8 alpine:3.21.0 AS final
 
 COPY --from=build ./go/src/ees-link ./
-#COPY --from=build ./go/src/public ./public
+COPY --from=build ./go/src/public ./public
 
 RUN chmod +x /ees-link
 

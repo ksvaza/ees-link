@@ -36,3 +36,4 @@ logs/*
 
 # Docker compose
 /dockercompose/docker-compose.yml
+/bin

@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
 #    depends_on:
 #      - influxdb
-#    ports:
-#      - "2884:1884"
+    ports:
+      - "6767:1884"
     environment:
       - LOGFILE=./logs/log.txt
       - CLEARLOG=true

@@ -37,5 +37,20 @@
 		</exec>
 	</target>
 	
+	<target name="server" depends="test">
+		<mkdir dir="bin" />
+		<exec executable="docker" failonerror="true">
+			<arg line="build" />
+			<arg line="-f DockerfileAMD64" />
+			<arg line="-t ees-link" />
+			<arg line="." />
+		</exec>
+		<exec executable="docker" failonerror="true">
+			<arg line="save" />
+			<arg line="-o bin/ees-link.tar" />
+			<arg line="ees-link" />
+		</exec>
+	</target>
+	
 	<target name="build" depends="clean,docker" />
 </project>

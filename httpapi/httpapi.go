@@ -64,7 +64,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// ir -- Pieteikumi
 	router.GET("/api/applications", Handler(PointGetApplications))
 	router.POST("/api/applications", Handler(PointPostApplications))
-	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
+	router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)
@@ -118,7 +118,7 @@ func setupHTTPHost(router *httprouter.Router) error {
 			return
 		}
 
-		redirectHTTPToHTTPS(w, r)
+		//redirectHTTPToHTTPS(w, r)
 
 		path := filepath.Join("public", filepath.Clean(r.URL.Path))
 		if strings.HasPrefix(path, "../") || strings.Contains(path, "/../") {

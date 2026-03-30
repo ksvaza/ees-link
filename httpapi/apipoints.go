@@ -9,6 +9,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/db"
+	"github.com/ksvaza/ees-link/models"
+
+	//"github.com/ksvaza/ees-link/db"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -403,23 +407,13 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Pieteikumi
 // ----------
 
-type applicantStatus string
+type ApplicantStatus string
 
 const (
-	InProcess applicantStatus = "in_process"
-	Accepted  applicantStatus = "accepted"
-	Denied    applicantStatus = "denied"
+	InProcess ApplicantStatus = "in_process"
+	Accepted  ApplicantStatus = "accepted"
+	Denied    ApplicantStatus = "denied"
 )
-
-type applicant struct {
-	ID         string      `json:"id"`
-	TeamName   string      `json:"teamName"`
-	School     string      `json:"school"`
-	Members    int         `json:"members"`
-	Supervisor string      `json:"supervisor"`
-	AplliedAt  pgtype.Date `json:"appliedAt"`
-	Status     string      `json:"status"`
-}
 
 func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
@@ -427,8 +421,8 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		return nil, errors.New("method not allowed")
 	}
 
-	var applications []applicant
-	applications = append(applications, applicant{
+	var applications []models.Applicant
+	applications = append(applications, models.Applicant{
 		ID:         "1",
 		TeamName:   "Team A",
 		School:     "School X",
@@ -452,7 +446,7 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant applicant
+	var newApplicant models.Applicant
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -461,6 +455,8 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	if err := json.Unmarshal(body, &newApplicant); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
+
+	db.WriteApplicantTable(r.Context(), db.Pool, newApplicant)
 
 	// New application handling logic here (e.g., save to database)
 	logrus.Infof("Received new application: %+v", newApplicant)
@@ -485,7 +481,7 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 	// Get application by ID from database (not implemented, just a placeholder)
 
 	// Check if application exists (not implemented, just a placeholder)
-	var existingApplication applicant
+	var existingApplication models.Applicant
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

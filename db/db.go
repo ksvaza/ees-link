@@ -2,16 +2,57 @@ package db
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ksvaza/ees-link/models"
+	"github.com/sirupsen/logrus"
 )
+
+//go:embed schema.sql
+var schema string
+var Pool *pgxpool.Pool
+
+func MigrateUp(ctx context.Context, pool *pgxpool.Pool, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
+	// Example migration: add a new column to an existing table
+	fmt.Println("Running migration...")
+	_, err = pool.Exec(ctx, schema)
+	if err != nil {
+		fmt.Println("Migration failed:")
+		logrus.WithError(err).Error("Failed to run migration")
+		return err
+	}
+	logrus.Info("Migration completed successfully")
+	return nil
+}
+
+func WriteApplicantTable(ctx context.Context, pool *pgxpool.Pool, newApplicant models.Applicant) error {
+	_, err := pool.Exec(ctx, ApplicantWriteRequest,
+		newApplicant.ID,         // $1 - id
+		newApplicant.TeamName,   // $2 - team_name
+		newApplicant.School,     // $3 - school
+		newApplicant.Members,    // $4 - members
+		newApplicant.Supervisor, // $5 - supervisor
+		newApplicant.AplliedAt,  // $6 - applied_at
+		"pending")
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to write to applicants table")
+	}
+
+	return err
+}
 
 type RandomStruct struct {
 	ID         int
@@ -30,7 +71,6 @@ type Ahh struct {
 	Nuniga     string
 }
 
-var Pool *pgxpool.Pool
 var Tables map[string]any
 
 func Init(dbURL string) error {
@@ -317,134 +357,3 @@ func ReadFromTableWhere(ctx context.Context, tableName string, model any, colNam
 
 	return results, nil
 }
-
-/*
-// Table initialisation
-func Init(dbURL string) error {
-	logrus.Info("Connecting to DB...")
-	ctx := context.Background()
-	var err error
-	Pool, err = pgxpool.New(ctx, dbURL)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to create DB pool")
-		return err
-	}
-
-	// Create table if not exists
-
-	table_query := []string{`CREATE TABLE IF NOT EXISTS events (
-        id SERIAL PRIMARY KEY,
-        instance_id INT NOT NULL,
-        name TEXT NOT NULL,
-        value DOUBLE PRECISION NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL
-    );`, `CREATE TABLE IF NOT EXISTS dalibnieki (
-        id SERIAL PRIMARY KEY,
-        instance_id INT NOT NULL,
-        name TEXT NOT NULL,
-        value DOUBLE PRECISION NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL
-    );`,
-	}
-
-	for _, q := range table_query {
-		_, err := Pool.Exec(ctx, q)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to create tables")
-			return err
-		}
-	}
-
-	return nil
-}
-*/
-
-/*
-// InsertEvent inserts a single Event and sets its ID
-func InsertEvent(e *Event) error {
-	ctx := context.Background()
-	insertSQL := `
-    INSERT INTO events (instance_id, name, value, timestamp)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id`
-
-	return Pool.QueryRow(ctx, insertSQL, e.InstanceID, e.Name, e.Value, e.Timestamp).Scan(&e.ID)
-}
-
-func InsertEventsBatchToTable(events []*Event, table string) error {
-	ctx := context.Background()
-	fmt.Printf("asaaa\n")
-	tx, err := Pool.Begin(ctx)
-
-	if err != nil {
-
-		logrus.WithError(err).Error("Failed to begin transaction")
-		return err
-	}
-
-	defer tx.Rollback(ctx)
-
-	batch := &pgx.Batch{}
-
-	for _, e := range events {
-		batch.Queue(
-			"INSERT INTO "+table+" (instance_id, name, value, timestamp) VALUES ($1, $2, $3, $4) RETURNING id",
-			e.InstanceID, e.Name, e.Value, e.Timestamp,
-		)
-	}
-
-	br := tx.SendBatch(ctx, batch)
-	for i, _ := range events {
-		err := br.QueryRow().Scan(&events[i].ID)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to execute batch insert")
-			br.Close()
-			return err
-		}
-	}
-	br.Close()
-	return tx.Commit(ctx)
-}
-
-func GetAllEventsByName(name string) ([]*Event, error) {
-	ctx := context.Background()
-
-	rows, err := Pool.Query(ctx, `
-		SELECT id, name, instance_id, value, timestamp
-		FROM dalibnieki
-		WHERE name = $1
-	`, name)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to query events")
-		return nil, err
-	}
-	defer rows.Close()
-
-	var events []*Event
-
-	for rows.Next() {
-		var e Event
-		err := rows.Scan(
-			&e.ID,
-			&e.Name,
-			&e.InstanceID,
-			&e.Value,
-			&e.Timestamp,
-		)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to scan event row")
-			return nil, err
-		}
-		events = append(events, &e)
-	}
-
-	return events, nil
-}
-
-// Close closes the DB pool
-func Close() {
-	if Pool != nil {
-		Pool.Close()
-	}
-}
-*/

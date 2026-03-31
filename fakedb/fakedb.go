@@ -3,47 +3,12 @@ package fakedb
 import (
 	"encoding/json"
 	"os"
-	"time"
+
+	"github.com/ksvaza/ees-link/models"
 )
 
 // Read write to file in json
 // --------------------------
-
-// RegistrationFormData represents the top-level registration structure
-type RegistrationFormData struct {
-	ID                string            `json:"id"`
-	TeamName          string            `json:"teamName"`
-	AgeGroup          string            `json:"ageGroup"` // Assumes AgeGroup is a string enum
-	Institution       *string           `json:"institution,omitempty"`
-	CityOrRegion      string            `json:"cityOrRegion"`
-	Members           []TeamMember      `json:"members"`
-	ResponsiblePerson ResponsiblePerson `json:"responsiblePerson"`
-	HowHeardAbout     *string           `json:"howHeardAbout,omitempty"`
-	Comments          *string           `json:"comments,omitempty"`
-	ConfirmTruthful   bool              `json:"confirmTruthful"`
-	ConfirmRules      bool              `json:"confirmRules"`
-	ConfirmMedia      bool              `json:"confirmMedia"`
-	AppliedAt         time.Time         `json:"appliedAt"`
-	Status            string            `json:"status"`
-}
-
-// TeamMember represents individual members in the members array
-type TeamMember struct {
-	Key                    string `json:"key"`
-	FullName               string `json:"fullName"`
-	DateOfBirth            string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
-	EducationalInstitution string `json:"educationalInstitution"`
-	Role                   string `json:"role"`
-	ClassOrYear            string `json:"classOrYear"`
-}
-
-// ResponsiblePerson represents the contact person details
-type ResponsiblePerson struct {
-	FullName string `json:"fullName"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email"`
-	Status   string `json:"status"`
-}
 
 var path string = "fakedbdata/data.json"
 
@@ -59,17 +24,17 @@ func testExistance() error {
 }
 
 // Read and return all applications (registration forms) from the JSON file
-func getAllApplications() ([]RegistrationFormData, error) {
+func getAllApplications() ([]models.RegistrationFormData, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(data) == 0 {
-		return []RegistrationFormData{}, nil
+		return []models.RegistrationFormData{}, nil
 	}
 
-	var apps []RegistrationFormData
+	var apps []models.RegistrationFormData
 	if err := json.Unmarshal(data, &apps); err != nil {
 		return nil, err
 	}
@@ -78,7 +43,7 @@ func getAllApplications() ([]RegistrationFormData, error) {
 }
 
 // Read and return a single application by its ID
-func getApplicationByID(id string) (*RegistrationFormData, error) {
+func getApplicationByID(id string) (*models.RegistrationFormData, error) {
 	apps, err := getAllApplications()
 	if err != nil {
 		return nil, err
@@ -94,7 +59,7 @@ func getApplicationByID(id string) (*RegistrationFormData, error) {
 }
 
 // Add a new application to the JSON file
-func addApplication(app RegistrationFormData) error {
+func addApplication(app models.RegistrationFormData) error {
 	apps, err := getAllApplications()
 	if err != nil {
 		return err

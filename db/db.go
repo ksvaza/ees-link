@@ -41,7 +41,7 @@ func MigrateUp(ctx context.Context, dbURL string) error {
 	return nil
 }
 
-func (DB *RealDB) RegisterNewApplicant(ctx context.Context, newApplicant models.RegistrationFormData) error {
+func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
 	a, err := DB.GetAllApplications(ctx)
 	if err != nil {
 		logrus.Warnf("Failed to read from applicants table")

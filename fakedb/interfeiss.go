@@ -3,6 +3,8 @@ package fakedb
 import (
 	"context"
 	"fmt"
+
+	"github.com/ksvaza/ees-link/models"
 )
 
 type FSDatabase struct {
@@ -13,22 +15,22 @@ func (db *FSDatabase) TestHealthiness(ctx context.Context) error {
 	return testExistance()
 }
 
-func (db *FSDatabase) GetAllApplications(ctx context.Context) ([]RegistrationFormData, error) {
+func (db *FSDatabase) GetAllApplications(ctx context.Context) ([]models.RegistrationFormData, error) {
 	return getAllApplications()
 }
 
-func (db *FSDatabase) GetApplicationByID(ctx context.Context, id string) (RegistrationFormData, error) {
+func (db *FSDatabase) GetApplicationByID(ctx context.Context, id string) (models.RegistrationFormData, error) {
 	app, err := getApplicationByID(id)
 	if err != nil {
-		return RegistrationFormData{}, err
+		return models.RegistrationFormData{}, err
 	}
 	if app == nil {
-		return RegistrationFormData{}, fmt.Errorf("application with ID '%s' not found", id)
+		return models.RegistrationFormData{}, fmt.Errorf("application with ID '%s' not found", id)
 	}
 	return *app, nil
 }
 
-func (db *FSDatabase) RegisterNewApplication(ctx context.Context, newApplicant RegistrationFormData) error {
+func (db *FSDatabase) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
 	existing, err := getAllApplications()
 	if err != nil {
 		return err
@@ -41,7 +43,7 @@ func (db *FSDatabase) RegisterNewApplication(ctx context.Context, newApplicant R
 	return addApplication(newApplicant)
 }
 
-func (db *FSDatabase) UpdateApplication(ctx context.Context, updatedApplicant RegistrationFormData) error {
+func (db *FSDatabase) UpdateApplication(ctx context.Context, updatedApplicant models.RegistrationFormData) error {
 	existing, err := getAllApplications()
 	if err != nil {
 		return err

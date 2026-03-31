@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/ksvaza/ees-link/fakedb"
@@ -13,7 +14,6 @@ import (
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
 
-	
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -427,14 +427,6 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Pieteikumi
 // ----------
 
-type ApplicationStatus string
-
-const (
-	InProcess ApplicantStatus = "in_process"
-	Accepted  ApplicantStatus = "accepted"
-	Denied    ApplicantStatus = "denied"
-)
-
 func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
 	if r.Method != http.MethodGet {
@@ -442,7 +434,7 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 	}
 
 	//realDB := fakedb.FSDatabase{}
-	
+
 	realDB := db.RealDB{}
 
 	//db.GetAllApplicants()
@@ -507,14 +499,15 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.New("missing application ID")
 	}
 
+	logrus.Infof("Patching application with ID: %s", ID)
+
+	realDB := db.RealDB{}
 
 	// Get application by ID from database
 	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetApplicationByID")
 	}
-
-
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

@@ -23,7 +23,7 @@ type RegistrationFormData struct {
 	ConfirmTruthful   bool              `json:"confirmTruthful"`
 	ConfirmRules      bool              `json:"confirmRules"`
 	ConfirmMedia      bool              `json:"confirmMedia"`
-	AplliedAt         time.Time         `json:"appliedAt"`
+	AppliedAt         time.Time         `json:"appliedAt"`
 	Status            string            `json:"status"`
 }
 
@@ -47,8 +47,19 @@ type ResponsiblePerson struct {
 
 var path string = "fakedbdata/data.json"
 
+func testExistance() error {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return err
+		}
+		return err
+	}
+	return nil
+}
+
 // Read and return all applications (registration forms) from the JSON file
-func GetAllApplications() ([]RegistrationFormData, error) {
+func getAllApplications() ([]RegistrationFormData, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -67,8 +78,8 @@ func GetAllApplications() ([]RegistrationFormData, error) {
 }
 
 // Read and return a single application by its ID
-func GetApplicationByID(id string) (*RegistrationFormData, error) {
-	apps, err := GetAllApplications()
+func getApplicationByID(id string) (*RegistrationFormData, error) {
+	apps, err := getAllApplications()
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +94,8 @@ func GetApplicationByID(id string) (*RegistrationFormData, error) {
 }
 
 // Add a new application to the JSON file
-func AddApplication(app RegistrationFormData) error {
-	apps, err := GetAllApplications()
+func addApplication(app RegistrationFormData) error {
+	apps, err := getAllApplications()
 	if err != nil {
 		return err
 	}

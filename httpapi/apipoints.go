@@ -78,13 +78,32 @@ func TestPointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	// Read the request body and return it as the response
 	_, err := io.ReadAll(r.Body)
 	if err != nil {
-		errorHandler(w, err, http.StatusInternalServerError)
+		errorHandler(w, errors.Wrap(err, "failed to read request body"), http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<h1>Hello, this is a test API!</h1>\n"))
+}
+
+func TestDatabase(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("TestPointTestAPI called %+v", ps)
+
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	realDB := fakedb.FSDatabase{}
+	err := realDB.TestHealthiness(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to test database health")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         "Database is healthy",
+	}, nil
 }
 
 // tīri tests formu saņemšanai, vēlāk varētu būt noderīgi, lai saņemtu datus no frontend formas
@@ -411,8 +430,10 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		return nil, errors.New("method not allowed")
 	}
 
+	realDB := fakedb.FSDatabase{}
+
 	var applications []fakedb.RegistrationFormData
-	applications, err := fakedb.GetAllApplications()
+	applications, err := realDB.GetAllApplications(r.Context())
 	if err != nil {
 		return nil, errors.Wrap(err, "GetAllApplications")
 	}
@@ -440,11 +461,14 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	}
 
 	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
-	newApplicant.AplliedAt = time.Now()
+	newApplicant.AppliedAt = time.Now()
 
 	// New application handling logic here (e.g., save to database)
 	logrus.Infof("Received new application: %+v", newApplicant)
-	err = fakedb.AddApplication(newApplicant)
+
+	realDB := fakedb.FSDatabase{}
+
+	err = realDB.RegisterNewApplication(r.Context(), newApplicant)
 	if err != nil {
 		return nil, errors.Wrap(err, "AddApplication")
 	}
@@ -466,13 +490,12 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.New("missing application ID")
 	}
 
+	realDB := fakedb.FSDatabase{}
+
 	// Get application by ID from database (not implemented, just a placeholder)
-	existingApplication, err := fakedb.GetApplicationByID(ID)
+	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetApplicationByID")
-	}
-	if existingApplication == nil {
-		return nil, errors.New("application not found")
 	}
 
 	body, err := io.ReadAll(r.Body)
@@ -486,9 +509,9 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 
 	// Application patching handling logic here (e.g., save to database)
 	logrus.Infof("Received application update: %+v", existingApplication)
-	err = fakedb.AddApplication(*existingApplication)
+	err = realDB.UpdateApplication(r.Context(), existingApplication)
 	if err != nil {
-		return nil, errors.Wrap(err, "AddApplication")
+		return nil, errors.Wrap(err, "UpdateApplication")
 	}
 
 	return &httpResult{

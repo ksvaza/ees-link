@@ -14,6 +14,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 
 	// Test endpoints
 	router.GET("/api/test", Handler(test))
+	router.GET("/api/testdb", Handler(TestDatabase))
 	router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth

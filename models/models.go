@@ -35,3 +35,11 @@ type RegistrationFormData struct {
 	AppliedAt         time.Time         `json:"appliedAt"`
 	Status            string            `json:"status"`
 }
+
+type RegistrationFormDataRestricted struct {
+	TeamName 		 string `json:"teamName"`
+	Institution       *string           `json:"institution,omitempty"`
+	MemberCount	   int    `json:"memberCount"`
+	AppliedAt		 time.Time `json:"appliedAt"`
+	Status			 string `json:"status"`
+}

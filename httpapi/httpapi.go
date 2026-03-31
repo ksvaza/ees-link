@@ -63,12 +63,12 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.DELETE("/api/events/:id", PointDeleteEventByID)
 
 	// ir -- Pieteikumi
-	router.GET("/api/applications", BasicAuth(Handler(PointGetApplications)))
+	//router.GET("/api/applications", BasicAuth(Handler(PointGetApplications)))
 	router.POST("/api/applications", Handler(PointPostApplications))
 	router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
 
 	// ierobežotie pieteikumi
-	router.GET("/api/applications/restricted", Handler(PointGetApplicationsRestricted))
+	router.GET("/api/applications", Handler(PointGetApplicationsRestricted))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

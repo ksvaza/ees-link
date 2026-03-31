@@ -537,6 +537,40 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 	}, nil
 }
 
+func PointGetApplicationsRestricted(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointGetApplicationsRestricted called %+v", ps)
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	//realDB := fakedb.FSDatabase{}
+
+	realDB := db.RealDB{}
+
+	//db.GetAllApplicants()
+
+	applications, err := realDB.GetAllApplications(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAllApplications")
+	}
+
+	restrictedApplications := make([]models.RegistrationFormDataRestricted, len(applications))
+	for i, app := range applications {
+		restrictedApplications[i] = models.RegistrationFormDataRestricted{
+			TeamName:    app.TeamName,
+			Institution: app.Institution,
+			MemberCount: len(app.Members),
+			AppliedAt:   app.AppliedAt,
+			Status:      app.Status,
+		}
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         restrictedApplications,
+	}, nil
+}
+
 // --------------------------------------------------------------------------------------------------------------------------------
 
 // WebSocket

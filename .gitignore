@@ -34,8 +34,8 @@ go.work.sum
 # logs
 logs/*
 
-# Docker compose
-/dockercompose/docker-compose.yml
+# Docker compose files
+dockercompose/*
 
 
 /bin

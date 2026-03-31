@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/ksvaza/ees-link/fakedb"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/db"
+	"github.com/ksvaza/ees-link/models"
+
+	
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -424,15 +427,26 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Pieteikumi
 // ----------
 
+type ApplicationStatus string
+
+const (
+	InProcess ApplicantStatus = "in_process"
+	Accepted  ApplicantStatus = "accepted"
+	Denied    ApplicantStatus = "denied"
+)
+
 func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 
-	realDB := fakedb.FSDatabase{}
+	//realDB := fakedb.FSDatabase{}
+	
+	realDB := db.RealDB{}
 
-	var applications []fakedb.RegistrationFormData
+	//db.GetAllApplicants()
+
 	applications, err := realDB.GetAllApplications(r.Context())
 	if err != nil {
 		return nil, errors.Wrap(err, "GetAllApplications")
@@ -450,7 +464,7 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant fakedb.RegistrationFormData
+	var newApplicant models.RegistrationFormData
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -459,14 +473,17 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	if err := json.Unmarshal(body, &newApplicant); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
-
 	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
 	newApplicant.AppliedAt = time.Now()
+	realDB := db.RealDB{}
+
+	fmt.Printf("Registering new applicant:\n")
 
 	// New application handling logic here (e.g., save to database)
+
 	logrus.Infof("Received new application: %+v", newApplicant)
 
-	realDB := fakedb.FSDatabase{}
+	//realDB := fakedb.FSDatabase{}
 
 	err = realDB.RegisterNewApplication(r.Context(), newApplicant)
 	if err != nil {
@@ -490,13 +507,14 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.New("missing application ID")
 	}
 
-	realDB := fakedb.FSDatabase{}
 
-	// Get application by ID from database (not implemented, just a placeholder)
+	// Get application by ID from database
 	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "GetApplicationByID")
 	}
+
+
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

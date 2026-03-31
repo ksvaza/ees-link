@@ -2,16 +2,234 @@ package db
 
 import (
 	"context"
+	_ "embed"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/ksvaza/ees-link/models"
+	"github.com/sirupsen/logrus"
 )
+
+type RealDB struct {
+	ctx context.Context
+}
+
+//go:embed schema.sql
+var schema string
+var Pool *pgxpool.Pool
+
+func MigrateUp(ctx context.Context, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
+
+	_, err = Pool.Exec(ctx, schema)
+	if err != nil {
+		fmt.Println("Migration failed:")
+		logrus.WithError(err).Error("Failed to run migration")
+		return err
+	}
+	logrus.Info("Migration completed successfully")
+	return nil
+}
+
+func (DB *RealDB) RegisterNewApplicant(ctx context.Context, newApplicant models.RegistrationFormData) error {
+	a, err := DB.GetAllApplications(ctx)
+	if err != nil {
+		logrus.Warnf("Failed to read from applicants table")
+		return err
+	}
+
+	for _, applicant := range a {
+		if applicant.TeamName == newApplicant.TeamName {
+			logrus.Warnf("Applicant with team name %q already exists, skipping insert", newApplicant.TeamName)
+			return nil
+		}
+	}
+
+	membersJSON, err := json.Marshal(newApplicant.Members)
+	if err != nil {
+		return fmt.Errorf("failed to marshal members: %w", err)
+	}
+
+	ResponsiblePersonJSON, e := json.Marshal(newApplicant.ResponsiblePerson)
+	if e != nil {
+		return fmt.Errorf("failed to marshal responsible person: %w", err)
+	}
+
+	_, er := Pool.Exec(ctx, ApplicantWriteRequest,
+		newApplicant.ID,              // $1 - id
+		newApplicant.TeamName,        // $2 - team_name
+		newApplicant.AgeGroup,        // $3 - age_group
+		newApplicant.Institution,     // $4 - institution
+		newApplicant.CityOrRegion,    // $5 - city_or_region
+		membersJSON,                  // $6 - members (assumes proper serialization)
+		ResponsiblePersonJSON,        // $7 - responsible_person_full_nam   // $10 - responsible_person_status
+		newApplicant.HowHeardAbout,   // $11 - how_heard_about
+		newApplicant.Comments,        // $12 - comments
+		newApplicant.ConfirmTruthful, // $13 - confirm_truthful
+		newApplicant.ConfirmRules,    // $14 - confirm_rules
+		newApplicant.ConfirmMedia,    // $15 - confirm_media
+		newApplicant.AppliedAt,       // $16 - applied_at
+		newApplicant.Status,
+	)
+	if er != nil {
+		logrus.WithError(err).Error("Failed to write to applicants table")
+	}
+
+	logrus.Info("Applicant written to DB successfully")
+
+	return err
+}
+
+func (DB *RealDB) GetAllApplications(ctx context.Context) ([]models.RegistrationFormData, error) {
+	query := ApplicantReadRequest // Adjust the query to select all columns from the applicants table
+	rows, err := Pool.Query(ctx, query)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query applicants table")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var membersRaw []byte
+	var ResponsiblePersonRaw []byte
+
+	var applicants []models.RegistrationFormData
+	for rows.Next() {
+		var a models.RegistrationFormData
+		err := rows.Scan(
+			&a.ID,
+			&a.TeamName,
+			&a.AgeGroup,
+			&a.Institution,
+			&a.CityOrRegion,
+			&membersRaw,
+			&ResponsiblePersonRaw,
+			&a.HowHeardAbout,
+			&a.Comments,
+			&a.ConfirmTruthful,
+			&a.ConfirmRules,
+			&a.ConfirmMedia,
+			&a.AppliedAt,
+			&a.Status,
+		)
+
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan applicant row")
+			return nil, err
+		}
+		err = json.Unmarshal(membersRaw, &a.Members)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to unmarshal members JSON")
+			return nil, err
+		}
+
+		err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
+			return nil, err
+		}
+
+		applicants = append(applicants, a)
+	}
+
+	return applicants, nil
+}
+
+//func (DB *RealDB) UpdateApplicant()
+
+func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (models.RegistrationFormData, error) {
+	rows, err := Pool.Query(ctx, ApplicantReadRequestByID, id)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query applicants table")
+		return models.RegistrationFormData{}, err
+	}
+	defer rows.Close()
+
+	var membersRaw []byte
+	var ResponsiblePersonRaw []byte
+
+	var a models.RegistrationFormData
+	for rows.Next() {
+		err := rows.Scan(
+			&a.ID,
+			&a.TeamName,
+			&a.AgeGroup,
+			&a.Institution,
+			&a.CityOrRegion,
+			&membersRaw,
+			&ResponsiblePersonRaw,
+			&a.HowHeardAbout,
+			&a.Comments,
+			&a.ConfirmTruthful,
+			&a.ConfirmRules,
+			&a.ConfirmMedia,
+			&a.AppliedAt,
+			&a.Status,
+		)
+
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan applicant row")
+			return models.RegistrationFormData{}, err
+		}
+
+		err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
+			return models.RegistrationFormData{}, err
+		}
+
+		err = json.Unmarshal(membersRaw, &a.Members)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to unmarshal members JSON")
+			return models.RegistrationFormData{}, err
+		}
+	}
+
+	return a, nil
+}
+
+func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models.RegistrationFormData) error {
+	membersJSON, err := json.Marshal(updatedApplicant.Members)
+	if err != nil {
+		return fmt.Errorf("failed to marshal members: %w", err)
+	}
+
+	responsiblePersonJSON, err := json.Marshal(updatedApplicant.ResponsiblePerson)
+	if err != nil {
+		return fmt.Errorf("failed to marshal responsible person: %w", err)
+	}
+
+	_, err = Pool.Exec(ctx, ApplicantUpdateRequest,
+		updatedApplicant.TeamName,
+		updatedApplicant.AgeGroup,
+		updatedApplicant.Institution,
+		updatedApplicant.CityOrRegion,
+		membersJSON,
+		responsiblePersonJSON,
+		updatedApplicant.HowHeardAbout,
+		updatedApplicant.Comments,
+		updatedApplicant.ConfirmTruthful,
+		updatedApplicant.ConfirmRules,
+		updatedApplicant.ConfirmMedia,
+		updatedApplicant.AppliedAt,
+		updatedApplicant.Status,
+		updatedApplicant.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update applicant: %w", err)
+	}
+
+	return nil
+}
 
 type RandomStruct struct {
 	ID         int
@@ -30,7 +248,6 @@ type Ahh struct {
 	Nuniga     string
 }
 
-var Pool *pgxpool.Pool
 var Tables map[string]any
 
 func Init(dbURL string) error {
@@ -238,9 +455,9 @@ func BatchInsertIntoTable(ctx context.Context, tableName string, models []any) e
 	br := Pool.SendBatch(ctx, batch)
 	defer br.Close()
 
-	ids := make([]int, len(models))
+	teamNames := make([]int, len(models))
 	for i := range models {
-		if err := br.QueryRow().Scan(&ids[i]); err != nil {
+		if err := br.QueryRow().Scan(&teamNames[i]); err != nil {
 			logrus.WithError(err).Errorf("Failed to scan row %d", i)
 			return err
 		}
@@ -292,9 +509,14 @@ func ReadFromTableWhere(ctx context.Context, tableName string, model any, colNam
 
 	rows, err := Pool.Query(ctx, query, colValues...)
 	if err != nil {
-		logrus.WithError(err).Errorf("Failed to query table %q", tableName)
+		//logrus.WithError(err).Errorf("Failed to query table %q", tableName)
+		fmt.Println("Query failed:")
+		fmt.Println(err)
+		fmt.Errorf("Failed to query table %w", err)
 		return nil, err
 	}
+
+	fmt.Printf("Running query:With values:")
 	defer rows.Close()
 
 	var results []any
@@ -317,134 +539,3 @@ func ReadFromTableWhere(ctx context.Context, tableName string, model any, colNam
 
 	return results, nil
 }
-
-/*
-// Table initialisation
-func Init(dbURL string) error {
-	logrus.Info("Connecting to DB...")
-	ctx := context.Background()
-	var err error
-	Pool, err = pgxpool.New(ctx, dbURL)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to create DB pool")
-		return err
-	}
-
-	// Create table if not exists
-
-	table_query := []string{`CREATE TABLE IF NOT EXISTS events (
-        id SERIAL PRIMARY KEY,
-        instance_id INT NOT NULL,
-        name TEXT NOT NULL,
-        value DOUBLE PRECISION NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL
-    );`, `CREATE TABLE IF NOT EXISTS dalibnieki (
-        id SERIAL PRIMARY KEY,
-        instance_id INT NOT NULL,
-        name TEXT NOT NULL,
-        value DOUBLE PRECISION NOT NULL,
-        timestamp TIMESTAMPTZ NOT NULL
-    );`,
-	}
-
-	for _, q := range table_query {
-		_, err := Pool.Exec(ctx, q)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to create tables")
-			return err
-		}
-	}
-
-	return nil
-}
-*/
-
-/*
-// InsertEvent inserts a single Event and sets its ID
-func InsertEvent(e *Event) error {
-	ctx := context.Background()
-	insertSQL := `
-    INSERT INTO events (instance_id, name, value, timestamp)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id`
-
-	return Pool.QueryRow(ctx, insertSQL, e.InstanceID, e.Name, e.Value, e.Timestamp).Scan(&e.ID)
-}
-
-func InsertEventsBatchToTable(events []*Event, table string) error {
-	ctx := context.Background()
-	fmt.Printf("asaaa\n")
-	tx, err := Pool.Begin(ctx)
-
-	if err != nil {
-
-		logrus.WithError(err).Error("Failed to begin transaction")
-		return err
-	}
-
-	defer tx.Rollback(ctx)
-
-	batch := &pgx.Batch{}
-
-	for _, e := range events {
-		batch.Queue(
-			"INSERT INTO "+table+" (instance_id, name, value, timestamp) VALUES ($1, $2, $3, $4) RETURNING id",
-			e.InstanceID, e.Name, e.Value, e.Timestamp,
-		)
-	}
-
-	br := tx.SendBatch(ctx, batch)
-	for i, _ := range events {
-		err := br.QueryRow().Scan(&events[i].ID)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to execute batch insert")
-			br.Close()
-			return err
-		}
-	}
-	br.Close()
-	return tx.Commit(ctx)
-}
-
-func GetAllEventsByName(name string) ([]*Event, error) {
-	ctx := context.Background()
-
-	rows, err := Pool.Query(ctx, `
-		SELECT id, name, instance_id, value, timestamp
-		FROM dalibnieki
-		WHERE name = $1
-	`, name)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to query events")
-		return nil, err
-	}
-	defer rows.Close()
-
-	var events []*Event
-
-	for rows.Next() {
-		var e Event
-		err := rows.Scan(
-			&e.ID,
-			&e.Name,
-			&e.InstanceID,
-			&e.Value,
-			&e.Timestamp,
-		)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to scan event row")
-			return nil, err
-		}
-		events = append(events, &e)
-	}
-
-	return events, nil
-}
-
-// Close closes the DB pool
-func Close() {
-	if Pool != nil {
-		Pool.Close()
-	}
-}
-*/

@@ -11,6 +11,8 @@ COPY ./logeris /go/src/logeris
 COPY ./envreader /go/src/envreader
 COPY ./httpapi /go/src/httpapi
 COPY ./db /go/src/db
+COPY ./models /go/src/models
+COPY ./data /go/src/data
 COPY ./fakedb /go/src/fakedb
 
 RUN tree /go/src

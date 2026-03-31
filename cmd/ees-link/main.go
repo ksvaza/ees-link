@@ -3,9 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"time"
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/envreader"
+	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -43,101 +46,99 @@ func main() {
 		logrus.Errorf("Error %d", i)
 	}
 
-	/*
-
-		// sudi
-
-		ctx := context.Background()
-
-		slices := make([]db.RandomStruct, 1000)
-		slices2 := make([]db.Ahh, 1000)
-
-		for i := 0; i < 1000; i++ {
-			slices[i] = db.RandomStruct{
-				ID:         i + 1,
-				InstanceID: (i % 10) + 1,
-				Name:       fmt.Sprintf("Name%d", i+1),
-				Value:      float64(i) * 1.1,
-				Timestamp:  time.Now(),
-			}
-			slices2[i] = db.Ahh{
-				ID:         i + 1,
-				InstanceID: (i % 10) + 1,
-				Name:       fmt.Sprintf("Name%d", i+1),
-				Value:      float64(i) * 1.1,
-				Timestamp:  time.Now(),
-				Nuniga:     fmt.Sprintf("Nuniga%d", i+1),
-			}
-		}
-
-
-
-			//strukti1 := db.ToAnySlice(slices)
-			//strukti2 := db.ToAnySlice(slices2)
-
-			dsn := fmt.Sprintf(
-				"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-				envreader.GetEnvString("POSTGRES_HOST"),
-				envreader.GetEnvString("POSTGRES_PORT"),
-				envreader.GetEnvString("POSTGRES_USER"),
-				envreader.GetEnvString("POSTGRES_PASSWORD"),
-				envreader.GetEnvString("POSTGRES_DB"),
-			)
-
-			db.Init(dsn)
-
-			//db.BatchInsertIntoTable(ctx, "kkas", strukti1)
-			// db.BatchInsertIntoTable(ctx, "kkas2", strukti2)
-
-			results, err := db.ReadFromTableWhere(ctx, "kkas", db.RandomStruct{}, "instance_i_d", []any{1, 2, 3})
-			if err != nil {
-				logrus.WithError(err).Error("Failed to read from table")
-				return
-			}
-
-			for i, r := range results {
-				v := reflect.ValueOf(r)
-				t := reflect.TypeOf(r)
-
-				fmt.Printf("--- Row %d ---\n", i+1)
-				for j := 0; j < t.NumField(); j++ {
-					fmt.Printf("%s: %v\n", t.Field(j).Name, v.Field(j).Interface())
-				}
-			}
-
-			fmt.Println("sucess")
-
-			logrus.Info("\nSveika, http aplikācija!\n")
-
-			err = httpapi.SetupHTTPAPI()
-			if err != nil {
-				logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
-			}
-
-	*/
+	// sudi
 
 	ctx := context.Background()
 
-	dbURL := fmt.Sprintf(
+	slices := make([]db.RandomStruct, 1000)
+	slices2 := make([]db.Ahh, 1000)
+
+	for i := 0; i < 1000; i++ {
+		slices[i] = db.RandomStruct{
+			ID:         i + 1,
+			InstanceID: (i % 10) + 1,
+			Name:       fmt.Sprintf("Name%d", i+1),
+			Value:      float64(i) * 1.1,
+			Timestamp:  time.Now(),
+		}
+		slices2[i] = db.Ahh{
+			ID:         i + 1,
+			InstanceID: (i % 10) + 1,
+			Name:       fmt.Sprintf("Name%d", i+1),
+			Value:      float64(i) * 1.1,
+			Timestamp:  time.Now(),
+			Nuniga:     fmt.Sprintf("Nuniga%d", i+1),
+		}
+	}
+
+	//strukti1 := db.ToAnySlice(slices)
+	//strukti2 := db.ToAnySlice(slices2)
+
+	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		envreader.GetEnvString("POSTGRES_HOST"),
 		envreader.GetEnvString("POSTGRES_PORT"),
 		envreader.GetEnvString("POSTGRES_USER"),
 		envreader.GetEnvString("POSTGRES_PASSWORD"),
-		envreader.GetEnvString("POSTGRES_DB"))
+		envreader.GetEnvString("POSTGRES_DB"),
+	)
 
-	fmt.Println(dbURL)
+	db.Init(dsn)
+	fmt.Println("DB initialized")
+	//db.BatchInsertIntoTable(ctx, "kkas", strukti1)
+	// db.BatchInsertIntoTable(ctx, "kkas2", strukti2)
 
-	logrus.Infof("kkas strada")
-
-	e := db.MigrateUp(ctx, db.Pool, dbURL)
-
-	fmt.Println("Migrated up")
-
-	if e != nil {
-		logrus.WithError(err).Error("Failed to migrate up")
+	results, err := db.ReadFromTableWhere(ctx, "kkas", db.RandomStruct{}, "instance_i_d", []any{1, 2, 3})
+	if err != nil {
+		logrus.WithError(err).Error("Failed to read from table")
 		return
 	}
+
+	for i, r := range results {
+		v := reflect.ValueOf(r)
+		t := reflect.TypeOf(r)
+
+		fmt.Printf("--- Row %d ---\n", i+1)
+		for j := 0; j < t.NumField(); j++ {
+			fmt.Printf("%s: %v\n", t.Field(j).Name, v.Field(j).Interface())
+		}
+	}
+
+	fmt.Println("sucess")
+
+	logrus.Info("\nSveika, http aplikācija!\n")
+
+	err = httpapi.SetupHTTPAPI()
+	if err != nil {
+		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
+	}
+
+	/*
+
+		ctx := context.Background()
+
+		dbURL := fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			envreader.GetEnvString("POSTGRES_HOST"),
+			envreader.GetEnvString("POSTGRES_PORT"),
+			envreader.GetEnvString("POSTGRES_USER"),
+			envreader.GetEnvString("POSTGRES_PASSWORD"),
+			envreader.GetEnvString("POSTGRES_DB"))
+
+		fmt.Println(dbURL)
+
+		logrus.Infof("kkas strada")
+
+		e := db.MigrateUp(ctx, db.Pool, dbURL)
+
+		fmt.Println("Migrated up")
+
+		if e != nil {
+			logrus.WithError(err).Error("Failed to migrate up")
+			return
+		}
+
+	*/
 
 	for {
 

@@ -332,9 +332,14 @@ func ReadFromTableWhere(ctx context.Context, tableName string, model any, colNam
 
 	rows, err := Pool.Query(ctx, query, colValues...)
 	if err != nil {
-		logrus.WithError(err).Errorf("Failed to query table %q", tableName)
+		//logrus.WithError(err).Errorf("Failed to query table %q", tableName)
+		fmt.Println("Query failed:")
+		fmt.Println(err)
+		fmt.Errorf("Failed to query table %w", err)
 		return nil, err
 	}
+
+	fmt.Printf("Running query:With values:")
 	defer rows.Close()
 
 	var results []any

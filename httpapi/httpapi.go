@@ -14,6 +14,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 
 	// Test endpoints
 	router.GET("/api/test", Handler(test))
+	router.GET("/api/testdb", Handler(TestDatabase))
 	router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth
@@ -64,11 +65,15 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// ir -- Pieteikumi
 	router.GET("/api/applications", Handler(PointGetApplications))
 	router.POST("/api/applications", Handler(PointPostApplications))
-	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
+	router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)
 }
+
+// Neizdzēšanas zona
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 func redirectHTTPToHTTPS(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-Forwarded-Proto") != "https" && r.Header.Get("X-Forwarded-Proto") != "" {
@@ -118,7 +123,7 @@ func setupHTTPHost(router *httprouter.Router) error {
 			return
 		}
 
-		redirectHTTPToHTTPS(w, r)
+		//redirectHTTPToHTTPS(w, r)
 
 		path := filepath.Join("public", filepath.Clean(r.URL.Path))
 		if strings.HasPrefix(path, "../") || strings.Contains(path, "/../") {
@@ -138,12 +143,18 @@ func setupHTTPHost(router *httprouter.Router) error {
 	return http.ListenAndServe(":1884", handler)
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 func SetupHTTPAPI() error {
 	router := httprouter.New()
 
+	// Nedrīks izdzēst
+	// ---------------
 	setupApiEndpoints(router)
 
 	err := setupHTTPHost(router)
+	// ---------------
 
 	return err
 }

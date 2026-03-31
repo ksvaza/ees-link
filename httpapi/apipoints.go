@@ -7,8 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
+	"github.com/ksvaza/ees-link/fakedb"
+
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/db"
+	"github.com/ksvaza/ees-link/models"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -76,13 +81,32 @@ func TestPointTestAPI(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	// Read the request body and return it as the response
 	_, err := io.ReadAll(r.Body)
 	if err != nil {
-		errorHandler(w, err, http.StatusInternalServerError)
+		errorHandler(w, errors.Wrap(err, "failed to read request body"), http.StatusInternalServerError)
 		return
 	}
 	defer r.Body.Close()
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<h1>Hello, this is a test API!</h1>\n"))
+}
+
+func TestDatabase(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("TestPointTestAPI called %+v", ps)
+
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	realDB := fakedb.FSDatabase{}
+	err := realDB.TestHealthiness(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to test database health")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         "Database is healthy",
+	}, nil
 }
 
 // tīri tests formu saņemšanai, vēlāk varētu būt noderīgi, lai saņemtu datus no frontend formas
@@ -403,42 +427,22 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Pieteikumi
 // ----------
 
-type applicantStatus string
-
-const (
-	InProcess applicantStatus = "in_process"
-	Accepted  applicantStatus = "accepted"
-	Denied    applicantStatus = "denied"
-)
-
-type applicant struct {
-	ID         string      `json:"id"`
-	TeamName   string      `json:"teamName"`
-	School     string      `json:"school"`
-	Members    int         `json:"members"`
-	Supervisor string      `json:"supervisor"`
-	AplliedAt  pgtype.Date `json:"appliedAt"`
-	Status     string      `json:"status"`
-}
-
 func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 
-	var applications []applicant
-	applications = append(applications, applicant{
-		ID:         "1",
-		TeamName:   "Team A",
-		School:     "School X",
-		Members:    4,
-		Supervisor: "Supervisor Y",
-		AplliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
-		Status:     string(InProcess),
-	})
+	//realDB := fakedb.FSDatabase{}
 
-	logrus.Info("Returning applications data")
+	realDB := db.RealDB{}
+
+	//db.GetAllApplicants()
+
+	applications, err := realDB.GetAllApplications(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAllApplications")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
@@ -452,7 +456,7 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant applicant
+	var newApplicant models.RegistrationFormData
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -461,9 +465,22 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	if err := json.Unmarshal(body, &newApplicant); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
+	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
+	newApplicant.AppliedAt = time.Now()
+	realDB := db.RealDB{}
+
+	fmt.Printf("Registering new applicant:\n")
 
 	// New application handling logic here (e.g., save to database)
+
 	logrus.Infof("Received new application: %+v", newApplicant)
+
+	//realDB := fakedb.FSDatabase{}
+
+	err = realDB.RegisterNewApplication(r.Context(), newApplicant)
+	if err != nil {
+		return nil, errors.Wrap(err, "AddApplication")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
@@ -482,10 +499,15 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.New("missing application ID")
 	}
 
-	// Get application by ID from database (not implemented, just a placeholder)
+	logrus.Infof("Patching application with ID: %s", ID)
 
-	// Check if application exists (not implemented, just a placeholder)
-	var existingApplication applicant
+	realDB := db.RealDB{}
+
+	// Get application by ID from database
+	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetApplicationByID")
+	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -498,6 +520,10 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 
 	// Application patching handling logic here (e.g., save to database)
 	logrus.Infof("Received application update: %+v", existingApplication)
+	err = realDB.UpdateApplication(r.Context(), existingApplication)
+	if err != nil {
+		return nil, errors.Wrap(err, "UpdateApplication")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

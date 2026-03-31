@@ -1,12 +1,8 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"reflect"
-	"time"
 
-	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
@@ -38,13 +34,13 @@ func main() {
 
 	logrus.Info("\nSveika, pasaule!\n")
 
-	for i := 0; i < 5; i++ {
-		logrus.Tracef("Trace %d", i)
-		logrus.Debugf("Debug %d", i)
-		logrus.Infof("Info %d", i)
-		logrus.Warnf("Warn %d", i)
-		logrus.Errorf("Error %d", i)
-	}
+	// for i := 0; i < 5; i++ {
+	// 	logrus.Tracef("Trace %d", i)
+	// 	logrus.Debugf("Debug %d", i)
+	// 	logrus.Infof("Info %d", i)
+	// 	logrus.Warnf("Warn %d", i)
+	// 	logrus.Errorf("Error %d", i)
+	// }
 
 	// sudi
 
@@ -104,7 +100,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("sucess")
+	fmt.Println("success")
 
 	logrus.Info("\nSveika, http aplikācija!\n")
 

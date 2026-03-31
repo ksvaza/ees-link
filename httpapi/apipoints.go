@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
+	"github.com/ksvaza/ees-link/fakedb"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -403,42 +405,17 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // Pieteikumi
 // ----------
 
-type applicantStatus string
-
-const (
-	InProcess applicantStatus = "in_process"
-	Accepted  applicantStatus = "accepted"
-	Denied    applicantStatus = "denied"
-)
-
-type applicant struct {
-	ID         string      `json:"id"`
-	TeamName   string      `json:"teamName"`
-	School     string      `json:"school"`
-	Members    int         `json:"members"`
-	Supervisor string      `json:"supervisor"`
-	AplliedAt  pgtype.Date `json:"appliedAt"`
-	Status     string      `json:"status"`
-}
-
 func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetApplications called %+v", ps)
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 
-	var applications []applicant
-	applications = append(applications, applicant{
-		ID:         "1",
-		TeamName:   "Team A",
-		School:     "School X",
-		Members:    4,
-		Supervisor: "Supervisor Y",
-		AplliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
-		Status:     string(InProcess),
-	})
-
-	logrus.Info("Returning applications data")
+	var applications []fakedb.RegistrationFormData
+	applications, err := fakedb.GetAllApplications()
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAllApplications")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
@@ -452,7 +429,7 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant applicant
+	var newApplicant fakedb.RegistrationFormData
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -462,8 +439,15 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 
+	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
+	newApplicant.AplliedAt = time.Now()
+
 	// New application handling logic here (e.g., save to database)
 	logrus.Infof("Received new application: %+v", newApplicant)
+	err = fakedb.AddApplication(newApplicant)
+	if err != nil {
+		return nil, errors.Wrap(err, "AddApplication")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
@@ -483,9 +467,13 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 	}
 
 	// Get application by ID from database (not implemented, just a placeholder)
-
-	// Check if application exists (not implemented, just a placeholder)
-	var existingApplication applicant
+	existingApplication, err := fakedb.GetApplicationByID(ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetApplicationByID")
+	}
+	if existingApplication == nil {
+		return nil, errors.New("application not found")
+	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -498,6 +486,10 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 
 	// Application patching handling logic here (e.g., save to database)
 	logrus.Infof("Received application update: %+v", existingApplication)
+	err = fakedb.AddApplication(*existingApplication)
+	if err != nil {
+		return nil, errors.Wrap(err, "AddApplication")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

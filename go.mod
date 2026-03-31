@@ -31,6 +31,8 @@ require (
 )
 
 require (
+	github.com/google/uuid v1.6.0
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/spf13/viper v1.21.0
 	golang.org/x/sys v0.42.0 // indirect

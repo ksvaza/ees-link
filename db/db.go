@@ -18,16 +18,15 @@ import (
 var schema string
 var Pool *pgxpool.Pool
 
-func MigrateUp(ctx context.Context, pool *pgxpool.Pool, dbURL string) error {
+func MigrateUp(ctx context.Context, dbURL string) error {
 	var err error
 	Pool, err = pgxpool.New(ctx, dbURL)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to create DB pool")
 		return err
 	}
-	// Example migration: add a new column to an existing table
-	fmt.Println("Running migration...")
-	_, err = pool.Exec(ctx, schema)
+
+	_, err = Pool.Exec(ctx, schema)
 	if err != nil {
 		fmt.Println("Migration failed:")
 		logrus.WithError(err).Error("Failed to run migration")
@@ -44,12 +43,14 @@ func WriteApplicantTable(ctx context.Context, pool *pgxpool.Pool, newApplicant m
 		newApplicant.School,     // $3 - school
 		newApplicant.Members,    // $4 - members
 		newApplicant.Supervisor, // $5 - supervisor
-		newApplicant.AplliedAt,  // $6 - applied_at
+		newApplicant.AppliedAt,  // $6 - applied_at
 		"pending")
 
 	if err != nil {
 		logrus.WithError(err).Error("Failed to write to applicants table")
 	}
+
+	logrus.Info("Applicant written to DB successfully")
 
 	return err
 }

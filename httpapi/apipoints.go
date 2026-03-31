@@ -428,7 +428,7 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		School:     "School X",
 		Members:    4,
 		Supervisor: "Supervisor Y",
-		AplliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
+		AppliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
 		Status:     string(InProcess),
 	})
 
@@ -458,7 +458,6 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 
 	db.WriteApplicantTable(r.Context(), db.Pool, newApplicant)
 
-	// New application handling logic here (e.g., save to database)
 	logrus.Infof("Received new application: %+v", newApplicant)
 
 	return &httpResult{

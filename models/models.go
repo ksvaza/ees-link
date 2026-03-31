@@ -8,6 +8,6 @@ type Applicant struct {
 	School     string      `json:"school"`
 	Members    int         `json:"members"`
 	Supervisor string      `json:"supervisor"`
-	AplliedAt  pgtype.Date `json:"appliedAt"`
+	AppliedAt  pgtype.Date `json:"appliedAt"`
 	Status     string      `json:"status"`
 }

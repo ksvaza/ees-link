@@ -118,7 +118,7 @@ func setupHTTPHost(router *httprouter.Router) error {
 			return
 		}
 
-		redirectHTTPToHTTPS(w, r)
+		//redirectHTTPToHTTPS(w, r)
 
 		path := filepath.Join("public", filepath.Clean(r.URL.Path))
 		if strings.HasPrefix(path, "../") || strings.Contains(path, "/../") {

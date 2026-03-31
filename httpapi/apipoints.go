@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
@@ -421,16 +419,14 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		return nil, errors.New("method not allowed")
 	}
 
-	var applications []models.Applicant
-	applications = append(applications, models.Applicant{
-		ID:         "1",
-		TeamName:   "Team A",
-		School:     "School X",
-		Members:    4,
-		Supervisor: "Supervisor Y",
-		AppliedAt:  pgtype.Date{Time: time.Now(), Valid: true},
-		Status:     string(InProcess),
-	})
+	realDB := db.RealDB{}
+
+	//db.GetAllApplicants()
+
+	applications, err := realDB.GetAllApplications(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAllApplications")
+	}
 
 	logrus.Info("Returning applications data")
 
@@ -446,7 +442,7 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant models.Applicant
+	var newApplicant models.RegistrationFormData
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -456,7 +452,11 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 
-	db.WriteApplicantTable(r.Context(), db.Pool, newApplicant)
+	realDB := db.RealDB{}
+
+	fmt.Printf("Registering new applicant:\n")
+
+	realDB.RegisterNewApplicant(r.Context(), newApplicant)
 
 	logrus.Infof("Received new application: %+v", newApplicant)
 
@@ -477,14 +477,20 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.New("missing application ID")
 	}
 
+	realDB := db.RealDB{}
+
+	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetApplicationByID")
+	}
+
 	// Get application by ID from database (not implemented, just a placeholder)
 
 	// Check if application exists (not implemented, just a placeholder)
-	var existingApplication models.Applicant
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "Read body")
+	body, e := io.ReadAll(r.Body)
+	if e != nil {
+		return nil, errors.Wrap(e, "Read body")
 	}
 
 	if err := json.Unmarshal(body, &existingApplication); err != nil {
@@ -493,6 +499,10 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 
 	// Application patching handling logic here (e.g., save to database)
 	logrus.Infof("Received application update: %+v", existingApplication)
+	err = realDB.UpdateApplication(r.Context(), existingApplication)
+	if err != nil {
+		return nil, errors.Wrap(err, "UpdateApplication")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

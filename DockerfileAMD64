@@ -13,6 +13,7 @@ COPY ./envreader /go/src/envreader
 COPY ./httpapi /go/src/httpapi
 COPY ./db /go/src/db
 COPY ./models /go/src/models
+COPY ./data /go/src/data
 RUN tree /go/src
 RUN go build -o ees-link cmd/ees-link/main.go
 

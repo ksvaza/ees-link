@@ -6,6 +6,7 @@ import (
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/envreader"
+	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -105,15 +106,6 @@ func main() {
 				}
 			}
 
-			fmt.Println("sucess")
-
-			logrus.Info("\nSveika, http aplikācija!\n")
-
-			err = httpapi.SetupHTTPAPI()
-			if err != nil {
-				logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
-			}
-
 	*/
 
 	ctx := context.Background()
@@ -126,17 +118,17 @@ func main() {
 		envreader.GetEnvString("POSTGRES_PASSWORD"),
 		envreader.GetEnvString("POSTGRES_DB"))
 
-	fmt.Println(dbURL)
-
-	logrus.Infof("kkas strada")
-
-	e := db.MigrateUp(ctx, db.Pool, dbURL)
-
-	fmt.Println("Migrated up")
-
+	e := db.MigrateUp(ctx, dbURL)
 	if e != nil {
 		logrus.WithError(err).Error("Failed to migrate up")
 		return
+	}
+
+	logrus.Info("\nSveika, http aplikācija!\n")
+
+	err = httpapi.SetupHTTPAPI()
+	if err != nil {
+		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
 	}
 
 	for {

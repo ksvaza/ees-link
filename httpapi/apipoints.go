@@ -471,6 +471,12 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 
 	fmt.Printf("Registering new applicant:\n")
 
+	// FS Backup
+	err = fakedb.BackupApplication(newApplicant)
+	if err != nil {
+		return nil, errors.Wrap(err, "BackupApplication")
+	}
+
 	// New application handling logic here (e.g., save to database)
 
 	logrus.Infof("Received new application: %+v", newApplicant)

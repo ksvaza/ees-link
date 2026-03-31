@@ -11,6 +11,10 @@ type FSDatabase struct {
 	ctx context.Context
 }
 
+func BackupApplication(a models.RegistrationFormData) error {
+	return createApplicationFile(a)
+}
+
 func (db *FSDatabase) TestHealthiness(ctx context.Context) error {
 	return testExistance()
 }

@@ -7,9 +7,7 @@ import (
 	"github.com/ksvaza/ees-link/models"
 )
 
-type FSDatabase struct {
-	ctx context.Context
-}
+type FSDatabase struct{}
 
 func BackupApplication(a models.RegistrationFormData) error {
 	return createApplicationFile(a)

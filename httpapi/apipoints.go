@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/fakedb"
 
 	"github.com/julienschmidt/httprouter"
@@ -97,7 +98,8 @@ func TestDatabase(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
-	realDB := fakedb.FSDatabase{}
+	var realDB data.Database
+	realDB = &fakedb.FSDatabase{}
 	err := realDB.TestHealthiness(r.Context())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to test database health")
@@ -545,7 +547,8 @@ func PointGetApplicationsRestricted(r *http.Request, ps httprouter.Params) (*htt
 
 	//realDB := fakedb.FSDatabase{}
 
-	realDB := db.RealDB{}
+	var realDB data.Database
+	realDB = &db.RealDB{}
 
 	//db.GetAllApplicants()
 

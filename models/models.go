@@ -51,6 +51,7 @@ type Account struct {
 	Username    string     `json:"lietotajvards"`
 	Email       string     `json:"epasts"`
 	PhoneNumber string     `json:"telefonanumurs"`
+	Salt        string     `json:"salt"`
 }
 
 type AccountApplication struct {
@@ -61,4 +62,9 @@ type AccountApplication struct {
 	Email       string `json:"epasts"`
 	PhoneNumber string `json:"telefonanumurs"`
 	TeamName    string `json:"komandasNosaukums"`
+}
+
+type AuthenticationResponse struct {
+	Account *Account `json:"account"`
+	Err     error    `json:"error"`
 }

@@ -55,4 +55,10 @@ func Authenticate(r *http.Request) (*models.Account, error) {
 	if err != nil {
 		return nil, errors.New("unauthorized")
 	}
+
+	if hashPassword(password, a.Salt) != a.Password {
+		return nil, errors.New("unauthorized")
+	}
+
+	return &a, nil
 }

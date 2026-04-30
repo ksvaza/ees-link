@@ -43,6 +43,8 @@ func test(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 func Handler(fn func(r *http.Request, ps httprouter.Params) (*httpResult, error)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// authenticate
+
 		result, err := fn(r, ps)
 		if err != nil {
 			errorHandler(w, err, http.StatusInternalServerError)

@@ -5,15 +5,10 @@ import (
 	"encoding/hex"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/db"
+	"github.com/ksvaza/ees-link/models"
 	"github.com/pkg/errors"
 )
-
-type user struct {
-	Username     string
-	PasswordHash string
-	Salt         string
-}
 
 func hashPassword(password, salt string) string {
 	h := sha512.New()
@@ -21,24 +16,7 @@ func hashPassword(password, salt string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func lookupUser(username string) (*user, error) {
-	// TODO: replace with actual DB lookup
-	// return db.GetUserByUsername(ctx, username)
-
-	stubSalt := "randomsalt123"
-	stubHash := hashPassword("password123", stubSalt)
-
-	if username == "admin" {
-		return &user{
-			Username:     "admin",
-			PasswordHash: stubHash,
-			Salt:         stubSalt,
-		}, nil
-	}
-
-	return nil, errors.New("user not found")
-}
-
+/*
 func BasicAuth(next httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		username, password, ok := r.BasicAuth()
@@ -62,5 +40,19 @@ func BasicAuth(next httprouter.Handle) httprouter.Handle {
 		}
 
 		next(w, r, ps)
+	}
+}
+*/
+
+func Authenticate(r *http.Request) (*models.Account, error) {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		return nil, errors.New("unauthorized")
+	}
+
+	database := db.RealDB{}
+	a, err := database.GetAccountByUsername(r.Context(), username)
+	if err != nil {
+		return nil, errors.New("unauthorized")
 	}
 }

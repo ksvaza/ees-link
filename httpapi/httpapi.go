@@ -18,7 +18,8 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth
-	router.POST("/api/login", PointLogin)
+	router.POST("/api/register", Handler(PointRegister))
+	router.POST("/api/login", Handler(PointLogin))
 
 	// Users
 	router.GET("/api/users", PointGetUsers)

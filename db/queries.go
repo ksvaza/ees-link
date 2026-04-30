@@ -51,4 +51,7 @@ const (
 		INSERT INTO kontu_pieteikumi (
 			full_name = $1, date_of_birth = $2, password = $3, username = $4, email = $5, phone_number = $6, team_name = $7 )`
 
+	AccountReadRequestByUsername = `
+		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		FROM konti WHERE username = $1`
 )

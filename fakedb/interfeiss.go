@@ -62,3 +62,23 @@ func (db *FSDatabase) UpdateApplication(ctx context.Context, updatedApplicant mo
 	}
 	return addApplication(updatedApplicant)
 }
+
+func (db *FSDatabase) RegisterNewAccount(ctx context.Context, newAccount models.Account) error {
+	return nil
+}
+
+func (db *FSDatabase) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) (models.AccountApplication, error) {
+	return newAccountApplication, nil
+}
+
+func (db *FSDatabase) GetAccountByUsername(ctx context.Context, username string) (models.Account, error) {
+	return models.Account{}, nil
+}
+
+func (db *FSDatabase) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
+	return models.Account{}, nil
+}
+
+func (db *FSDatabase) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
+	return models.Account{}, nil
+}

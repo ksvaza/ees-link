@@ -14,4 +14,12 @@ type Database interface {
 
 	RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error
 	UpdateApplication(ctx context.Context, updatedApplicant models.RegistrationFormData) error
+
+	RegisterNewAccount(ctx context.Context, newAccount models.Account) error
+
+	RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) (models.AccountApplication, error)
+
+	GetAccountByUsername(ctx context.Context, username string) (models.Account, error)
+	GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error)
+	GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error)
 }

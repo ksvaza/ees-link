@@ -275,7 +275,7 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	return newAccountApplication, nil
 }
 
-func (DB *RealDB) GetKontiByFullname(ctx context.Context, fullname string) (models.Account, error) {
+func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
 	rows, err := Pool.Query(ctx, AccountReadRequestByFullname, fullname)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query accounts table")
@@ -308,7 +308,40 @@ func (DB *RealDB) GetKontiByFullname(ctx context.Context, fullname string) (mode
 	return a, nil
 }
 
-func (DB *RealDB) GetKontiByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
+func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequestByUsername, username)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query accounts table")
+		return models.Account{}, err
+	}
+	defer rows.Close()
+
+	var a models.Account
+	for rows.Next() {
+		err = rows.Scan(
+			&a.Cilveks.Key,
+			&a.Cilveks.FullName,
+			&a.Cilveks.DateOfBirth,
+			&a.Cilveks.EducationalInstitution,
+			&a.Cilveks.Role,
+			&a.Cilveks.ClassOrYear,
+			&a.Cilveks.ID,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+		)
+	}
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to scan account row")
+		return models.Account{}, err
+	}
+
+	return a, nil
+}
+
+func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
 	rows, err := Pool.Query(ctx, AccountReadRequestByDateOfBirth, dateOfBirth)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query accounts table")

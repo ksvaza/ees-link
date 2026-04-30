@@ -38,6 +38,9 @@ func test(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	// if account != nil {
 	// 	logrus.Infof("Authenticated account: %+v", account)
 	// }
+	// if account.Cilveks.Role != "admin" {
+	// 	return nil, errors.New("forbidden")
+	// }
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

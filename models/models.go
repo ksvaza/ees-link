@@ -46,16 +46,16 @@ type RegistrationFormDataRestricted struct {
 }
 
 type Konts struct {
-	Cilveks TeamMember `json:"dati"`
-	Parole         string `json:"parole"`
-	Lietotajvards  string `json:"lietotajvards"`
-	Epasts         string `json:"epasts"`
-	Telefonanumurs string `json:"telefonanumurs"`
+	Cilveks        TeamMember `json:"dati"`
+	Parole         string     `json:"parole"`
+	Lietotajvards  string     `json:"lietotajvards"`
+	Epasts         string     `json:"epasts"`
+	Telefonanumurs string     `json:"telefonanumurs"`
 }
 
 type KontaPieteikums struct {
 	FullName       string `json:"fullName"`
-	DateOfBirth    string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
+	DateOfBirth    string `json:"dateOfBirth"` // Sakrīt ar formātu "GGGG-MM-DD".
 	Parole         string `json:"parole"`
 	Lietotajvards  string `json:"lietotajvards"`
 	Epasts         string `json:"epasts"`

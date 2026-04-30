@@ -45,19 +45,20 @@ type RegistrationFormDataRestricted struct {
 	Status      string    `json:"status"`
 }
 
-type Konts struct {
+type Account struct {
 	Cilveks TeamMember `json:"dati"`
-	Parole         string `json:"parole"`
-	Lietotajvards  string `json:"lietotajvards"`
-	Epasts         string `json:"epasts"`
-	Telefonanumurs string `json:"telefonanumurs"`
+	Password         string `json:"parole"`
+	Username  string `json:"lietotajvards"`
+	Email         string `json:"epasts"`
+	PhoneNumber string `json:"telefonanumurs"`
 }
 
-type KontaPieteikums struct {
+type AccountApplication struct {
 	FullName       string `json:"fullName"`
 	DateOfBirth    string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
-	Parole         string `json:"parole"`
-	Lietotajvards  string `json:"lietotajvards"`
-	Epasts         string `json:"epasts"`
-	Telefonanumurs string `json:"telefonanumurs"`
+	Password         string `json:"parole"`
+	Username  string `json:"lietotajvards"`
+	Email         string `json:"epasts"`
+	PhoneNumber string `json:"telefonanumurs"`
+	TeamName string `json:"komandasNosaukums"`
 }

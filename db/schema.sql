@@ -19,3 +19,24 @@ CREATE TABLE IF NOT EXISTS applicants (
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status TEXT NOT NULL DEFAULT 'pending'
 );
+
+CREATE TABLE IF NOT EXISTS konti (
+    key TEXT PRIMARY KEY,
+    fullname TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL,
+    id TEXT NOT NULL,
+    password TEXT NOT NULL,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone_number TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
+    fullname TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL,
+    password TEXT NOT NULL,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone_number TEXT NOT NULL,
+    team_name TEXT NOT NULL
+);

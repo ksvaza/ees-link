@@ -33,4 +33,22 @@ const (
 			confirm_truthful = $9, confirm_rules = $10, confirm_media = $11, applied_at = $12,
 			status = $13
 		WHERE id = $14`
+
+	AccountWriteRequest = `
+		INSERT INTO konti (
+			id = $1, full_name = $2, date_of_birth = $3, password = $4, username = $5, email = $6, phone_number = $7
+		)`
+
+	AccountReadRequestByFullname = `
+		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		FROM konti WHERE full_name = $1`
+
+	AccountReadRequestByDateOfBirth = `
+		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		FROM konti WHERE date_of_birth = $1`
+
+	AccountApplicationWriteRequest = `
+		INSERT INTO kontu_pieteikumi (
+			full_name = $1, date_of_birth = $2, password = $3, username = $4, email = $5, phone_number = $6, team_name = $7 )`
+
 )

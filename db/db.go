@@ -373,3 +373,35 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 
 	return a, nil
 }
+
+func (Db *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
+	rows, err := Pool.Query(ctx, AccountApplicationReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query account applications table")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accountApplications []models.AccountApplication
+	for rows.Next() {
+		var a models.AccountApplication
+		err = rows.Scan(
+			&a.FullName,
+			&a.DateOfBirth,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.TeamName,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account application row")
+
+			return nil, err
+		}
+		accountApplications = append(accountApplications, a)
+	}
+
+	return accountApplications, nil
+}
+

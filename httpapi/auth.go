@@ -1,11 +1,13 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -32,7 +34,9 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	// TODO: Implement registration logic here, e.g. validate input, check for existing user, hash password, save to database, etc.
 
-	//realDB := db.RealDB{}
+	realDB := db.RealDB{}
+
+	realDB.RegisterNewAccountApplication(context.Background(), pieteikums)
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
@@ -47,4 +51,37 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	}
 	// TODO: implement login
 	return nil, errors.New("not implemented")
+}
+
+func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointGetAccountApplications called %+v", ps)
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	realDB := db.RealDB{}
+	accountApplications, err := realDB.GetAccountApplications(context.Background())
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get account applications")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         accountApplications,
+	}, nil
+}
+
+func PointReceiveVerifiedAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointReceiveVerifiedAccounts called %+v", ps)
+	if r.Method != http.MethodGet {
+		return nil, errors.New("method not allowed")
+	}
+
+	
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         accounts,
+	}, nil
 }

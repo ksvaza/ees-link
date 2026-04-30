@@ -1,13 +1,29 @@
 package httpapi
 
 import (
+	"crypto/rand"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 )
+
+func GenerateSalt(size int) (string, error) {
+	if size <= 0 {
+		size = 16
+	}
+
+	salt := make([]byte, size)
+	if _, err := rand.Read(salt); err != nil {
+		return "", fmt.Errorf("failed to generate random salt: %w", err)
+	}
+
+	return base64.RawStdEncoding.EncodeToString(salt), nil
+}
 
 type user struct {
 	Username     string

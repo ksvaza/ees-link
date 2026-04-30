@@ -54,4 +54,8 @@ const (
 	AccountReadRequestByUsername = `
 		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
 		FROM konti WHERE username = $1`
+
+		AccountApplicationReadRequest = `
+		SELECT id, full_name, date_of_birth, password, username, email, phone_number, team_name
+		FROM kontu_pieteikumi`
 )

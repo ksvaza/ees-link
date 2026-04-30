@@ -43,3 +43,4 @@ type RegistrationFormDataRestricted struct {
 	AppliedAt		 time.Time `json:"appliedAt"`
 	Status			 string `json:"status"`
 }
+

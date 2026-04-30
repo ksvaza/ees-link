@@ -63,8 +63,3 @@ type AccountApplication struct {
 	PhoneNumber string `json:"telefonanumurs"`
 	TeamName    string `json:"komandasNosaukums"`
 }
-
-type AuthenticationResponse struct {
-	Account *Account `json:"account"`
-	Err     error    `json:"error"`
-}

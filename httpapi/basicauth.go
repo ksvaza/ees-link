@@ -1,13 +1,14 @@
 package httpapi
 
 import (
+	"context"
 	"crypto/sha512"
 	"encoding/hex"
 	"net/http"
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 func hashPassword(password, salt string) string {
@@ -16,49 +17,44 @@ func hashPassword(password, salt string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-/*
-func BasicAuth(next httprouter.Handle) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		username, password, ok := r.BasicAuth()
-		if !ok {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
-			errorHandler(w, errors.New("unauthorized"), http.StatusUnauthorized)
-			return
-		}
+type contextKeyT string
 
-		u, err := lookupUser(username)
-		if err != nil {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
-			errorHandler(w, errors.New("unauthorized"), http.StatusUnauthorized)
-			return
-		}
+var accountKey = contextKeyT("account")
 
-		if hashPassword(password, u.Salt) != u.PasswordHash {
-			w.Header().Set("WWW-Authenticate", `Basic realm="restricted"`)
-			errorHandler(w, errors.New("unauthorized"), http.StatusUnauthorized)
-			return
-		}
-
-		next(w, r, ps)
-	}
+func WithAccount(ctx context.Context, account *models.Account) context.Context {
+	return context.WithValue(ctx, accountKey, account)
 }
-*/
 
-func Authenticate(r *http.Request) (*models.Account, error) {
+func GetAccount(ctx context.Context) *models.Account {
+	account, ok := ctx.Value(accountKey).(*models.Account)
+	if !ok {
+		return nil
+	}
+	return account
+}
+
+func Authenticate(r *http.Request) *http.Request {
+	ctx := r.Context()
+
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		return nil, errors.New("unauthorized")
+		return r
 	}
 
 	database := db.RealDB{}
-	a, err := database.GetAccountByUsername(r.Context(), username)
+	a, err := database.GetAccountByUsername(ctx, username)
 	if err != nil {
-		return nil, errors.New("unauthorized")
+		logrus.WithError(err).Error("Failed to get account by username")
+		return r
 	}
 
 	if hashPassword(password, a.Salt) != a.Password {
-		return nil, errors.New("unauthorized")
+		return r
 	}
 
-	return &a, nil
+	ctx = WithAccount(ctx, &a)
+	r = r.WithContext(ctx)
+
+	return r
+
 }

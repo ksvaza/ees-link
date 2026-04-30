@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/fakedb"
+	"github.com/ksvaza/ees-link/models"
 
 	"github.com/julienschmidt/httprouter"
 
@@ -43,6 +45,13 @@ func test(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 func Handler(fn func(r *http.Request, ps httprouter.Params) (*httpResult, error)) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		// authenticate
+		var resp models.AuthenticationResponse
+		resp.Account, resp.Err = Authenticate(r)
+
+		ctx := context.WithValue(r.Context(), "resp", resp)
+		r = r.WithContext(ctx)
+
 		result, err := fn(r, ps)
 		if err != nil {
 			errorHandler(w, err, http.StatusInternalServerError)

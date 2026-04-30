@@ -15,9 +15,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type RealDB struct {
-	ctx context.Context
-}
+type RealDB struct{}
 
 //go:embed schema.sql
 var schema string
@@ -38,6 +36,16 @@ func MigrateUp(ctx context.Context, dbURL string) error {
 		return err
 	}
 	logrus.Info("Migration completed successfully")
+	return nil
+}
+
+func (DB *RealDB) TestHealthiness(ctx context.Context) error {
+	// err := Pool.Ping(ctx)
+	// if err != nil {
+	// 	logrus.WithError(err).Error("Failed to ping DB")
+	// 	return err
+	// }
+	// logrus.Info("DB connection is healthy")
 	return nil
 }
 

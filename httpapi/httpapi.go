@@ -65,7 +65,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// ir -- Pieteikumi
 	//router.GET("/api/applications", BasicAuth(Handler(PointGetApplications)))
 	router.POST("/api/applications", Handler(PointPostApplications))
-	router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
+	//router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
 
 	// ierobežotie pieteikumi
 	router.GET("/api/applications", Handler(PointGetApplicationsRestricted))

@@ -62,4 +62,5 @@ type AccountApplication struct {
 	Email       string `json:"epasts"`
 	PhoneNumber string `json:"telefonanumurs"`
 	TeamName    string `json:"komandasNosaukums"`
+	Role        string `json:"role"`
 }

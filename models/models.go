@@ -51,7 +51,10 @@ type Account struct {
 	Username    string     `json:"lietotajvards"`
 	Email       string     `json:"epasts"`
 	PhoneNumber string     `json:"telefonanumurs"`
+<<<<<<< Updated upstream
 	Salt        string     `json:"salt"`
+=======
+>>>>>>> Stashed changes
 }
 
 type AccountApplication struct {

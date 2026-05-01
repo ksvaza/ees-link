@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/ksvaza/ees-link/models"
 	"github.com/sirupsen/logrus"
@@ -145,55 +146,58 @@ func (DB *RealDB) GetAllApplications(ctx context.Context) ([]models.Registration
 		applicants = append(applicants, a)
 	}
 
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating applicant rows")
+		return nil, err
+	}
+
+	if len(applicants) == 0 {
+		return nil, nil
+	}
+
 	return applicants, nil
 }
 
-func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (models.RegistrationFormData, error) {
-	rows, err := Pool.Query(ctx, ApplicantReadRequestByID, id)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to query applicants table")
-		return models.RegistrationFormData{}, err
-	}
-	defer rows.Close()
-
+func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (*models.RegistrationFormData, error) {
+	a := &models.RegistrationFormData{}
 	var membersRaw []byte
 	var ResponsiblePersonRaw []byte
 
-	var a models.RegistrationFormData
-	for rows.Next() {
-		err := rows.Scan(
-			&a.ID,
-			&a.TeamName,
-			&a.AgeGroup,
-			&a.Institution,
-			&a.CityOrRegion,
-			&membersRaw,
-			&ResponsiblePersonRaw,
-			&a.HowHeardAbout,
-			&a.Comments,
-			&a.ConfirmTruthful,
-			&a.ConfirmRules,
-			&a.ConfirmMedia,
-			&a.AppliedAt,
-			&a.Status,
-		)
+	err := Pool.QueryRow(ctx, ApplicantReadRequestByID, id).Scan(
+		&a.ID,
+		&a.TeamName,
+		&a.AgeGroup,
+		&a.Institution,
+		&a.CityOrRegion,
+		&membersRaw,
+		&ResponsiblePersonRaw,
+		&a.HowHeardAbout,
+		&a.Comments,
+		&a.ConfirmTruthful,
+		&a.ConfirmRules,
+		&a.ConfirmMedia,
+		&a.AppliedAt,
+		&a.Status,
+	)
 
-		if err != nil {
-			logrus.WithError(err).Error("Failed to scan applicant row")
-			return models.RegistrationFormData{}, err
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
 		}
+		logrus.WithError(err).Error("Failed to scan applicant row")
+		return nil, err
+	}
 
-		err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
-			return models.RegistrationFormData{}, err
-		}
+	err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
+		return nil, err
+	}
 
-		err = json.Unmarshal(membersRaw, &a.Members)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to unmarshal members JSON")
-			return models.RegistrationFormData{}, err
-		}
+	err = json.Unmarshal(membersRaw, &a.Members)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal members JSON")
+		return nil, err
 	}
 
 	return a, nil
@@ -275,100 +279,80 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	return newAccountApplication, nil
 }
 
-func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
-	rows, err := Pool.Query(ctx, AccountReadRequestByFullname, fullname)
+func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByFullname, fullname).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.EducationalInstitution,
+		&a.Cilveks.Role,
+		&a.Cilveks.ClassOrYear,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+	)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to query accounts table")
-		return models.Account{}, err
-	}
-	defer rows.Close()
-
-	var a models.Account
-	for rows.Next() {
-		err = rows.Scan(
-			&a.Cilveks.Key,
-			&a.Cilveks.FullName,
-			&a.Cilveks.DateOfBirth,
-			&a.Cilveks.EducationalInstitution,
-			&a.Cilveks.Role,
-			&a.Cilveks.ClassOrYear,
-			&a.Cilveks.ID,
-			&a.Password,
-			&a.Username,
-			&a.Email,
-			&a.PhoneNumber,
-		)
-	}
-
-	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		logrus.WithError(err).Error("Failed to scan account row")
-		return models.Account{}, err
+		return nil, err
 	}
 
 	return a, nil
 }
 
-func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (models.Account, error) {
-	rows, err := Pool.Query(ctx, AccountReadRequestByUsername, username)
+func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByUsername, username).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.EducationalInstitution,
+		&a.Cilveks.Role,
+		&a.Cilveks.ClassOrYear,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+	)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to query accounts table")
-		return models.Account{}, err
-	}
-	defer rows.Close()
-
-	var a models.Account
-	for rows.Next() {
-		err = rows.Scan(
-			&a.Cilveks.Key,
-			&a.Cilveks.FullName,
-			&a.Cilveks.DateOfBirth,
-			&a.Cilveks.EducationalInstitution,
-			&a.Cilveks.Role,
-			&a.Cilveks.ClassOrYear,
-			&a.Cilveks.ID,
-			&a.Password,
-			&a.Username,
-			&a.Email,
-			&a.PhoneNumber,
-		)
-	}
-
-	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		logrus.WithError(err).Error("Failed to scan account row")
-		return models.Account{}, err
+		return nil, err
 	}
 
 	return a, nil
 }
 
-func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
-	rows, err := Pool.Query(ctx, AccountReadRequestByDateOfBirth, dateOfBirth)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to query accounts table")
-		return models.Account{}, err
-	}
-	defer rows.Close()
-
-	var a models.Account
-	for rows.Next() {
-		err = rows.Scan(
-			&a.Cilveks.Key,
-			&a.Cilveks.FullName,
-			&a.Cilveks.DateOfBirth,
-			&a.Cilveks.EducationalInstitution,
-			&a.Cilveks.Role,
-			&a.Cilveks.ClassOrYear,
-			&a.Cilveks.ID,
-			&a.Password,
-			&a.Username,
-			&a.Email,
-			&a.PhoneNumber,
-		)
-	}
+func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByDateOfBirth, dateOfBirth).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.EducationalInstitution,
+		&a.Cilveks.Role,
+		&a.Cilveks.ClassOrYear,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+	)
 
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		logrus.WithError(err).Error("Failed to scan account row")
-		return models.Account{}, err
+		return nil, err
 	}
 
 	return a, nil
@@ -396,10 +380,18 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account application row")
-
 			return nil, err
 		}
 		accountApplications = append(accountApplications, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account application rows")
+		return nil, err
+	}
+
+	if len(accountApplications) == 0 {
+		return nil, nil
 	}
 
 	return accountApplications, nil
@@ -451,31 +443,33 @@ func (DB *RealDB) GetAllAdmins(ctx context.Context) ([]models.AdminAccount, erro
 		admins = append(admins, a)
 	}
 
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating admin account rows")
+		return nil, err
+	}
+
+	if len(admins) == 0 {
+		return nil, nil
+	}
+
 	return admins, nil
 }
 
 func (DB *RealDB) GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error) {
-	rows, err := Pool.Query(ctx, AdminAccountReadRequestByUsername, username)
+	a := &models.AdminAccount{}
+	err := Pool.QueryRow(ctx, AdminAccountReadRequestByUsername, username).Scan(
+		&a.Username,
+		&a.Password,
+		&a.Salt,
+		&a.Superadmin,
+	)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to query admin accounts table")
-		return nil, err
-	}
-	defer rows.Close()
-
-	var a models.AdminAccount
-	for rows.Next() {
-		err = rows.Scan(
-			&a.Username,
-			&a.Password,
-			&a.Salt,
-			&a.Superadmin,
-		)
-	}
-
-	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
 		logrus.WithError(err).Error("Failed to scan admin account row")
 		return nil, err
 	}
 
-	return &a, nil
+	return a, nil
 }

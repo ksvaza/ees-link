@@ -105,18 +105,22 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.Wrap(err, "GetApplicationByID")
 	}
 
+	if existingApplication == nil {
+		return nil, errors.New("application not found")
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
 	}
 
-	if err := json.Unmarshal(body, &existingApplication); err != nil {
+	if err := json.Unmarshal(body, existingApplication); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 
 	// Application patching handling logic here (e.g., save to database)
 	logrus.Infof("Received application update: %+v", existingApplication)
-	err = realDB.UpdateApplication(r.Context(), existingApplication)
+	err = realDB.UpdateApplication(r.Context(), *existingApplication)
 	if err != nil {
 		return nil, errors.Wrap(err, "UpdateApplication")
 	}

@@ -90,6 +90,9 @@ func Authenticate(r *http.Request) *http.Request {
 	}
 
 	if admin != nil {
+		if admin.Username == "" || admin.Password == "" || admin.Salt == "" {
+			return r
+		}
 		if hashPassword(password, admin.Salt) != admin.Password {
 			return r
 		}
@@ -104,11 +107,15 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
+	if a == nil {
+		return r
+	}
+
 	if hashPassword(password, a.Salt) != a.Password {
 		return r
 	}
 
-	ctx = WithAccount(ctx, &a)
+	ctx = WithAccount(ctx, a)
 	r = r.WithContext(ctx)
 
 	return r

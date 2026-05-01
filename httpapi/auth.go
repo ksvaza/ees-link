@@ -63,6 +63,7 @@ func RegisterAdminAccount(admin models.AdminAccount) error {
 	realDB := db.RealDB{}
 
 	admins, err := realDB.GetAllAdmins(context.Background())
+
 	if err != nil {
 		return errors.Wrap(err, "failed to get all admins")
 	}
@@ -93,7 +94,7 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 	adminaccount := GetAdminAccount(r.Context())
-	if adminaccount != nil {
+	if adminaccount != nil && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
 		logrus.Infof("Authenticated admin account: %+v", adminaccount)
 		return &httpResult{
 			ResponseType: http.StatusOK,
@@ -101,7 +102,7 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		}, nil
 	}
 	account := GetAccount(r.Context())
-	if account != nil {
+	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
 		logrus.Infof("Authenticated account: %+v", account)
 		return &httpResult{
 			ResponseType: http.StatusOK,

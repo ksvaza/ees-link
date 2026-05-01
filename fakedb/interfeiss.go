@@ -22,15 +22,15 @@ func (db *FSDatabase) GetAllApplications(ctx context.Context) ([]models.Registra
 	return getAllApplications()
 }
 
-func (db *FSDatabase) GetApplicationByID(ctx context.Context, id string) (models.RegistrationFormData, error) {
+func (db *FSDatabase) GetApplicationByID(ctx context.Context, id string) (*models.RegistrationFormData, error) {
 	app, err := getApplicationByID(id)
 	if err != nil {
-		return models.RegistrationFormData{}, err
+		return nil, err
 	}
 	if app == nil {
-		return models.RegistrationFormData{}, fmt.Errorf("application with ID '%s' not found", id)
+		return nil, nil
 	}
-	return *app, nil
+	return app, nil
 }
 
 func (db *FSDatabase) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
@@ -76,22 +76,22 @@ func (db *FSDatabase) RegisterNewAccountApplication(ctx context.Context, newAcco
 	return newAccountApplication, nil
 }
 
-func (db *FSDatabase) GetAccountByUsername(ctx context.Context, username string) (models.Account, error) {
+func (db *FSDatabase) GetAccountByUsername(ctx context.Context, username string) (*models.Account, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
-	return models.Account{}, nil
+	return nil, nil
 }
 
-func (db *FSDatabase) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
+func (db *FSDatabase) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (*models.Account, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
-	return models.Account{}, nil
+	return nil, nil
 }
 
-func (db *FSDatabase) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
+func (db *FSDatabase) GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
-	return models.Account{}, nil
+	return nil, nil
 }
 
 func (db *FSDatabase) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {

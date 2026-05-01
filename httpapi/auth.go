@@ -19,7 +19,7 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
-	id := ps.ByName("uniqueID") // e-es.lv/api/register?uniqueID=1234
+	//id := ps.ByName("uniqueID") // e-es.lv/api/register?uniqueID=1234
 
 	var pieteikums models.AccountApplication
 	body, err := io.ReadAll(r.Body)

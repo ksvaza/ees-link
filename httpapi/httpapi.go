@@ -18,7 +18,9 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth
-	router.POST("/api/login", PointLogin)
+	router.POST("/api/register", Handler(PointRegister))
+	router.GET("/api/login", Handler(PointLogin))
+	// TODO: add GET and POST rqeuests for account applications and verified accounts
 
 	// Users
 	router.GET("/api/users", PointGetUsers)
@@ -63,12 +65,10 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.DELETE("/api/events/:id", PointDeleteEventByID)
 
 	// ir -- Pieteikumi
-	//router.GET("/api/applications", BasicAuth(Handler(PointGetApplications)))
+	router.GET("/api/applications", Handler(PointGetApplications))
 	router.POST("/api/applications", Handler(PointPostApplications))
-	//router.PATCH("/api/applications/:id", BasicAuth(Handler(PointPatchApplicationByID)))
-
-	// ierobežotie pieteikumi
-	router.GET("/api/applications", Handler(PointGetApplicationsRestricted))
+	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
+	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

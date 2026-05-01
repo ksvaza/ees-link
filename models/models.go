@@ -9,6 +9,7 @@ type TeamMember struct {
 	EducationalInstitution string `json:"educationalInstitution"`
 	Role                   string `json:"role"`
 	ClassOrYear            string `json:"classOrYear"`
+	ID                     string `json:"id"`
 }
 
 // ResponsiblePerson represents the contact person details
@@ -36,11 +37,55 @@ type RegistrationFormData struct {
 	Status            string            `json:"status"`
 }
 
-type RegistrationFormDataRestricted struct {
-	TeamName 		 string `json:"teamName"`
-	Institution       *string           `json:"institution,omitempty"`
-	MemberCount	   int    `json:"memberCount"`
-	AppliedAt		 time.Time `json:"appliedAt"`
-	Status			 string `json:"status"`
+func (r RegistrationFormData) FindTeamMemberByFullName(fullName string) *TeamMember {
+	for _, member := range r.Members {
+		if member.FullName == fullName {
+			return &member
+		}
+	}
+	return nil
 }
 
+func (r RegistrationFormData) FindTeamLeader() *TeamMember {
+	for _, member := range r.Members {
+		if member.Role == "team_leader" {
+			return &member
+		}
+	}
+	return nil
+}
+
+type RegistrationFormDataRestricted struct {
+	TeamName    string    `json:"teamName"`
+	Institution *string   `json:"institution,omitempty"`
+	MemberCount int       `json:"memberCount"`
+	AppliedAt   time.Time `json:"appliedAt"`
+	Status      string    `json:"status"`
+}
+
+type Account struct {
+	Cilveks     TeamMember `json:"dati"`
+	Password    string     `json:"parole"`
+	Username    string     `json:"lietotajvards"`
+	Email       string     `json:"epasts"`
+	PhoneNumber string     `json:"telefonanumurs"`
+	Salt        string     `json:"salt"`
+}
+
+type AdminAccount struct {
+	Username   string `json:"lietotajvards"`
+	Password   string `json:"parole"`
+	Salt       string `json:"salt"`
+	Superadmin bool   `json:"superadmin"`
+}
+
+type AccountApplication struct {
+	FullName    string `json:"fullName"`
+	DateOfBirth string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
+	Password    string `json:"parole"`
+	Username    string `json:"lietotajvards"`
+	Email       string `json:"epasts"`
+	PhoneNumber string `json:"telefonanumurs"`
+	TeamName    string `json:"komandasNosaukums"`
+	Role        string `json:"role"`
+}

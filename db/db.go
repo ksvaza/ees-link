@@ -5,9 +5,6 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"reflect"
-	"strings"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -39,15 +36,38 @@ func MigrateUp(ctx context.Context, dbURL string) error {
 	return nil
 }
 
-func (DB *RealDB) TestHealthiness(ctx context.Context) error {
-	// err := Pool.Ping(ctx)
-	// if err != nil {
-	// 	logrus.WithError(err).Error("Failed to ping DB")
-	// 	return err
-	// }
-	// logrus.Info("DB connection is healthy")
+func MigrateDown(ctx context.Context, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
 	return nil
 }
+
+func impregnateDB(ctx context.Context, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
+
+	return nil
+}
+
+func (DB *RealDB) TestHealthiness(ctx context.Context) error {
+	err := Pool.Ping(ctx)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to ping DB")
+		return err
+	}
+	logrus.Info("DB connection is healthy")
+	return nil
+}
+
+// Applications, registration form data
 
 func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
 	a, err := DB.GetAllApplications(ctx)
@@ -149,57 +169,58 @@ func (DB *RealDB) GetAllApplications(ctx context.Context) ([]models.Registration
 		applicants = append(applicants, a)
 	}
 
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating applicant rows")
+		return nil, err
+	}
+
+	if len(applicants) == 0 {
+		return nil, nil
+	}
+
 	return applicants, nil
 }
 
-//func (DB *RealDB) UpdateApplicant()
-
-func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (models.RegistrationFormData, error) {
-	rows, err := Pool.Query(ctx, ApplicantReadRequestByID, id)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to query applicants table")
-		return models.RegistrationFormData{}, err
-	}
-	defer rows.Close()
-
+func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (*models.RegistrationFormData, error) {
+	a := &models.RegistrationFormData{}
 	var membersRaw []byte
 	var ResponsiblePersonRaw []byte
 
-	var a models.RegistrationFormData
-	for rows.Next() {
-		err := rows.Scan(
-			&a.ID,
-			&a.TeamName,
-			&a.AgeGroup,
-			&a.Institution,
-			&a.CityOrRegion,
-			&membersRaw,
-			&ResponsiblePersonRaw,
-			&a.HowHeardAbout,
-			&a.Comments,
-			&a.ConfirmTruthful,
-			&a.ConfirmRules,
-			&a.ConfirmMedia,
-			&a.AppliedAt,
-			&a.Status,
-		)
+	err := Pool.QueryRow(ctx, ApplicantReadRequestByID, id).Scan(
+		&a.ID,
+		&a.TeamName,
+		&a.AgeGroup,
+		&a.Institution,
+		&a.CityOrRegion,
+		&membersRaw,
+		&ResponsiblePersonRaw,
+		&a.HowHeardAbout,
+		&a.Comments,
+		&a.ConfirmTruthful,
+		&a.ConfirmRules,
+		&a.ConfirmMedia,
+		&a.AppliedAt,
+		&a.Status,
+	)
 
-		if err != nil {
-			logrus.WithError(err).Error("Failed to scan applicant row")
-			return models.RegistrationFormData{}, err
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
 		}
+		logrus.WithError(err).Error("Failed to scan applicant row")
+		return nil, err
+	}
 
-		err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
-			return models.RegistrationFormData{}, err
-		}
+	err = json.Unmarshal(ResponsiblePersonRaw, &a.ResponsiblePerson)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
+		return nil, err
+	}
 
-		err = json.Unmarshal(membersRaw, &a.Members)
-		if err != nil {
-			logrus.WithError(err).Error("Failed to unmarshal members JSON")
-			return models.RegistrationFormData{}, err
-		}
+	err = json.Unmarshal(membersRaw, &a.Members)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal members JSON")
+		return nil, err
 	}
 
 	return a, nil
@@ -239,311 +260,308 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 	return nil
 }
 
-type RandomStruct struct {
-	ID         int
-	InstanceID int
-	Name       string
-	Value      float64
-	Timestamp  time.Time
-}
+// User accounts
 
-type Ahh struct {
-	ID         int
-	InstanceID int
-	Name       string
-	Value      float64
-	Timestamp  time.Time
-	Nuniga     string
-}
+func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Account) error {
+	_, err := Pool.Exec(ctx, AccountWriteRequest,
+		newAccount.Cilveks.Key,
+		newAccount.Cilveks.FullName,
+		newAccount.Cilveks.DateOfBirth,
+		newAccount.Cilveks.Role,
+		newAccount.Cilveks.ID,
+		newAccount.Password,
+		newAccount.Username,
+		newAccount.Email,
+		newAccount.PhoneNumber,
+		newAccount.Salt,
+	)
 
-var Tables map[string]any
-
-func Init(dbURL string) error {
-	logrus.Info("Connecting to DB...")
-	ctx := context.Background()
-
-	var err error
-	Pool, err = pgxpool.New(ctx, dbURL)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to create DB pool")
+		logrus.WithError(err).Error("Failed to write to accounts table")
 		return err
 	}
 
-	// register tables
-	Tables = map[string]any{
-		"kkas":  RandomStruct{},
-		"kkas2": Ahh{},
-	}
-
-	for name, model := range Tables {
-		if err := CreateTableFromStruct(ctx, name, model); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-// sql type lookup
-func sqlType(t reflect.Type) (string, error) {
-	if t == reflect.TypeOf(time.Time{}) {
-		return "TIMESTAMPTZ", nil
-	}
-	switch t.Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return "BIGINT", nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return "BIGINT", nil
-	case reflect.Float32, reflect.Float64:
-		return "DOUBLE PRECISION", nil
-	case reflect.Bool:
-		return "BOOLEAN", nil
-	case reflect.String:
-		return "TEXT", nil
-	case reflect.Slice:
-		if t.Elem().Kind() == reflect.Uint8 {
-			return "BYTEA", nil
-		}
-	}
-
-	return "", fmt.Errorf("unsupported type: %s", t.String())
-}
-
-func toLowerCase(s string) string {
-	var b strings.Builder
-	for i, r := range s {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				b.WriteByte('_')
-			}
-			b.WriteRune(r + 32) // uppercase → lowercase in ASCII
-		} else {
-			b.WriteRune(r)
-		}
-	}
-	return b.String()
-}
-
-func ToAnySlice(slice any) []any {
-	v := reflect.ValueOf(slice)
-	if v.Kind() != reflect.Slice {
-		return nil
-	}
-	result := make([]any, v.Len())
-	for i := 0; i < v.Len(); i++ {
-		result[i] = v.Index(i).Interface()
-	}
-	return result
-}
-
-func CreateTableFromStruct(ctx context.Context, tableName string, model any) error {
-	t := reflect.TypeOf(model)
-
-	// Unwrap pointer if needed (*Event → Event)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	if t.Kind() != reflect.Struct {
-		return fmt.Errorf("model must be a struct, got %s", t.Kind())
-	}
-
-	var columns []string
-	hasPK := false
-
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		tag := field.Tag.Get("db")
-
-		// Skip this field entirely
-		if tag == "-" {
-			continue
-		}
-
-		// Determine column name
-		colName := toLowerCase(field.Name)
-		if tag != "" && tag != "pk" {
-			colName = tag // custom name from tag
-		}
-
-		// Get the Postgres type for this field
-		sqlT, err := sqlType(field.Type)
-		if err != nil {
-			return fmt.Errorf("field %s: %w", field.Name, err)
-		}
-
-		if tag == "pk" {
-			columns = append(columns, fmt.Sprintf("%s %s PRIMARY KEY", colName, sqlT))
-			hasPK = true
-		} else {
-			columns = append(columns, fmt.Sprintf("%s %s NOT NULL", colName, sqlT))
-		}
-	}
-
-	if !hasPK {
-		columns = append([]string{"id SERIAL PRIMARY KEY"}, columns...)
-	}
-
-	query := fmt.Sprintf(
-		"CREATE TABLE IF NOT EXISTS %s (\n    %s\n);",
-		tableName,
-		strings.Join(columns, ",\n    "),
+func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByFullname, fullname).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.Role,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.Salt,
 	)
-
-	logrus.Infof("Running query:\n%s", query) // print the query
-
-	_, err := Pool.Exec(ctx, query)
 	if err != nil {
-		logrus.WithError(err).Errorf("Failed to create table %q", tableName)
-		return err
-	}
-
-	logrus.Infof("Table %q created successfully", tableName)
-
-	return nil
-}
-
-func BatchInsertIntoTable(ctx context.Context, tableName string, models []any) error {
-	if len(models) == 0 {
-		return nil
-	}
-
-	t := reflect.TypeOf(models[0])
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	var colNames []string
-	var fieldIndexes []int
-
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		tag := field.Tag.Get("db")
-
-		if tag == "-" || tag == "pk" {
-			continue
+		if err == pgx.ErrNoRows {
+			return nil, nil
 		}
-
-		colName := toLowerCase(field.Name)
-		if tag != "" {
-			colName = tag
-		}
-
-		colNames = append(colNames, colName)
-		fieldIndexes = append(fieldIndexes, i)
-	}
-
-	placeholders := make([]string, len(colNames))
-	for i := range colNames {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-	}
-
-	query := fmt.Sprintf(
-		"INSERT INTO %s (%s) VALUES (%s) RETURNING id",
-		tableName,
-		strings.Join(colNames, ", "),
-		strings.Join(placeholders, ", "),
-	)
-
-	batch := &pgx.Batch{}
-	for _, model := range models {
-		v := reflect.ValueOf(model)
-		if v.Kind() == reflect.Ptr {
-			v = v.Elem()
-		}
-
-		values := make([]any, len(fieldIndexes))
-		for i, idx := range fieldIndexes {
-			values[i] = v.Field(idx).Interface()
-		}
-
-		batch.Queue(query, values...)
-	}
-
-	br := Pool.SendBatch(ctx, batch)
-	defer br.Close()
-
-	teamNames := make([]int, len(models))
-	for i := range models {
-		if err := br.QueryRow().Scan(&teamNames[i]); err != nil {
-			logrus.WithError(err).Errorf("Failed to scan row %d", i)
-			return err
-		}
-	}
-
-	logrus.Infof("Inserted %d rows into %q", len(models), tableName)
-
-	return nil
-}
-
-func ReadFromTableWhere(ctx context.Context, tableName string, model any, colName string, colValues []any) ([]any, error) {
-	t := reflect.TypeOf(model)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
-
-	var colNames []string
-	var fieldIndexes []int
-
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		tag := field.Tag.Get("db")
-
-		if tag == "-" {
-			continue
-		}
-
-		col := toLowerCase(field.Name)
-		if tag != "" && tag != "pk" {
-			col = tag
-		}
-
-		colNames = append(colNames, col)
-		fieldIndexes = append(fieldIndexes, i)
-	}
-
-	placeholders := make([]string, len(colValues))
-	for i := range colValues {
-		placeholders[i] = fmt.Sprintf("$%d", i+1)
-	}
-
-	query := fmt.Sprintf(
-		"SELECT %s FROM %s WHERE %s IN (%s)",
-		strings.Join(colNames, ", "),
-		tableName,
-		colName,
-		strings.Join(placeholders, ", "),
-	)
-
-	rows, err := Pool.Query(ctx, query, colValues...)
-	if err != nil {
-		//logrus.WithError(err).Errorf("Failed to query table %q", tableName)
-		fmt.Println("Query failed:")
-		fmt.Println(err)
-		fmt.Errorf("Failed to query table %w", err)
+		logrus.WithError(err).Error("Failed to scan account row")
 		return nil, err
 	}
 
-	fmt.Printf("Running query:With values:")
+	return a, nil
+}
+
+func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByUsername, username).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.Role,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.Salt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan account row")
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByDateOfBirth, dateOfBirth).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.Role,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.Salt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan account row")
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query accounts table")
+		return nil, err
+	}
 	defer rows.Close()
 
-	var results []any
-
+	var accounts []models.Account
 	for rows.Next() {
-		newStruct := reflect.New(t).Elem()
-
-		valuePtrs := make([]any, len(fieldIndexes))
-		for i, idx := range fieldIndexes {
-			valuePtrs[i] = newStruct.Field(idx).Addr().Interface()
+		var a models.Account
+		err = rows.Scan(
+			&a.Cilveks.Key,
+			&a.Cilveks.FullName,
+			&a.Cilveks.DateOfBirth,
+			&a.Cilveks.Role,
+			&a.Cilveks.ID,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.Salt,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account row")
+			return nil, err
 		}
+		accounts = append(accounts, a)
+	}
 
-		if err := rows.Scan(valuePtrs...); err != nil {
-			logrus.WithError(err).Error("Failed to scan row")
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account rows")
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return nil, nil
+	}
+
+	return accounts, nil
+}
+
+// Account applications for user creation
+
+func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
+	rows, err := Pool.Query(ctx, AccountApplicationReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query account applications table")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accountApplications []models.AccountApplication
+	for rows.Next() {
+		var a models.AccountApplication
+		err = rows.Scan(
+			&a.FullName,
+			&a.DateOfBirth,
+			&a.Role,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.TeamName,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account application row")
+			return nil, err
+		}
+		accountApplications = append(accountApplications, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account application rows")
+		return nil, err
+	}
+
+	if len(accountApplications) == 0 {
+		return nil, nil
+	}
+
+	return accountApplications, nil
+}
+
+func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) error {
+	_, err := Pool.Exec(ctx, AccountApplicationWriteRequest,
+		newAccountApplication.FullName,
+		newAccountApplication.DateOfBirth,
+		newAccountApplication.Role,
+		newAccountApplication.Password,
+		newAccountApplication.Username,
+		newAccountApplication.Email,
+		newAccountApplication.PhoneNumber,
+		newAccountApplication.TeamName,
+	)
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to write to accounts table")
+		return err
+	}
+
+	return nil
+}
+
+func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id int) (*models.AccountApplication, error) {
+	a := &models.AccountApplication{}
+	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByID, id).Scan(
+		&a.FullName,
+		&a.DateOfBirth,
+		&a.Role,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.TeamName,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan account application row")
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// Admin accounts
+
+func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
+	fmt.Printf("Registering new admin: %+v\n", newAccount)
+	_, err := Pool.Exec(ctx, AdminAccountWriteRequest,
+		newAccount.Username,
+		newAccount.Password,
+		newAccount.Salt,
+		newAccount.Superadmin,
+	)
+
+	fmt.Printf("ierakstits")
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to write to admin accounts table")
+		return err
+	}
+
+	return nil
+}
+
+func (DB *RealDB) GetAllAdmins(ctx context.Context) ([]models.AdminAccount, error) {
+	rows, err := Pool.Query(ctx, AdminAccountReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query admin accounts table")
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var admins []models.AdminAccount
+	for rows.Next() {
+		var a models.AdminAccount
+		err = rows.Scan(
+			&a.Username,
+			&a.Password,
+			&a.Salt,
+			&a.Superadmin,
+		)
+
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan admin account row")
 			return nil, err
 		}
 
-		results = append(results, newStruct.Interface())
+		admins = append(admins, a)
 	}
 
-	return results, nil
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating admin account rows")
+		return nil, err
+	}
+
+	if len(admins) == 0 {
+		return nil, nil
+	}
+
+	return admins, nil
+}
+
+func (DB *RealDB) GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error) {
+	a := &models.AdminAccount{}
+	err := Pool.QueryRow(ctx, AdminAccountReadRequestByUsername, username).Scan(
+		&a.Username,
+		&a.Password,
+		&a.Salt,
+		&a.Superadmin,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan admin account row")
+		return nil, err
+	}
+
+	return a, nil
 }

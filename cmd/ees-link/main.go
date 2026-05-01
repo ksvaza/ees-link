@@ -8,6 +8,7 @@ import (
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
+	"github.com/ksvaza/ees-link/models"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -52,7 +53,43 @@ func main() {
 		return
 	}
 
+	RealDB := db.RealDB{}
+
+	RealDB.TestHealthiness(ctx)
+
+	// DB impregnācija ar testu datiem
+
+	if envreader.GetEnvBool("SEEDDATABASE") {
+		logrus.Info("Seeding database with test data...")
+		err = db.SeedTestData(ctx)
+		if err != nil {
+			logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
+			return
+		}
+	}
+
+	if envreader.GetEnvBool("CLEARSEEDDATA") {
+		logrus.Info("Clearing seeded test data from database...")
+		err = db.DeleteSeedData(ctx)
+		if err != nil {
+			logrus.WithError(errors.Wrap(err, "DB Clear Seed Data")).Error("Error")
+			return
+		}
+	}
+
 	logrus.Info("\nSveika, http aplikācija!\n")
+
+	// visadministratora atgūšana no vides mainīgajiem
+	var superadmin models.AdminAccount
+	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
+	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
+	superadmin.Superadmin = true
+
+	err = httpapi.RegisterAdminAccount(superadmin)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to register superadmin account")
+		return
+	}
 
 	err = httpapi.SetupHTTPAPI()
 	if err != nil {

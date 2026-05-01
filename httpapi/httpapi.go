@@ -68,6 +68,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/applications", Handler(PointGetApplications))
 	router.POST("/api/applications", Handler(PointPostApplications))
 	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
+	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

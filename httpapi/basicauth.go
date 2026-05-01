@@ -81,7 +81,7 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
-	logrus.Infof("Autentifikācija ar \"%s:%s\"", username, password)
+	logrus.Infof("Autentifikācija ar \"%s\"", username)
 
 	realDB := db.RealDB{}
 
@@ -96,7 +96,7 @@ func Authenticate(r *http.Request) *http.Request {
 			return r
 		}
 		if hr := hashPassword(password, admin.Salt); hr != admin.Password {
-			logrus.Infof("Admin Hash (salt = \"%s\") result \"%s\"", admin.Salt, hr)
+			logrus.Infof("Admin Hash result \"%s\"", hr)
 			return r
 		}
 		ctx = WithAdminAccount(ctx, admin)
@@ -115,7 +115,7 @@ func Authenticate(r *http.Request) *http.Request {
 	}
 
 	if hr := hashPassword(password, a.Salt); hr != a.Password {
-		logrus.Infof("Parasto mirstīgo Hash (salt = \"%s\") result \"%s\"", a.Salt, hr)
+		logrus.Infof("Parasto mirstīgo Hash result \"%s\"", hr)
 		return r
 	}
 

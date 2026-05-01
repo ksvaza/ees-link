@@ -3,9 +3,9 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/db"
@@ -36,10 +36,45 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	realDB := db.RealDB{}
 
 	if pieteikums.TeamName == "" {
+		if pieteikums.Username == "" || pieteikums.Password == "" || pieteikums.Email == "" || pieteikums.FullName == "" || pieteikums.DateOfBirth == "" {
+			return &httpResult{
+				ResponseType: http.StatusBadRequest,
+				Body:         `{"error":"missing required fields"}`,
+			}, nil
+		}
 
-		// pa taisno reģistrēt
+		existing, err := realDB.GetAccountByUsername(r.Context(), pieteikums.Username)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to check username")
+		}
+		if existing != nil {
+			return &httpResult{
+				ResponseType: http.StatusConflict,
+				Body:         `{"error":"username already exists"}`,
+			}, nil
+		}
 
-		// reģistrācijas
+		salt, err := GenerateSalt(16)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to generate salt")
+		}
+
+		account := models.Account{
+			Cilveks: models.TeamMember{
+				FullName:    pieteikums.FullName,
+				DateOfBirth: pieteikums.DateOfBirth,
+			},
+			Username:    pieteikums.Username,
+			Password:    hashPassword(pieteikums.Password, salt),
+			Email:       pieteikums.Email,
+			PhoneNumber: pieteikums.PhoneNumber,
+			Salt:        salt,
+		}
+
+		err = realDB.RegisterNewAccount(r.Context(), account)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to register new account")
+		}
 
 		return &httpResult{
 			ResponseType: http.StatusOK,
@@ -51,13 +86,31 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		// http://e-es.lv/api/register?uniqueID=1234567890
 		id := r.URL.Query().Get("uniqueID")
 		if id != "" {
-			team, err := realDB.GetApplicationByID(context.Background(), id)
+			team, err := realDB.GetApplicationByID(r.Context(), id)
 			if err != nil {
 				logrus.WithError(err).Error("Failed to find team by ID")
 			} else {
 				member := team.FindTeamMemberByFullName(pieteikums.FullName)
 				if member != nil {
 					if member.Role == "team_leader" {
+						if pieteikums.Username == "" || pieteikums.Password == "" || pieteikums.Email == "" {
+							return &httpResult{
+								ResponseType: http.StatusBadRequest,
+								Body:         `{"error":"missing required fields for team leader"}`,
+							}, nil
+						}
+
+						existing, err := realDB.GetAccountByUsername(r.Context(), pieteikums.Username)
+						if err != nil {
+							return nil, errors.Wrap(err, "failed to check username")
+						}
+						if existing != nil {
+							return &httpResult{
+								ResponseType: http.StatusConflict,
+								Body:         `{"error":"username already exists"}`,
+							}, nil
+						}
+
 						if pieteikums.DateOfBirth != member.DateOfBirth {
 							logrus.Infof("Nesakrīt dzimšanas dienas datumi kontam ar pieteikumu \"%s\" pret \"%s\"", pieteikums.DateOfBirth, member.DateOfBirth)
 						} else {
@@ -66,21 +119,22 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 							account.Salt, err = GenerateSalt(16)
 							if err != nil {
 								logrus.WithError(err).Error("Neizdevās saģenerēt sāli.")
-							}
-							// paroli nevajadzētu sūtīt kā parastu teksu, bet tas tā
-							account.Password = hashPassword(pieteikums.Password, account.Salt)
-							account.Username = pieteikums.Username
-							account.Email = pieteikums.Email
-							account.PhoneNumber = pieteikums.PhoneNumber
-
-							err = realDB.RegisterNewAccount(context.Background(), account)
-							if err != nil {
-								logrus.WithError(err).Error("Neizdevās piereģistrēt komandas līderi automātiski")
 							} else {
-								return &httpResult{
-									ResponseType: http.StatusOK,
-									Body:         `{"status":"accepted"}`,
-								}, nil
+								// paroli nevajadzētu sūtīt kā parastu teksu, bet tas tā
+								account.Password = hashPassword(pieteikums.Password, account.Salt)
+								account.Username = pieteikums.Username
+								account.Email = pieteikums.Email
+								account.PhoneNumber = pieteikums.PhoneNumber
+
+								err = realDB.RegisterNewAccount(r.Context(), account)
+								if err != nil {
+									logrus.WithError(err).Error("Neizdevās piereģistrēt komandas līderi automātiski")
+								} else {
+									return &httpResult{
+										ResponseType: http.StatusOK,
+										Body:         `{"status":"accepted"}`,
+									}, nil
+								}
 							}
 						}
 					} else {
@@ -93,7 +147,7 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		}
 	}
 
-	err = realDB.RegisterNewAccountApplication(context.Background(), pieteikums)
+	err = realDB.RegisterNewAccountApplication(r.Context(), pieteikums)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to register new account application")
 	}
@@ -127,8 +181,6 @@ func RegisterAdminAccount(admin models.AdminAccount) error {
 
 	admin.Salt = salt
 	admin.Password = hashPassword(admin.Password, salt)
-
-	fmt.Printf("%+v\n", admin)
 
 	err = realDB.RegisterNewAdmin(context.Background(), admin)
 	if err != nil {
@@ -180,44 +232,46 @@ func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpRe
 
 	realDB := db.RealDB{}
 
-	applications, err := realDB.GetAllApplications(context.Background())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get all applications")
-	}
-
-	return &httpResult{
-		ResponseType: http.StatusOK,
-		Body:         applications,
-	}, nil
-}
-
-func PointReceiveVerifiedAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	if r.Method != http.MethodPost {
-		return nil, errors.New("method not allowed")
-	}
-
-	var verifiedAccounts []models.Account
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read request body")
-	}
-	defer r.Body.Close()
-
-	if err := json.Unmarshal(body, &verifiedAccounts); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal request body")
-	}
-
-	realDB := db.RealDB{}
-	for _, account := range verifiedAccounts {
-		err := realDB.RegisterNewAccount(context.Background(), account)
+	adminAccount := GetAdminAccount(r.Context())
+	if adminAccount != nil && adminAccount.Superadmin {
+		logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
+		applications, err := realDB.GetAccountApplications(r.Context())
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to save verified accounts")
+			return nil, errors.Wrap(err, "failed to get account applications")
 		}
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         applications,
+		}, nil
+	}
+
+	account := GetAccount(r.Context())
+	if account != nil && account.Cilveks.Role == "team_leader" {
+		logrus.Infof("Team leader account found in context: %s", account.Username)
+
+		id, err := strconv.Atoi(account.Cilveks.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid team leader ID format")
+		}
+		application, err := realDB.GetAccountApplicationByID(r.Context(), id)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get application by ID")
+		}
+
+		if application == nil {
+			return nil, errors.New("application not found for team leader")
+		}
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         application,
+		}, nil
 	}
 
 	return &httpResult{
-		ResponseType: http.StatusOK,
-		Body:         "Accounts inserted into DB",
+		ResponseType: http.StatusUnauthorized,
+		Body:         `{"error":"unauthorized"}`,
 	}, nil
+
 }

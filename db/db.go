@@ -67,6 +67,8 @@ func (DB *RealDB) TestHealthiness(ctx context.Context) error {
 	return nil
 }
 
+// Applications, registration form data
+
 func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
 	a, err := DB.GetAllApplications(ctx)
 	if err != nil {
@@ -258,6 +260,8 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 	return nil
 }
 
+// User accounts
+
 func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Account) error {
 	_, err := Pool.Exec(ctx, AccountWriteRequest,
 		newAccount.Cilveks.Key,
@@ -356,6 +360,50 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 	return a, nil
 }
 
+func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query accounts table")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []models.Account
+	for rows.Next() {
+		var a models.Account
+		err = rows.Scan(
+			&a.Cilveks.Key,
+			&a.Cilveks.FullName,
+			&a.Cilveks.DateOfBirth,
+			&a.Cilveks.Role,
+			&a.Cilveks.ID,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.Salt,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account row")
+			return nil, err
+		}
+		accounts = append(accounts, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account rows")
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return nil, nil
+	}
+
+	return accounts, nil
+}
+
+// Account applications for user creation
+
 func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
 	rows, err := Pool.Query(ctx, AccountApplicationReadRequest)
 	if err != nil {
@@ -415,6 +463,31 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 
 	return nil
 }
+
+func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id int) (*models.AccountApplication, error) {
+	a := &models.AccountApplication{}
+	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByID, id).Scan(
+		&a.FullName,
+		&a.DateOfBirth,
+		&a.Role,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.TeamName,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan account application row")
+		return nil, err
+	}
+
+	return a, nil
+}
+
+// Admin accounts
 
 func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
 	fmt.Printf("Registering new admin: %+v\n", newAccount)

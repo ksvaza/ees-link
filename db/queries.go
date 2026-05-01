@@ -65,6 +65,10 @@ const (
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		FROM konti WHERE date_of_birth = $1`
 
+	AccountReadRequestByID = `
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		FROM konti WHERE id = $1`
+
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------
@@ -80,9 +84,9 @@ const (
 		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
 		FROM kontu_pieteikumi`
 
-	AccountApplicationReadRequestByID = `
+	AccountApplicationReadRequestByUsername = `
 		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
-		FROM kontu_pieteikumi WHERE id = $1`
+		FROM kontu_pieteikumi WHERE username = $1`
 
 	// -------------------------------------------------------------------------
 	// Admins (admini table)

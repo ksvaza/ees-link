@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/db"
@@ -250,28 +249,39 @@ func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpRe
 	if account != nil && account.Cilveks.Role == "team_leader" {
 		logrus.Infof("Team leader account found in context: %s", account.Username)
 
-		id, err := strconv.Atoi(account.Cilveks.ID)
+		applications, err := realDB.GetAccountApplications(r.Context())
 		if err != nil {
-			return nil, errors.Wrap(err, "invalid team leader ID format")
+			return nil, errors.Wrap(err, "failed to get account applications")
 		}
-		application, err := realDB.GetAccountApplicationByID(r.Context(), id)
+
+		registrationApplication, err := realDB.GetApplicationByID(r.Context(), account.Cilveks.ID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get application by ID")
 		}
 
-		if application == nil {
-			return nil, errors.New("application not found for team leader")
+		if registrationApplication == nil {
+			return &httpResult{
+				ResponseType: http.StatusNotFound,
+				Body:         `{"error":"registration application not found"}`,
+			}, nil
+		}
+
+		var teamApplications []models.AccountApplication
+
+		for _, app := range applications {
+			if app.TeamName == registrationApplication.TeamName {
+				teamApplications = append(teamApplications, app)
+			}
 		}
 
 		return &httpResult{
 			ResponseType: http.StatusOK,
-			Body:         application,
+			Body:         teamApplications,
 		}, nil
 	}
 
 	return &httpResult{
-		ResponseType: http.StatusUnauthorized,
-		Body:         `{"error":"unauthorized"}`,
+		ResponseType: http.StatusForbidden,
+		Body:         `{"error":"forbidden"}`,
 	}, nil
-
 }

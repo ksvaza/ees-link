@@ -57,6 +57,12 @@ func main() {
 
 	RealDB.TestHealthiness(ctx)
 
+	// DB impregnācija ar testu datiem
+	err = db.SeedTestData(ctx)
+	if err != nil {
+		logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
+	}
+
 	logrus.Info("\nSveika, http aplikācija!\n")
 
 	err = httpapi.SetupHTTPAPI()

@@ -132,17 +132,24 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	adminaccount := GetAdminAccount(r.Context())
 	if adminaccount != nil && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
 		logrus.Infof("Authenticated admin account: %+v", adminaccount)
+		adminaccountInfo := models.AdminAccount{
+			Superadmin: adminaccount.Superadmin,
+			Username:   adminaccount.Username}
 		return &httpResult{
 			ResponseType: http.StatusOK,
-			Body:         adminaccount,
+			Body:         adminaccountInfo,
 		}, nil
 	}
 	account := GetAccount(r.Context())
 	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
 		logrus.Infof("Authenticated account: %+v", account)
+		accountInfo := models.Account{
+			Cilveks:   account.Cilveks,
+			Username:  account.Username,
+		}
 		return &httpResult{
 			ResponseType: http.StatusOK,
-			Body:         account,
+			Body:         accountInfo,
 		}, nil
 	}
 
@@ -153,43 +160,42 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 }
 
 func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointGetAccountApplications called %+v", ps)
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 
 	realDB := db.RealDB{}
-	accountApplications, err := realDB.GetAccountApplications(context.Background())
 
+	applications, err := realDB.GetAllApplications(context.Background())
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get account applications")
+		return nil, errors.Wrap(err, "failed to get all applications")
 	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
-		Body:         accountApplications,
+		Body:         applications,
 	}, nil
 }
 
 func PointReceiveVerifiedAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointReceiveVerifiedAccounts called %+v", ps)
 	if r.Method != http.MethodPost {
 		return nil, errors.New("method not allowed")
 	}
 
-	var accounts []models.Account
+	var verifiedAccounts []models.Account
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "Read body")
+		return nil, errors.Wrap(err, "failed to read request body")
 	}
 	defer r.Body.Close()
 
-	if err := json.Unmarshal(body, &accounts); err != nil {
-		return nil, errors.Wrap(err, "Unmarshal")
+	if err := json.Unmarshal(body, &verifiedAccounts); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal request body")
 	}
 
 	realDB := db.RealDB{}
-	for _, account := range accounts {
+	for _, account := range verifiedAccounts {
 		err := realDB.RegisterNewAccount(context.Background(), account)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to save verified accounts")
@@ -198,6 +204,6 @@ func PointReceiveVerifiedAccounts(r *http.Request, ps httprouter.Params) (*httpR
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
-		Body:         accounts,
+		Body:         "Accounts inserted into DB",
 	}, nil
 }

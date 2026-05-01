@@ -1,6 +1,8 @@
 package httpapi
 
 import (
+	"context"
+	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
 	"encoding/hex"
@@ -9,7 +11,7 @@ import (
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
-	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 func GenerateSalt(size int) (string, error) {
@@ -37,6 +39,9 @@ func hashPassword(password, salt string) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
+// Context helpers
+// ----------------------------------------------------------------
+
 type contextKeyT string
 
 var accountKey = contextKeyT("account")
@@ -44,12 +49,17 @@ var accountKey = contextKeyT("account")
 func WithAccount(ctx context.Context, account *models.Account) context.Context {
 	return context.WithValue(ctx, accountKey, account)
 }
+
 func GetAccount(ctx context.Context) *models.Account {
 	account, ok := ctx.Value(accountKey).(*models.Account)
 	if !ok {
 		return nil
 	}
 	return account
+}
+
+// ----------------------------------------------------------------
+
 func Authenticate(r *http.Request) *http.Request {
 	ctx := r.Context()
 
@@ -73,5 +83,4 @@ func Authenticate(r *http.Request) *http.Request {
 	r = r.WithContext(ctx)
 
 	return r
-
 }

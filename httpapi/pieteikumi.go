@@ -26,13 +26,13 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 
 	realDB := db.RealDB{}
 	applications, err := realDB.GetAllApplications(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "GetAllApplications")
+	}
 
 	adminaccount := GetAdminAccount(r.Context())
 	if adminaccount != nil && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
 		logrus.Infof("Admin account found in context: %+v", adminaccount)
-		if err != nil {
-			return nil, errors.Wrap(err, "GetAllApplications")
-		}
 
 		return &httpResult{
 			ResponseType: http.StatusOK,
@@ -40,47 +40,65 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		}, nil
 	}
 
-	var a models.RegistrationFormData
 	account := GetAccount(r.Context())
 	if account == nil {
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         "Unauthorized",
-		}, nil
-	}
-
-	for _, application := range applications {
-		if application.ID == account.Cilveks.ID {
-			a = application
-			break
+		logrus.Infof("Izprintēja ierobežotas piekļuves datus. Nebija neviens autentificējies.")
+		var applicationsRestricted []models.RegistrationFormDataRestricted
+		for _, application := range applications {
+			restA := models.RegistrationFormDataRestricted{
+				TeamName:    application.TeamName,
+				Institution: application.Institution,
+				MemberCount: len(application.Members),
+				AppliedAt:   application.AppliedAt,
+				Status:      application.Status,
+			}
+			applicationsRestricted = append(applicationsRestricted, restA)
 		}
-	}
 
-	if a.ID == "" {
 		return &httpResult{
 			ResponseType: http.StatusOK,
-			Body:         "Application not found",
-		}, nil
-	}
-
-	if account != nil && account.Cilveks.Role == "team_leader" && account.Username != "" && account.Password != "" && account.Salt != "" {
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         a,
+			Body:         applicationsRestricted,
 		}, nil
 	} else {
-		applicationRestricted := models.RegistrationFormDataRestricted{
-			TeamName:    a.TeamName,
-			Institution: a.Institution,
-			MemberCount: len(a.Members),
-			AppliedAt:   a.AppliedAt,
-			Status:      a.Status,
+		logrus.Tracef("Kāds ir reģistrējies")
+		var a models.RegistrationFormData
+		for _, application := range applications {
+			if application.ID == account.Cilveks.ID {
+				a = application
+				break
+			}
 		}
 
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         applicationRestricted,
-		}, nil
+		if a.ID == "" {
+			return &httpResult{
+				ResponseType: http.StatusOK,
+				Body:         "Application not found",
+			}, nil
+		}
+
+		logrus.Tracef("Pēc ID = \"%s\" atrasta komanda.", a.ID)
+
+		if account != nil && account.Cilveks.Role == "team_leader" && account.Username != "" && account.Password != "" && account.Salt != "" {
+			logrus.Infof("Izprintēja komandas pilnos datos ar tās līdera \"%s\" autentifikāciju.", account.Cilveks.FullName)
+			return &httpResult{
+				ResponseType: http.StatusOK,
+				Body:         a,
+			}, nil
+		} else {
+			logrus.Infof("Izprintēja komandas ierobežotos datos ar \"%s\" autentifikāciju.", account.Cilveks.FullName)
+			applicationRestricted := models.RegistrationFormDataRestricted{
+				TeamName:    a.TeamName,
+				Institution: a.Institution,
+				MemberCount: len(a.Members),
+				AppliedAt:   a.AppliedAt,
+				Status:      a.Status,
+			}
+
+			return &httpResult{
+				ResponseType: http.StatusOK,
+				Body:         applicationRestricted,
+			}, nil
+		}
 	}
 }
 
@@ -101,8 +119,8 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	}
 	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
 
-	for i := range newApplicant.Members {
-		newApplicant.Members[i].ID = newApplicant.ID
+	for _, m := range newApplicant.Members {
+		m.ID = newApplicant.ID
 	}
 
 	newApplicant.AppliedAt = time.Now()
@@ -119,8 +137,6 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	// New application handling logic here (e.g., save to database)
 
 	logrus.Infof("Received new application: %+v", newApplicant)
-
-	//realDB := fakedb.FSDatabase{}
 
 	err = realDB.RegisterNewApplication(r.Context(), newApplicant)
 	if err != nil {
@@ -163,14 +179,14 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.Wrap(err, "Read body")
 	}
 
+	if err := json.Unmarshal(body, existingApplication); err != nil {
+		return nil, errors.Wrap(err, "Unmarshal")
+	}
+	existingApplication.ID = ID
+
 	adminaccount := GetAdminAccount(r.Context())
 	if adminaccount != nil && adminaccount.Superadmin && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
 		logrus.Infof("Admin account found in context: %+v", adminaccount)
-
-		if err := json.Unmarshal(body, existingApplication); err != nil {
-			return nil, errors.Wrap(err, "Unmarshal")
-		}
-		existingApplication.ID = ID
 
 		logrus.Infof("Received application update (superadmin): %+v", existingApplication)
 		err = realDB.UpdateApplication(r.Context(), *existingApplication)
@@ -185,13 +201,9 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 	}
 
 	account := GetAccount(r.Context())
-	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
+	if account != nil && account.Cilveks.Role == "team_leader" && account.Username != "" && account.Password != "" && account.Salt != "" {
 		if account.Cilveks.ID == ID {
 			logrus.Infof("Received application update from team member: %+v", account)
-			if err := json.Unmarshal(body, existingApplication); err != nil {
-				return nil, errors.Wrap(err, "Unmarshal")
-			}
-			existingApplication.ID = ID
 
 			err = realDB.UpdateApplication(r.Context(), *existingApplication)
 			if err != nil {
@@ -209,38 +221,3 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		Body:         `{"error":"forbidden"}`,
 	}, nil
 }
-
-// func PointGetApplicationsRestricted(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-// 	logrus.Infof("PointGetApplicationsRestricted called %+v", ps)
-// 	if r.Method != http.MethodGet {
-// 		return nil, errors.New("method not allowed")
-// 	}
-
-// 	//realDB := fakedb.FSDatabase{}
-
-// 	var realDB data.Database
-// 	realDB = &db.RealDB{}
-
-// 	//db.GetAllApplicants()
-
-// 	applications, err := realDB.GetAllApplications(r.Context())
-// 	if err != nil {
-// 		return nil, errors.Wrap(err, "GetAllApplications")
-// 	}
-
-// 	restrictedApplications := make([]models.RegistrationFormDataRestricted, len(applications))
-// 	for i, app := range applications {
-// 		restrictedApplications[i] = models.RegistrationFormDataRestricted{
-// 			TeamName:    app.TeamName,
-// 			Institution: app.Institution,
-// 			MemberCount: len(app.Members),
-// 			AppliedAt:   app.AppliedAt,
-// 			Status:      app.Status,
-// 		}
-// 	}
-
-// 	return &httpResult{
-// 		ResponseType: http.StatusOK,
-// 		Body:         restrictedApplications,
-// 	}, nil
-// }

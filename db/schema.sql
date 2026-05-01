@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS konti (
     password TEXT NOT NULL,
     username TEXT NOT NULL,
     email TEXT NOT NULL,
-    phone_number TEXT NOT NULL
+    phone_number TEXT NOT NULL,
+    salt TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS kontu_pieteikumi (

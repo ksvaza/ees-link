@@ -54,7 +54,6 @@ func impregnateDB(ctx context.Context, dbURL string) error {
 		return err
 	}
 
-	
 	return nil
 }
 
@@ -270,26 +269,7 @@ func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Acco
 		newAccount.Username,
 		newAccount.Email,
 		newAccount.PhoneNumber,
-	)
-
-	if err != nil {
-		logrus.WithError(err).Error("Failed to write to accounts table")
-		return err
-	}
-
-	return nil
-}
-
-func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) error {
-	_, err := Pool.Exec(ctx, AccountApplicationWriteRequest,
-		newAccountApplication.FullName,
-		newAccountApplication.DateOfBirth,
-		newAccountApplication.Role,
-		newAccountApplication.Password,
-		newAccountApplication.Username,
-		newAccountApplication.Email,
-		newAccountApplication.PhoneNumber,
-		newAccountApplication.TeamName,
+		newAccount.Salt,
 	)
 
 	if err != nil {
@@ -312,6 +292,7 @@ func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*m
 		&a.Username,
 		&a.Email,
 		&a.PhoneNumber,
+		&a.Salt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -336,6 +317,7 @@ func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*m
 		&a.Username,
 		&a.Email,
 		&a.PhoneNumber,
+		&a.Salt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -360,6 +342,7 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 		&a.Username,
 		&a.Email,
 		&a.PhoneNumber,
+		&a.Salt,
 	)
 
 	if err != nil {
@@ -411,6 +394,26 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 	}
 
 	return accountApplications, nil
+}
+
+func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) error {
+	_, err := Pool.Exec(ctx, AccountApplicationWriteRequest,
+		newAccountApplication.FullName,
+		newAccountApplication.DateOfBirth,
+		newAccountApplication.Role,
+		newAccountApplication.Password,
+		newAccountApplication.Username,
+		newAccountApplication.Email,
+		newAccountApplication.PhoneNumber,
+		newAccountApplication.TeamName,
+	)
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to write to accounts table")
+		return err
+	}
+
+	return nil
 }
 
 func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {

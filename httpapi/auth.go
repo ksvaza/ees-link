@@ -35,8 +35,21 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	realDB := db.RealDB{}
 
+	if pieteikums.TeamName == "" {
+
+		// pa taisno reģistrēt
+
+		// reģistrācijas
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         `{"status":"accepted"}`,
+		}, nil
+	}
+
 	if pieteikums.Role == "team_leader" {
-		id := ps.ByName("uniqueID") // http://e-es.lv/api/register?uniqueID=1234567890
+		// http://e-es.lv/api/register?uniqueID=1234567890
+		id := r.URL.Query().Get("uniqueID")
 		if id != "" {
 			team, err := realDB.GetApplicationByID(context.Background(), id)
 			if err != nil {
@@ -54,6 +67,7 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 							if err != nil {
 								logrus.WithError(err).Error("Neizdevās saģenerēt sāli.")
 							}
+							// paroli nevajadzētu sūtīt kā parastu teksu, bet tas tā
 							account.Password = hashPassword(pieteikums.Password, account.Salt)
 							account.Username = pieteikums.Username
 							account.Email = pieteikums.Email
@@ -86,7 +100,7 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
-		Body:         `{"status":"waiting"}`,
+		Body:         `{"status":"pending verification"}`,
 	}, nil
 }
 
@@ -126,7 +140,7 @@ func RegisterAdminAccount(admin models.AdminAccount) error {
 
 func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointLogin called %+v", ps)
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 	adminaccount := GetAdminAccount(r.Context())
@@ -144,8 +158,8 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
 		logrus.Infof("Authenticated account: %+v", account)
 		accountInfo := models.Account{
-			Cilveks:   account.Cilveks,
-			Username:  account.Username,
+			Cilveks:  account.Cilveks,
+			Username: account.Username,
 		}
 		return &httpResult{
 			ResponseType: http.StatusOK,

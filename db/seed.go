@@ -10,7 +10,6 @@ import (
 	"github.com/ksvaza/ees-link/models"
 )
 
-
 func SeedTestData(ctx context.Context) error {
 	realDB := &RealDB{}
 
@@ -28,6 +27,43 @@ func SeedTestData(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func DeleteSeedData(ctx context.Context) error {
+	if err := DeleteAllApplications(ctx); err != nil {
+		return fmt.Errorf("delete applications: %w", err)
+	}
+	if err := DeleteAllAccounts(ctx); err != nil {
+		return fmt.Errorf("delete accounts: %w", err)
+	}
+	if err := DeleteAllAdmins(ctx); err != nil {
+		return fmt.Errorf("delete admins: %w", err)
+	}
+	if err := DeleteAllAccountApplications(ctx); err != nil {
+		return fmt.Errorf("delete account applications: %w", err)
+	}
+
+	return nil
+}
+
+func DeleteAllApplications(ctx context.Context) error {
+	_, err := Pool.Exec(ctx, "DELETE FROM applicants")
+	return err
+}
+
+func DeleteAllAccounts(ctx context.Context) error {
+	_, err := Pool.Exec(ctx, "DELETE FROM konti")
+	return err
+}
+
+func DeleteAllAdmins(ctx context.Context) error {
+	_, err := Pool.Exec(ctx, "DELETE FROM admini")
+	return err
+}
+
+func DeleteAllAccountApplications(ctx context.Context) error {
+	_, err := Pool.Exec(ctx, "DELETE FROM kontu_pieteikumi")
+	return err
 }
 
 func seedHash(password, salt string) string {

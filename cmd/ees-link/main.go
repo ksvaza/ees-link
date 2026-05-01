@@ -58,9 +58,23 @@ func main() {
 	RealDB.TestHealthiness(ctx)
 
 	// DB impregnācija ar testu datiem
-	err = db.SeedTestData(ctx)
-	if err != nil {
-		logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
+
+	if envreader.GetEnvBool("SEEDDATABASE") {
+		logrus.Info("Seeding database with test data...")
+		err = db.SeedTestData(ctx)
+		if err != nil {
+			logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
+			return
+		}
+	}
+
+	if envreader.GetEnvBool("CLEARSEEDDATA") {
+		logrus.Info("Clearing seeded test data from database...")
+		err = db.DeleteSeedData(ctx)
+		if err != nil {
+			logrus.WithError(errors.Wrap(err, "DB Clear Seed Data")).Error("Error")
+			return
+		}
 	}
 
 	logrus.Info("\nSveika, http aplikācija!\n")

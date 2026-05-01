@@ -69,6 +69,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/applications", Handler(PointPostApplications))
 	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
 	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
+	// Vēl vajag PATCH /api/account-applications manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

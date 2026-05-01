@@ -7,6 +7,8 @@ Dockerfile*
 .vscode
 build.xml
 **/*.exe
-Dokumentacija/*
+Dokumentacija
+LICENSE
+README.md
 *.tmp
 *.bak

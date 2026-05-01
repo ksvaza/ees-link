@@ -260,7 +260,7 @@ func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Acco
 	return nil
 }
 
-func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) (models.AccountApplication, error) {
+func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) error {
 	_, err := Pool.Exec(ctx, AccountApplicationWriteRequest,
 		newAccountApplication.FullName,
 		newAccountApplication.DateOfBirth,
@@ -273,10 +273,10 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 
 	if err != nil {
 		logrus.WithError(err).Error("Failed to write to accounts table")
-		return models.AccountApplication{}, err
+		return err
 	}
 
-	return newAccountApplication, nil
+	return nil
 }
 
 func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error) {

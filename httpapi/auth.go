@@ -35,11 +35,12 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	logrus.Infof("Received form data: %+v", pieteikums)
 
-	// TODO: Implement registration logic here, e.g. validate input, check for existing user, hash password, save to database, etc.
-
 	realDB := db.RealDB{}
 
-	realDB.RegisterNewAccountApplication(context.Background(), pieteikums)
+	err = realDB.RegisterNewAccountApplication(context.Background(), pieteikums)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to register new account application")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

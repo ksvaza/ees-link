@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
-	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/fakedb"
 	"github.com/ksvaza/ees-link/models"
@@ -23,20 +22,57 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		return nil, errors.New("method not allowed")
 	}
 
-	//realDB := fakedb.FSDatabase{}
+	ctx := r.Context()
 
 	realDB := db.RealDB{}
+	applications, err := realDB.GetAllApplications(ctx)
 
-	//db.GetAllApplicants()
+	adminaccount := GetAdminAccount(r.Context())
+	if adminaccount != nil && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
+		logrus.Infof("Admin account found in context: %+v", adminaccount)
+		if err != nil {
+			return nil, errors.Wrap(err, "GetAllApplications")
+		}
 
-	applications, err := realDB.GetAllApplications(r.Context())
-	if err != nil {
-		return nil, errors.Wrap(err, "GetAllApplications")
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         applications,
+		}, nil
+	}
+
+	account := GetAccount(r.Context())
+	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
+		logrus.Infof("User account found in context: %+v", account)
+		if err != nil {
+			return nil, errors.Wrap(err, "GetAllApplications")
+		}
+
+		for _, application := range applications {
+			if application.ID == account.Cilveks.ID {
+				applicationRestricted := models.RegistrationFormDataRestricted{
+					TeamName:    application.TeamName,
+					Institution: application.Institution,
+					MemberCount: len(application.Members),
+					AppliedAt:   application.AppliedAt,
+					Status:      application.Status,
+				}
+
+				return &httpResult{
+					ResponseType: http.StatusOK,
+					Body:         applicationRestricted,
+				}, nil
+			}
+		}
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         `{"error":"no data"}`,
+		}, nil
 	}
 
 	return &httpResult{
-		ResponseType: http.StatusOK,
-		Body:         applications,
+		ResponseType: http.StatusUnauthorized,
+		Body:         `{"error":"unauthorized"}`,
 	}, nil
 }
 
@@ -131,37 +167,37 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 	}, nil
 }
 
-func PointGetApplicationsRestricted(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointGetApplicationsRestricted called %+v", ps)
-	if r.Method != http.MethodGet {
-		return nil, errors.New("method not allowed")
-	}
+// func PointGetApplicationsRestricted(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+// 	logrus.Infof("PointGetApplicationsRestricted called %+v", ps)
+// 	if r.Method != http.MethodGet {
+// 		return nil, errors.New("method not allowed")
+// 	}
 
-	//realDB := fakedb.FSDatabase{}
+// 	//realDB := fakedb.FSDatabase{}
 
-	var realDB data.Database
-	realDB = &db.RealDB{}
+// 	var realDB data.Database
+// 	realDB = &db.RealDB{}
 
-	//db.GetAllApplicants()
+// 	//db.GetAllApplicants()
 
-	applications, err := realDB.GetAllApplications(r.Context())
-	if err != nil {
-		return nil, errors.Wrap(err, "GetAllApplications")
-	}
+// 	applications, err := realDB.GetAllApplications(r.Context())
+// 	if err != nil {
+// 		return nil, errors.Wrap(err, "GetAllApplications")
+// 	}
 
-	restrictedApplications := make([]models.RegistrationFormDataRestricted, len(applications))
-	for i, app := range applications {
-		restrictedApplications[i] = models.RegistrationFormDataRestricted{
-			TeamName:    app.TeamName,
-			Institution: app.Institution,
-			MemberCount: len(app.Members),
-			AppliedAt:   app.AppliedAt,
-			Status:      app.Status,
-		}
-	}
+// 	restrictedApplications := make([]models.RegistrationFormDataRestricted, len(applications))
+// 	for i, app := range applications {
+// 		restrictedApplications[i] = models.RegistrationFormDataRestricted{
+// 			TeamName:    app.TeamName,
+// 			Institution: app.Institution,
+// 			MemberCount: len(app.Members),
+// 			AppliedAt:   app.AppliedAt,
+// 			Status:      app.Status,
+// 		}
+// 	}
 
-	return &httpResult{
-		ResponseType: http.StatusOK,
-		Body:         restrictedApplications,
-	}, nil
-}
+// 	return &httpResult{
+// 		ResponseType: http.StatusOK,
+// 		Body:         restrictedApplications,
+// 	}, nil
+// }

@@ -2,6 +2,7 @@
 on: [push]
 jobs:
   build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Setup JDK 14
@@ -9,3 +10,4 @@ jobs:
         with:
           java-version: '14'
           architecture: x64
+      - run: ant build

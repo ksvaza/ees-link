@@ -37,6 +37,24 @@ type RegistrationFormData struct {
 	Status            string            `json:"status"`
 }
 
+func (r RegistrationFormData) FindTeamMemberByFullName(fullName string) *TeamMember {
+	for _, member := range r.Members {
+		if member.FullName == fullName {
+			return &member
+		}
+	}
+	return nil
+}
+
+func (r RegistrationFormData) FindTeamLeader() *TeamMember {
+	for _, member := range r.Members {
+		if member.Role == "team_leader" {
+			return &member
+		}
+	}
+	return nil
+}
+
 type RegistrationFormDataRestricted struct {
 	TeamName    string    `json:"teamName"`
 	Institution *string   `json:"institution,omitempty"`

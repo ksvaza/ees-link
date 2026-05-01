@@ -12,7 +12,7 @@ jobs:
           distribution: 'temurin'
       - run: ant build
       - name: Publish artefacts
-        uses: actions/publish-artifact@v2
+        uses: actions/upload-artifact@v2
         with:
           name: image
           path: bin/ees-link.tar

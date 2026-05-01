@@ -17,6 +17,8 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
+	id := ps.ByName("uniqueID")
+
 	var pieteikums models.AccountApplication
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -30,14 +32,31 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	logrus.Infof("Received form data: %+v", pieteikums)
 
-	// TODO: Implement registration logic here, e.g. validate input, check for existing user, hash password, save to database, etc.
-
-	//realDB := db.RealDB{}
+	err = RegisterApplication(pieteikums, id)
+	if err != nil {
+		return nil, errors.Wrap(err, "Register account")
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
 		Body:         `{"status":"success"}`,
 	}, nil
+}
+
+func RegisterApplication(pieteikums models.AccountApplication, id string) error {
+	// TODO: Implement application registration logic here
+
+	//realDB := db.RealDB{}
+	return nil
+}
+
+func RegisterAdminAccount(admin models.AdminAccount) error {
+	//admin.Salt = GenerateSalt()
+	// if admin exists return nil, otherwise create new admin account and return nil
+	// if errror occurs, return error
+
+	// Bračiņ, vajag funkciju datubāzē šim
+	return nil
 }
 
 func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {

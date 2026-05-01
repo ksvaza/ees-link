@@ -8,6 +8,7 @@ import (
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
+	"github.com/ksvaza/ees-link/models"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -33,6 +34,18 @@ func main() {
 		return
 	}
 	defer f.Close()
+
+	// visadministratora atgūšana no vides mainīgajiem
+	var superadmin models.AdminAccount
+	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
+	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
+	superadmin.Superadmin = true
+
+	err = httpapi.RegisterAdminAccount(superadmin)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to register superadmin account")
+		return
+	}
 
 	logrus.Info("\nSveika, pasaule!\n")
 

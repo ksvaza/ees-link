@@ -54,6 +54,13 @@ type Account struct {
 	Salt        string     `json:"salt"`
 }
 
+type AdminAccount struct {
+	Username   string `json:"lietotajvards"`
+	Password   string `json:"parole"`
+	Salt       string `json:"salt"`
+	Superadmin bool   `json:"superadmin"`
+}
+
 type AccountApplication struct {
 	FullName    string `json:"fullName"`
 	DateOfBirth string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format

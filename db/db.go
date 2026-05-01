@@ -36,6 +36,28 @@ func MigrateUp(ctx context.Context, dbURL string) error {
 	return nil
 }
 
+func MigrateDown(ctx context.Context, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
+	return nil
+}
+
+func impregnateDB(ctx context.Context, dbURL string) error {
+	var err error
+	Pool, err = pgxpool.New(ctx, dbURL)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to create DB pool")
+		return err
+	}
+
+	
+	return nil
+}
+
 func (DB *RealDB) TestHealthiness(ctx context.Context) error {
 	err := Pool.Ping(ctx)
 	if err != nil {
@@ -242,9 +264,7 @@ func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Acco
 		newAccount.Cilveks.Key,
 		newAccount.Cilveks.FullName,
 		newAccount.Cilveks.DateOfBirth,
-		newAccount.Cilveks.EducationalInstitution,
 		newAccount.Cilveks.Role,
-		newAccount.Cilveks.ClassOrYear,
 		newAccount.Cilveks.ID,
 		newAccount.Password,
 		newAccount.Username,
@@ -264,6 +284,7 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	_, err := Pool.Exec(ctx, AccountApplicationWriteRequest,
 		newAccountApplication.FullName,
 		newAccountApplication.DateOfBirth,
+		newAccountApplication.Role,
 		newAccountApplication.Password,
 		newAccountApplication.Username,
 		newAccountApplication.Email,
@@ -285,9 +306,7 @@ func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*m
 		&a.Cilveks.Key,
 		&a.Cilveks.FullName,
 		&a.Cilveks.DateOfBirth,
-		&a.Cilveks.EducationalInstitution,
 		&a.Cilveks.Role,
-		&a.Cilveks.ClassOrYear,
 		&a.Cilveks.ID,
 		&a.Password,
 		&a.Username,
@@ -311,9 +330,7 @@ func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*m
 		&a.Cilveks.Key,
 		&a.Cilveks.FullName,
 		&a.Cilveks.DateOfBirth,
-		&a.Cilveks.EducationalInstitution,
 		&a.Cilveks.Role,
-		&a.Cilveks.ClassOrYear,
 		&a.Cilveks.ID,
 		&a.Password,
 		&a.Username,
@@ -337,9 +354,7 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 		&a.Cilveks.Key,
 		&a.Cilveks.FullName,
 		&a.Cilveks.DateOfBirth,
-		&a.Cilveks.EducationalInstitution,
 		&a.Cilveks.Role,
-		&a.Cilveks.ClassOrYear,
 		&a.Cilveks.ID,
 		&a.Password,
 		&a.Username,
@@ -372,6 +387,7 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 		err = rows.Scan(
 			&a.FullName,
 			&a.DateOfBirth,
+			&a.Role,
 			&a.Password,
 			&a.Username,
 			&a.Email,

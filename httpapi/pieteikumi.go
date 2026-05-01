@@ -40,40 +40,48 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 		}, nil
 	}
 
+	var a models.RegistrationFormData
 	account := GetAccount(r.Context())
-	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
-		logrus.Infof("User account found in context: %+v", account)
-		if err != nil {
-			return nil, errors.Wrap(err, "GetAllApplications")
+	if account == nil {
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         "Unauthorized",
+		}, nil
+	}
+
+	for _, application := range applications {
+		if application.ID == account.Cilveks.ID {
+			a = application
+			break
 		}
+	}
 
-		for _, application := range applications {
-			if application.ID == account.Cilveks.ID {
-				applicationRestricted := models.RegistrationFormDataRestricted{
-					TeamName:    application.TeamName,
-					Institution: application.Institution,
-					MemberCount: len(application.Members),
-					AppliedAt:   application.AppliedAt,
-					Status:      application.Status,
-				}
+	if a.ID == "" {
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         "Application not found",
+		}, nil
+	}
 
-				return &httpResult{
-					ResponseType: http.StatusOK,
-					Body:         applicationRestricted,
-				}, nil
-			}
+	if account != nil && account.Cilveks.Role == "team_leader" && account.Username != "" && account.Password != "" && account.Salt != "" {
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         a,
+		}, nil
+	} else {
+		applicationRestricted := models.RegistrationFormDataRestricted{
+			TeamName:    a.TeamName,
+			Institution: a.Institution,
+			MemberCount: len(a.Members),
+			AppliedAt:   a.AppliedAt,
+			Status:      a.Status,
 		}
 
 		return &httpResult{
 			ResponseType: http.StatusOK,
-			Body:         `{"error":"no data"}`,
+			Body:         applicationRestricted,
 		}, nil
 	}
-
-	return &httpResult{
-		ResponseType: http.StatusUnauthorized,
-		Body:         `{"error":"unauthorized"}`,
-	}, nil
 }
 
 func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
@@ -92,6 +100,11 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
+
+	for i := range newApplicant.Members {
+		newApplicant.Members[i].ID = newApplicant.ID
+	}
+
 	newApplicant.AppliedAt = time.Now()
 	realDB := db.RealDB{}
 
@@ -150,20 +163,50 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 		return nil, errors.Wrap(err, "Read body")
 	}
 
-	if err := json.Unmarshal(body, existingApplication); err != nil {
-		return nil, errors.Wrap(err, "Unmarshal")
+	adminaccount := GetAdminAccount(r.Context())
+	if adminaccount != nil && adminaccount.Superadmin && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
+		logrus.Infof("Admin account found in context: %+v", adminaccount)
+
+		if err := json.Unmarshal(body, existingApplication); err != nil {
+			return nil, errors.Wrap(err, "Unmarshal")
+		}
+		existingApplication.ID = ID
+
+		logrus.Infof("Received application update (superadmin): %+v", existingApplication)
+		err = realDB.UpdateApplication(r.Context(), *existingApplication)
+		if err != nil {
+			return nil, errors.Wrap(err, "UpdateApplication")
+		}
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         "Application updated",
+		}, nil
 	}
 
-	// Application patching handling logic here (e.g., save to database)
-	logrus.Infof("Received application update: %+v", existingApplication)
-	err = realDB.UpdateApplication(r.Context(), *existingApplication)
-	if err != nil {
-		return nil, errors.Wrap(err, "UpdateApplication")
+	account := GetAccount(r.Context())
+	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
+		if account.Cilveks.ID == ID {
+			logrus.Infof("Received application update from team member: %+v", account)
+			if err := json.Unmarshal(body, existingApplication); err != nil {
+				return nil, errors.Wrap(err, "Unmarshal")
+			}
+			existingApplication.ID = ID
+
+			err = realDB.UpdateApplication(r.Context(), *existingApplication)
+			if err != nil {
+				return nil, errors.Wrap(err, "UpdateApplication")
+			}
+			return &httpResult{
+				ResponseType: http.StatusOK,
+				Body:         "Application updated",
+			}, nil
+		}
 	}
 
 	return &httpResult{
-		ResponseType: http.StatusOK,
-		Body:         "Application updated",
+		ResponseType: http.StatusForbidden,
+		Body:         `{"error":"forbidden"}`,
 	}, nil
 }
 

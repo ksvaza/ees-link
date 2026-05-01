@@ -1,0 +1,12 @@
+﻿.dockerignore
+bin
+Dockerfile*
+.gitignore 
+.git
+.idea
+.vscode
+build.xml
+**/*.exe
+Dokumentacija/*
+*.tmp
+*.bak

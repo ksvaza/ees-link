@@ -36,31 +36,46 @@ const (
 
 	AccountWriteRequest = `
 		INSERT INTO konti (
-			id = $1, full_name = $2, date_of_birth = $3, password = $4, username = $5, email = $6, phone_number = $7
+			id, fullname, date_of_birth, password, username, email, phone_number
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7
 		)`
 
 	AccountReadRequestByFullname = `
-		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
-		FROM konti WHERE full_name = $1`
+		SELECT id, fullname, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		FROM konti WHERE fullname = $1`
 
 	AccountReadRequestByDateOfBirth = `
-		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		SELECT id, fullname, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
 		FROM konti WHERE date_of_birth = $1`
 
 	AccountApplicationWriteRequest = `
 		INSERT INTO kontu_pieteikumi (
-			full_name = $1, date_of_birth = $2, password = $3, username = $4, email = $5, phone_number = $6, team_name = $7 )`
+			fullname, date_of_birth, password, username, email, phone_number, team_name
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7
+		)`
 
 	AccountReadRequestByUsername = `
-		SELECT id, full_name, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
+		SELECT id, fullname, date_of_birth, educational_institution, role, class_or_year, password, username, email, phone_number
 		FROM konti WHERE username = $1`
 
 	AccountApplicationReadRequest = `
-		SELECT id, full_name, date_of_birth, password, username, email, phone_number, team_name
+		SELECT id, fullname, date_of_birth, password, username, email, phone_number, team_name
 		FROM kontu_pieteikumi`
 
 	AdminAccountWriteRequest = `
-		INSERT INTO admin_accounts (
-			username = $1, password = $2, salt = $3, superadmin = $4
-		) `
+		INSERT INTO admini (
+			username, password, salt, superadmin
+		) VALUES (
+			$1, $2, $3, $4
+		)`
+
+	AdminAccountReadRequest = `
+		SELECT username, password, salt, superadmin
+		FROM admini`
+
+	AdminAccountReadRequestByUsername = `
+		SELECT username, password, salt, superadmin
+		FROM admini WHERE username = $1`
 )

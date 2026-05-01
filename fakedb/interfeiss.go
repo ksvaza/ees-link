@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ksvaza/ees-link/models"
+	"github.com/sirupsen/logrus"
 )
 
 type FSDatabase struct{}
@@ -64,29 +65,43 @@ func (db *FSDatabase) UpdateApplication(ctx context.Context, updatedApplicant mo
 }
 
 func (db *FSDatabase) RegisterNewAccount(ctx context.Context, newAccount models.Account) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return nil
 }
 
 func (db *FSDatabase) RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) (models.AccountApplication, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return newAccountApplication, nil
 }
 
 func (db *FSDatabase) GetAccountByUsername(ctx context.Context, username string) (models.Account, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return models.Account{}, nil
 }
 
 func (db *FSDatabase) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return models.Account{}, nil
 }
 
 func (db *FSDatabase) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return models.Account{}, nil
 }
 
 func (db *FSDatabase) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return nil
 }
 
 func (db *FSDatabase) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
 	return []models.AccountApplication{}, nil
 }

@@ -406,6 +406,7 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 }
 
 func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
+	fmt.Printf("Registering new admin: %+v\n", newAccount)
 	_, err := Pool.Exec(ctx, AdminAccountWriteRequest,
 		newAccount.Username,
 		newAccount.Password,
@@ -413,10 +414,68 @@ func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminA
 		newAccount.Superadmin,
 	)
 
+	fmt.Printf("ierakstits")
+
 	if err != nil {
 		logrus.WithError(err).Error("Failed to write to admin accounts table")
 		return err
 	}
 
 	return nil
+}
+
+func (DB *RealDB) GetAllAdmins(ctx context.Context) ([]models.AdminAccount, error) {
+	rows, err := Pool.Query(ctx, AdminAccountReadRequest)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query admin accounts table")
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var admins []models.AdminAccount
+	for rows.Next() {
+		var a models.AdminAccount
+		err = rows.Scan(
+			&a.Username,
+			&a.Password,
+			&a.Salt,
+			&a.Superadmin,
+		)
+
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan admin account row")
+			return nil, err
+		}
+
+		admins = append(admins, a)
+	}
+
+	return admins, nil
+}
+
+func (DB *RealDB) GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error) {
+	rows, err := Pool.Query(ctx, AdminAccountReadRequestByUsername, username)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query admin accounts table")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var a models.AdminAccount
+	for rows.Next() {
+		err = rows.Scan(
+			&a.Username,
+			&a.Password,
+			&a.Salt,
+			&a.Superadmin,
+		)
+	}
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to scan admin account row")
+		return nil, err
+	}
+
+	return &a, nil
 }

@@ -35,18 +35,6 @@ func main() {
 	}
 	defer f.Close()
 
-	// visadministratora atgūšana no vides mainīgajiem
-	var superadmin models.AdminAccount
-	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
-	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
-	superadmin.Superadmin = true
-
-	err = httpapi.RegisterAdminAccount(superadmin)
-	if err != nil {
-		logrus.WithError(err).Error("Failed to register superadmin account")
-		return
-	}
-
 	logrus.Info("\nSveika, pasaule!\n")
 
 	ctx := context.Background()
@@ -65,11 +53,27 @@ func main() {
 		return
 	}
 
+	RealDB := db.RealDB{}
+
+	RealDB.TestHealthiness(ctx)
+
 	logrus.Info("\nSveika, http aplikācija!\n")
 
 	err = httpapi.SetupHTTPAPI()
 	if err != nil {
 		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
+	}
+
+	// visadministratora atgūšana no vides mainīgajiem
+	var superadmin models.AdminAccount
+	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
+	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
+	superadmin.Superadmin = true
+
+	err = httpapi.RegisterAdminAccount(superadmin)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to register superadmin account")
+		return
 	}
 
 	for {

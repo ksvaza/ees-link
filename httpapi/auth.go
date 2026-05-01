@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -19,7 +20,7 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
-	id := ps.ByName("uniqueID") // e-es.lv/api/register?uniqueID=1234
+	//id := ps.ByName("uniqueID") // e-es.lv/api/register?uniqueID=1234
 
 	var pieteikums models.AccountApplication
 	body, err := io.ReadAll(r.Body)
@@ -54,11 +55,35 @@ func RegisterApplication(pieteikums models.AccountApplication, id string) error 
 }
 
 func RegisterAdminAccount(admin models.AdminAccount) error {
-	//admin.Salt = GenerateSalt()
-	// if admin exists return nil, otherwise create new admin account and return nil
-	// if errror occurs, return error
+	salt, err := GenerateSalt(16)
+	if err != nil {
+		return errors.Wrap(err, "failed to generate salt")
+	}
 
-	// Bračiņ, vajag funkciju datubāzē šim
+	realDB := db.RealDB{}
+
+	admins, err := realDB.GetAllAdmins(context.Background())
+	if err != nil {
+		return errors.Wrap(err, "failed to get all admins")
+	}
+
+	for _, a := range admins {
+		if a.Username == admin.Username {
+			logrus.Infof("Admin account with username '%s' already exists", admin.Username)
+			return nil
+		}
+	}
+
+	admin.Salt = salt
+	admin.Password = hashPassword(admin.Password, salt)
+
+	fmt.Printf("%+v\n", admin)
+
+	err = realDB.RegisterNewAdmin(context.Background(), admin)
+	if err != nil {
+		return errors.Wrap(err, "failed to register new admin")
+	}
+
 	return nil
 }
 

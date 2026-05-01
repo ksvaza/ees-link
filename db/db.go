@@ -402,6 +402,48 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 	return accounts, nil
 }
 
+func (DB *RealDB) GetAccountsByID(ctx context.Context, id string) ([]models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequestByID, id)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query accounts table by ID")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []models.Account
+	for rows.Next() {
+		var a models.Account
+		err = rows.Scan(
+			&a.Cilveks.Key,
+			&a.Cilveks.FullName,
+			&a.Cilveks.DateOfBirth,
+			&a.Cilveks.Role,
+			&a.Cilveks.ID,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.Salt,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account row")
+			return nil, err
+		}
+		accounts = append(accounts, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account rows by ID")
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return nil, nil
+	}
+
+	return accounts, nil
+}
+
 // Account applications for user creation
 
 func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
@@ -464,9 +506,9 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	return nil
 }
 
-func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id int) (*models.AccountApplication, error) {
+func (DB *RealDB) GetAccountApplicationByUsername(ctx context.Context, username string) (*models.AccountApplication, error) {
 	a := &models.AccountApplication{}
-	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByID, id).Scan(
+	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByUsername, username).Scan(
 		&a.FullName,
 		&a.DateOfBirth,
 		&a.Role,

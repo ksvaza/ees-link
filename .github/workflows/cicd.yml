@@ -9,5 +9,5 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '14'
-          architecture: x64
+          distribution: 'temurin'
       - run: ant build

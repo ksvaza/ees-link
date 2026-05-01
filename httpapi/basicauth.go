@@ -81,12 +81,21 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
-	database := db.RealDB{}
+	RealDB := db.RealDB{}
 
-	// admin account, err := database.GetAdminAccountByUsername(ctx, username)
-	// check firstly if the account is admin, if so then put into context WithAdminAccount, otherwise check if it's regular account and put into context WithAccount
+	admin, err := RealDB.GetAdminAccountByUsername(ctx, username)
 
-	a, err := database.GetAccountByUsername(ctx, username)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to get admin account by username")
+	}
+
+	if admin != nil {
+		ctx = WithAdminAccount(ctx, admin)
+		r = r.WithContext(ctx)
+		return r
+	}
+
+	a, err := RealDB.GetAccountByUsername(ctx, username)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get account by username")
 		return r

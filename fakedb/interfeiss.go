@@ -82,3 +82,11 @@ func (db *FSDatabase) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth s
 func (db *FSDatabase) GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error) {
 	return models.Account{}, nil
 }
+
+func (db *FSDatabase) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
+	return nil
+}
+
+func (db *FSDatabase) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
+	return []models.AccountApplication{}, nil
+}

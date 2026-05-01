@@ -20,6 +20,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// Auth
 	router.POST("/api/register", Handler(PointRegister))
 	router.POST("/api/login", Handler(PointLogin))
+	// TODO: add GET and POST rqeuests for account applications and verified accounts
 
 	// Users
 	router.GET("/api/users", PointGetUsers)

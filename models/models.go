@@ -68,3 +68,10 @@ type AuthenticationResponse struct {
 	Account *Account `json:"account"`
 	Err     error    `json:"error"`
 }
+
+type AdminAccount struct {
+	Username   string `json:"lietotajvards"`
+	Password   string `json:"parole"`
+	Salt       string `json:"salt"`
+	Superadmin bool   `json:"superadmin"`
+}

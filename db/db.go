@@ -374,7 +374,7 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 	return a, nil
 }
 
-func (Db *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
+func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error) {
 	rows, err := Pool.Query(ctx, AccountApplicationReadRequest)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query account applications table")
@@ -405,3 +405,18 @@ func (Db *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 	return accountApplications, nil
 }
 
+func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error {
+	_, err := Pool.Exec(ctx, AdminAccountWriteRequest,
+		newAccount.Username,
+		newAccount.Password,
+		newAccount.Salt,
+		newAccount.Superadmin,
+	)
+
+	if err != nil {
+		logrus.WithError(err).Error("Failed to write to admin accounts table")
+		return err
+	}
+
+	return nil
+}

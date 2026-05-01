@@ -74,11 +74,28 @@ func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpRe
 
 func PointReceiveVerifiedAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointReceiveVerifiedAccounts called %+v", ps)
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		return nil, errors.New("method not allowed")
 	}
 
-	
+	var accounts []models.Account
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Read body")
+	}
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &accounts); err != nil {
+		return nil, errors.Wrap(err, "Unmarshal")
+	}
+
+	realDB := db.RealDB{}
+	for _, account := range accounts {
+		err := realDB.RegisterNewAccount(context.Background(), account)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to save verified accounts")
+		}
+	}
 
 	return &httpResult{
 		ResponseType: http.StatusOK,

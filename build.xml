@@ -13,7 +13,7 @@
 		</exec>
 	</target>
 	
-	<target name="docker" depends="test">
+	<target name="docker">
 		<mkdir dir="bin" />
 		<exec executable="docker" failonerror="true">
 			<arg line="build" />
@@ -22,22 +22,6 @@
 			<arg line="." />
 		</exec>
 		<exec executable="docker" failonerror="true">
-			<arg line="save" />
-			<arg line="-o bin/ees-link.tar" />
-			<arg line="ees-link" />
-		</exec>
-	</target>
-
-	<target name="server" depends="test">
-		<mkdir dir="bin" />
-		<exec executable="docker" failonerror="true"> <!--> docker build -f Dockerfile -t ees-link-front . <!-->
-			<arg line="build" />
-			<!--arg line="- -debug" /-->
-			<arg line="-f DockerfileAMD64" />
-			<arg line="-t ees-link" />
-			<arg line="." />
-		</exec>
-		<exec executable="docker" failonerror="true"> <!--> docker save -o bin/ees-link-front.tar ees-link-front <!-->
 			<arg line="save" />
 			<arg line="-o bin/ees-link.tar" />
 			<arg line="ees-link" />

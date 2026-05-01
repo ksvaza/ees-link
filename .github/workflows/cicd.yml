@@ -11,3 +11,8 @@ jobs:
           java-version: '26'
           distribution: 'temurin'
       - run: ant build
+      - name: Publish artefacts
+        uses: actions/publish-artifact@v2
+        with:
+          name: image
+          path: bin/ees-link.tar

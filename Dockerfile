@@ -19,7 +19,8 @@ FROM build AS test
 WORKDIR /go/src
 RUN mkdir -p /go/src/bin/tests && \
     go test ./... -o /dev/null -c && \
-    sh -c 'go test ./... -json -count=1 -timeout 30s -cover -coverprofile=bin/tests/cover.txt || true' > bin/tests/tests.json
+    sh -c 'go test ./... -json -count=1 -timeout 30s -cover -coverprofile=bin/tests/cover.txt || true' > bin/tests/tests.json && \
+    ${GOPATH}/bin/golangci-lint --config .golangci.yaml run ./... --show-stats=false --output.text.print-issued-lines=false --output.text.colors --issues-exit-code=0 --max-same-issues=0 > bin/tests/linter.txt
 
 FROM alpine:3.23.0 AS final
 

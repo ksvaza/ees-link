@@ -45,9 +45,14 @@ func hashPassword(password, salt string) string {
 type contextKeyT string
 
 var accountKey = contextKeyT("account")
+var adminAccountKey = contextKeyT("adminAccount")
 
 func WithAccount(ctx context.Context, account *models.Account) context.Context {
 	return context.WithValue(ctx, accountKey, account)
+}
+
+func WithAdminAccount(ctx context.Context, admin *models.AdminAccount) context.Context {
+	return context.WithValue(ctx, adminAccountKey, admin)
 }
 
 func GetAccount(ctx context.Context) *models.Account {
@@ -56,6 +61,14 @@ func GetAccount(ctx context.Context) *models.Account {
 		return nil
 	}
 	return account
+}
+
+func GetAdminAccount(ctx context.Context) *models.AdminAccount {
+	admin, ok := ctx.Value(adminAccountKey).(*models.AdminAccount)
+	if !ok {
+		return nil
+	}
+	return admin
 }
 
 // ----------------------------------------------------------------
@@ -69,6 +82,10 @@ func Authenticate(r *http.Request) *http.Request {
 	}
 
 	database := db.RealDB{}
+
+	// admin account, err := database.GetAdminAccountByUsername(ctx, username)
+	// check firstly if the account is admin, if so then put into context WithAdminAccount, otherwise check if it's regular account and put into context WithAccount
+
 	a, err := database.GetAccountByUsername(ctx, username)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get account by username")

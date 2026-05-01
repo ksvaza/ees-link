@@ -67,8 +67,27 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if r.Method != http.MethodPost {
 		return nil, errors.New("method not allowed")
 	}
-	// TODO: implement login
-	return nil, errors.New("not implemented")
+	adminaccount := GetAdminAccount(r.Context())
+	if adminaccount != nil {
+		logrus.Infof("Authenticated admin account: %+v", adminaccount)
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         adminaccount,
+		}, nil
+	}
+	account := GetAccount(r.Context())
+	if account != nil {
+		logrus.Infof("Authenticated account: %+v", account)
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         account,
+		}, nil
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusUnauthorized,
+		Body:         `{"error":"unauthorized"}`,
+	}, nil
 }
 
 func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {

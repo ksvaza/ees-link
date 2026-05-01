@@ -34,9 +34,13 @@ func test(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
-	// account := GetAccount(r.Context())
+	//account := GetAccount(r.Context())
+	//admin := GetAdminAccount(r.Context())
 	// if account != nil {
 	// 	logrus.Infof("Authenticated account: %+v", account)
+	// }
+	// if admin != nil {
+	// 	logrus.Infof("Authenticated admin account: %+v", admin)
 	// }
 	// if account.Cilveks.Role != "admin" {
 	// 	return nil, errors.New("forbidden")

@@ -40,3 +40,10 @@ CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
     phone_number TEXT NOT NULL,
     team_name TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS admini (
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    salt TEXT NOT NULL,
+    superadmin BOOLEAN NOT NULL DEFAULT false
+);

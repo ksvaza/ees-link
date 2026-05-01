@@ -1,15 +1,35 @@
 package httpapi
 
 import (
-	"context"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/models"
-	"github.com/sirupsen/logrus"
+	"github.com/pkg/errors"
 )
+
+func GenerateSalt(size int) (string, error) {
+	if size <= 0 {
+		size = 16
+	}
+
+	salt := make([]byte, size)
+	if _, err := rand.Read(salt); err != nil {
+		return "", fmt.Errorf("failed to generate random salt: %w", err)
+	}
+
+	return base64.RawStdEncoding.EncodeToString(salt), nil
+}
+
+type user struct {
+	Username     string
+	PasswordHash string
+	Salt         string
+}
 
 func hashPassword(password, salt string) string {
 	h := sha512.New()
@@ -24,15 +44,12 @@ var accountKey = contextKeyT("account")
 func WithAccount(ctx context.Context, account *models.Account) context.Context {
 	return context.WithValue(ctx, accountKey, account)
 }
-
 func GetAccount(ctx context.Context) *models.Account {
 	account, ok := ctx.Value(accountKey).(*models.Account)
 	if !ok {
 		return nil
 	}
 	return account
-}
-
 func Authenticate(r *http.Request) *http.Request {
 	ctx := r.Context()
 

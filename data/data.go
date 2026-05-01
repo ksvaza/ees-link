@@ -22,4 +22,7 @@ type Database interface {
 	GetAccountByUsername(ctx context.Context, username string) (models.Account, error)
 	GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (models.Account, error)
 	GetAccountByFullname(ctx context.Context, fullname string) (models.Account, error)
+
+	RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error
+	GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error)
 }

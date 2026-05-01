@@ -81,9 +81,11 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
-	RealDB := db.RealDB{}
+	logrus.Infof("Autentifikācija ar \"%s:%s\"", username, password)
 
-	admin, err := RealDB.GetAdminAccountByUsername(ctx, username)
+	realDB := db.RealDB{}
+
+	admin, err := realDB.GetAdminAccountByUsername(ctx, username)
 
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get admin account by username")
@@ -93,7 +95,8 @@ func Authenticate(r *http.Request) *http.Request {
 		if admin.Username == "" || admin.Password == "" || admin.Salt == "" {
 			return r
 		}
-		if hashPassword(password, admin.Salt) != admin.Password {
+		if hr := hashPassword(password, admin.Salt); hr != admin.Password {
+			logrus.Infof("Admin Hash (salt = \"%s\") result \"%s\"", admin.Salt, hr)
 			return r
 		}
 		ctx = WithAdminAccount(ctx, admin)
@@ -101,7 +104,7 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
-	a, err := RealDB.GetAccountByUsername(ctx, username)
+	a, err := realDB.GetAccountByUsername(ctx, username)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to get account by username")
 		return r
@@ -111,7 +114,8 @@ func Authenticate(r *http.Request) *http.Request {
 		return r
 	}
 
-	if hashPassword(password, a.Salt) != a.Password {
+	if hr := hashPassword(password, a.Salt); hr != a.Password {
+		logrus.Infof("Parasto mirstīgo Hash (salt = \"%s\") result \"%s\"", a.Salt, hr)
 		return r
 	}
 

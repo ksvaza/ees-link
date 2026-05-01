@@ -79,11 +79,6 @@ func main() {
 
 	logrus.Info("\nSveika, http aplikācija!\n")
 
-	err = httpapi.SetupHTTPAPI()
-	if err != nil {
-		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
-	}
-
 	// visadministratora atgūšana no vides mainīgajiem
 	var superadmin models.AdminAccount
 	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
@@ -94,6 +89,11 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Error("Failed to register superadmin account")
 		return
+	}
+
+	err = httpapi.SetupHTTPAPI()
+	if err != nil {
+		logrus.WithError(errors.Wrap(err, "HTTP")).Error("Error")
 	}
 
 	for {

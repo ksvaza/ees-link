@@ -20,8 +20,6 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.New("method not allowed")
 	}
 
-	//id := ps.ByName("uniqueID") // e-es.lv/api/register?uniqueID=1234
-
 	var pieteikums models.AccountApplication
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -37,6 +35,64 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	realDB := db.RealDB{}
 
+	if pieteikums.TeamName == "" {
+
+		// pa taisno reģistrēt
+
+		// reģistrācijas
+
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         `{"status":"accepted"}`,
+		}, nil
+	}
+
+	if pieteikums.Role == "team_leader" {
+		// http://e-es.lv/api/register?uniqueID=1234567890
+		id := r.URL.Query().Get("uniqueID")
+		if id != "" {
+			team, err := realDB.GetApplicationByID(context.Background(), id)
+			if err != nil {
+				logrus.WithError(err).Error("Failed to find team by ID")
+			} else {
+				member := team.FindTeamMemberByFullName(pieteikums.FullName)
+				if member != nil {
+					if member.Role == "team_leader" {
+						if pieteikums.DateOfBirth != member.DateOfBirth {
+							logrus.Infof("Nesakrīt dzimšanas dienas datumi kontam ar pieteikumu \"%s\" pret \"%s\"", pieteikums.DateOfBirth, member.DateOfBirth)
+						} else {
+							var account models.Account
+							account.Cilveks = *member
+							account.Salt, err = GenerateSalt(16)
+							if err != nil {
+								logrus.WithError(err).Error("Neizdevās saģenerēt sāli.")
+							}
+							// paroli nevajadzētu sūtīt kā parastu teksu, bet tas tā
+							account.Password = hashPassword(pieteikums.Password, account.Salt)
+							account.Username = pieteikums.Username
+							account.Email = pieteikums.Email
+							account.PhoneNumber = pieteikums.PhoneNumber
+
+							err = realDB.RegisterNewAccount(context.Background(), account)
+							if err != nil {
+								logrus.WithError(err).Error("Neizdevās piereģistrēt komandas līderi automātiski")
+							} else {
+								return &httpResult{
+									ResponseType: http.StatusOK,
+									Body:         `{"status":"accepted"}`,
+								}, nil
+							}
+						}
+					} else {
+						logrus.Infof("Piesakoties kā līderim, šeit \"%+v\" cilvēka vārds nesakrīt ar komandas \"%s\" līdera vārdu", pieteikums, member.FullName)
+					}
+				} else {
+					logrus.Infof("Neizdevās atrast komandā \"%s\" cilvēku ar vārdu \"%s\"", team.TeamName, pieteikums.FullName)
+				}
+			}
+		}
+	}
+
 	err = realDB.RegisterNewAccountApplication(context.Background(), pieteikums)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to register new account application")
@@ -44,15 +100,8 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 	return &httpResult{
 		ResponseType: http.StatusOK,
-		Body:         `{"status":"success"}`,
+		Body:         `{"status":"pending verification"}`,
 	}, nil
-}
-
-func RegisterApplication(pieteikums models.AccountApplication, id string) error {
-	// TODO: Implement application registration logic here
-
-	//realDB := db.RealDB{}
-	return nil
 }
 
 func RegisterAdminAccount(admin models.AdminAccount) error {
@@ -91,7 +140,7 @@ func RegisterAdminAccount(admin models.AdminAccount) error {
 
 func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointLogin called %+v", ps)
-	if r.Method != http.MethodPost {
+	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
 	adminaccount := GetAdminAccount(r.Context())
@@ -109,8 +158,8 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
 		logrus.Infof("Authenticated account: %+v", account)
 		accountInfo := models.Account{
-			Cilveks:   account.Cilveks,
-			Username:  account.Username,
+			Cilveks:  account.Cilveks,
+			Username: account.Username,
 		}
 		return &httpResult{
 			ResponseType: http.StatusOK,

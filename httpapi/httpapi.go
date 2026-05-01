@@ -19,7 +19,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 
 	// Auth
 	router.POST("/api/register", Handler(PointRegister))
-	router.POST("/api/login", Handler(PointLogin))
+	router.GET("/api/login", Handler(PointLogin))
 	// TODO: add GET and POST rqeuests for account applications and verified accounts
 
 	// Users
@@ -68,9 +68,6 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/applications", Handler(PointGetApplications))
 	router.POST("/api/applications", Handler(PointPostApplications))
 	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
-
-	// ierobežotie pieteikumi
-	// router.GET("/api/applications", Handler(PointGetApplicationsRestricted))
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)
@@ -145,7 +142,7 @@ func setupHTTPHost(router *httprouter.Router) error {
 		fileServer.ServeHTTP(w, r)
 	})
 
-	return http.ListenAndServe(":2000", handler)
+	return http.ListenAndServe(":1884", handler)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

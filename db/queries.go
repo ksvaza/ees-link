@@ -36,18 +36,26 @@ const (
 
 	AccountWriteRequest = `
 		INSERT INTO konti (
-			key, fullname, date_of_birth, role, id, password, username, email, phone_number
+			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		)`
 
 	AccountReadRequestByFullname = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		FROM konti WHERE fullname = $1`
 
 	AccountReadRequestByDateOfBirth = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		FROM konti WHERE date_of_birth = $1`
+
+	AccountReadRequestByUsername = `
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		FROM konti WHERE username = $1`
+
+	AccountApplicationReadRequest = `
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
+		FROM kontu_pieteikumi`
 
 	AccountApplicationWriteRequest = `
 		INSERT INTO kontu_pieteikumi (
@@ -55,14 +63,6 @@ const (
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8
 		)`
-
-	AccountReadRequestByUsername = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number
-		FROM konti WHERE username = $1`
-
-	AccountApplicationReadRequest = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
-		FROM kontu_pieteikumi`
 
 	AdminAccountWriteRequest = `
 		INSERT INTO admini (

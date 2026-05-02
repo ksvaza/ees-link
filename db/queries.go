@@ -71,17 +71,17 @@ const (
 
 	AccountApplicationWriteRequest = `
 		INSERT INTO kontu_pieteikumi (
-			fullname, date_of_birth, role, password, username, email, phone_number, team_name
+			fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 		)`
 
 	AccountApplicationReadRequest = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		FROM kontu_pieteikumi`
 
 	AccountApplicationReadRequestByID = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		FROM kontu_pieteikumi WHERE id = $1`
 
 	// -------------------------------------------------------------------------
@@ -90,16 +90,16 @@ const (
 
 	AdminAccountWriteRequest = `
 		INSERT INTO admini (
-			username, password, salt, superadmin
+			username, password, salt, superadmin, key
 		) VALUES (
-			$1, $2, $3, $4
+			$1, $2, $3, $4, $5
 		)`
 
 	AdminAccountReadRequest = `
-		SELECT username, password, salt, superadmin
+		SELECT username, password, salt, superadmin, key
 		FROM admini`
 
 	AdminAccountReadRequestByUsername = `
-		SELECT username, password, salt, superadmin
+		SELECT username, password, salt, superadmin, key
 		FROM admini WHERE username = $1`
 )

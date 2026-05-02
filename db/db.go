@@ -424,6 +424,7 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 			&a.Email,
 			&a.PhoneNumber,
 			&a.TeamName,
+			&a.Key,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account application row")
@@ -454,6 +455,7 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 		newAccountApplication.Email,
 		newAccountApplication.PhoneNumber,
 		newAccountApplication.TeamName,
+		newAccountApplication.Key,
 	)
 
 	if err != nil {
@@ -464,7 +466,7 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	return nil
 }
 
-func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id int) (*models.AccountApplication, error) {
+func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id string) (*models.AccountApplication, error) {
 	a := &models.AccountApplication{}
 	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByID, id).Scan(
 		&a.FullName,
@@ -475,6 +477,7 @@ func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id int) (*model
 		&a.Email,
 		&a.PhoneNumber,
 		&a.TeamName,
+		&a.Key,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -496,6 +499,7 @@ func (DB *RealDB) RegisterNewAdmin(ctx context.Context, newAccount models.AdminA
 		newAccount.Password,
 		newAccount.Salt,
 		newAccount.Superadmin,
+		newAccount.Key,
 	)
 
 	fmt.Printf("ierakstits")
@@ -525,6 +529,7 @@ func (DB *RealDB) GetAllAdmins(ctx context.Context) ([]models.AdminAccount, erro
 			&a.Password,
 			&a.Salt,
 			&a.Superadmin,
+			&a.Key,
 		)
 
 		if err != nil {
@@ -554,6 +559,7 @@ func (DB *RealDB) GetAdminAccountByUsername(ctx context.Context, username string
 		&a.Password,
 		&a.Salt,
 		&a.Superadmin,
+		&a.Key,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {

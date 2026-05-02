@@ -41,12 +41,14 @@ CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
     username TEXT NOT NULL,
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
-    team_name TEXT NOT NULL
+    team_name TEXT NOT NULL,
+    key TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS admini (
     username TEXT NOT NULL,
     password TEXT NOT NULL,
     salt TEXT NOT NULL,
-    superadmin BOOLEAN NOT NULL DEFAULT false
+    superadmin BOOLEAN NOT NULL DEFAULT false,
+    key TEXT NOT NULL
 );

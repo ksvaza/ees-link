@@ -200,6 +200,7 @@ func seedAdmins(ctx context.Context, realDB *RealDB) error {
 		Password:   seedHash("seedAdminPass123", salt),
 		Salt:       salt,
 		Superadmin: false,
+		Key:        "seed-key-admin-001",
 	}
 
 	return realDB.RegisterNewAdmin(ctx, admin)
@@ -216,6 +217,7 @@ func seedAccountApplications(ctx context.Context, realDB *RealDB) error {
 		PhoneNumber: "+37127000001",
 		TeamName:    "Seed Team Alpha",
 	}
+	pending.Key = "seed-key-pending-001"
 
 	all, err := realDB.GetAccountApplications(ctx)
 	if err != nil {

@@ -70,9 +70,11 @@ type Account struct {
 	Email       string     `json:"epasts"`
 	PhoneNumber string     `json:"telefonanumurs"`
 	Salt        string     `json:"salt"`
+	// varbūt kaut kas trūkst tīri moderēšans pēc
 }
 
 type AdminAccount struct {
+	Key        string `json:"key"`
 	Username   string `json:"lietotajvards"`
 	Password   string `json:"parole"`
 	Salt       string `json:"salt"`
@@ -80,6 +82,7 @@ type AdminAccount struct {
 }
 
 type AccountApplication struct {
+	Key         string `json:"key"`
 	FullName    string `json:"fullName"`
 	DateOfBirth string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
 	Password    string `json:"parole"`

@@ -60,6 +60,7 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if adminaccount != nil && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
 		logrus.Infof("Authenticated admin account: %+v", adminaccount)
 		adminaccountInfo := models.AdminAccount{
+			Key:        adminaccount.Key,
 			Superadmin: adminaccount.Superadmin,
 			Username:   adminaccount.Username}
 		return &httpResult{
@@ -71,6 +72,7 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if account != nil && account.Username != "" && account.Password != "" && account.Salt != "" {
 		logrus.Infof("Authenticated account: %+v", account)
 		accountInfo := models.Account{
+			// Key: account.Key,
 			Cilveks:     account.Cilveks,
 			Username:    account.Username,
 			Email:       account.Email,
@@ -120,6 +122,13 @@ func registerAccountByApplication(ctx context.Context, realDB data.Database, app
 			return errors.New("team not found")
 		}
 	} else {
+		admin := GetAdminAccount(ctx)
+		account := GetAccount(ctx)
+		if admin == nil || !admin.Superadmin {
+			if account == nil || account.Cilveks.Role != "team_leader" {
+				return errors.New("team application found but user is not superadmin or team leader - cannot register account with team association")
+			}
+		}
 		teamID = team.ID
 		logrus.Infof("Registering account with team association: %s (team ID: %s)", app.TeamName, teamID)
 	}
@@ -375,6 +384,40 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 	}
 	criteria.UsernameAvailable = existing == nil
 
+	var teamExists bool
+	var memberFound bool
+	var dobMatches bool
+	var roleMatches bool
+	var teamLeaderFound bool
+
+	if app.TeamName != "" {
+		teamApp, err := realDB.GetApplicationByTeamName(ctx, app.TeamName)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get team application")
+		}
+		teamExists = teamApp != nil
+		if teamExists {
+			member := teamApp.FindTeamMemberByFullName(app.FullName)
+			memberFound = member != nil
+			if memberFound {
+				dobMatches = member.DateOfBirth == app.DateOfBirth
+				roleMatches = member.Role == app.Role
+				teamLeaderFound = member.Role == "team_leader"
+			}
+		}
+	}
+
+	// Determine whether the application can be registered in principle
+	if criteria.RequiredFieldsPresent && criteria.UsernameAvailable {
+		if app.TeamName == "" {
+			criteria.CanRegister = app.Role != "team_leader"
+		} else if app.Role == "team_leader" {
+			criteria.CanRegister = teamExists && memberFound && teamLeaderFound && dobMatches
+		} else {
+			criteria.CanRegister = teamExists
+		}
+	}
+
 	// Check user context
 	adminAccount := GetAdminAccount(ctx)
 	account := GetAccount(ctx)
@@ -412,41 +455,21 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 		criteria.TeamNameProvided = &teamNameProvided
 
 		if teamNameProvided {
-			teamApp, err := realDB.GetApplicationByTeamName(ctx, app.TeamName)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to get team application")
-			}
-
-			teamExists := teamApp != nil
 			criteria.TeamApplicationExists = &teamExists
+			criteria.TeamMemberFound = &memberFound
+			if memberFound {
+				criteria.TeamLeaderDateOfBirthMatch = &dobMatches
+				criteria.TeamMemberRoleMatches = &roleMatches
 
-			if teamExists {
-				member := teamApp.FindTeamMemberByFullName(app.FullName)
-				memberFound := member != nil
-				criteria.TeamMemberFound = &memberFound
+				isTeamLeaderRole := app.Role == "team_leader"
+				criteria.TeamLeaderRole = &isTeamLeaderRole
 
-				if memberFound {
-					// Check if date of birth matches
-					dobMatches := member.DateOfBirth == app.DateOfBirth
-					criteria.TeamLeaderDateOfBirthMatch = &dobMatches
-
-					// Check role match
-					roleMatches := member.Role == app.Role
-					criteria.TeamMemberRoleMatches = &roleMatches
-
-					// Team leader specific checks
-					isTeamLeaderRole := app.Role == "team_leader"
-					criteria.TeamLeaderRole = &isTeamLeaderRole
-
-					if isTeamLeaderRole {
-						teamLeaderFound := member.Role == "team_leader"
-						criteria.TeamLeaderMemberFound = &teamLeaderFound
-					}
-				} else {
-					// No matching member found
-					noMatch := true
-					criteria.NoMatchingTeamMember = &noMatch
+				if isTeamLeaderRole {
+					criteria.TeamLeaderMemberFound = &teamLeaderFound
 				}
+			} else {
+				noMatch := teamExists
+				criteria.NoMatchingTeamMember = &noMatch
 			}
 		}
 	}
@@ -455,6 +478,39 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 }
 
 func PointGetAccountVerificationInfo(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointGetAccountVerificationInfo called %+v", ps)
+	if r.Method != http.MethodPost {
+		return nil, errors.New("method not allowed")
+	}
+
+	var pieteikums models.AccountApplication
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "Read body")
+	}
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &pieteikums); err != nil {
+		return nil, errors.Wrap(err, "Unmarshal")
+	}
+
+	logrus.Infof("Received application data for verification info: %+v", pieteikums)
+
+	var realDB data.Database
+	realDB = &db.RealDB{}
+
+	criteria, err := buildVerificationCriteria(r.Context(), realDB, pieteikums)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to build verification criteria")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         criteria,
+	}, nil
+}
+
+func PointGetAccountVerificationInfoByKey(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
@@ -514,8 +570,8 @@ func PointVerifyAccountApplication(r *http.Request, ps httprouter.Params) (*http
 		}, nil
 	}
 
+	adminAccount := GetAdminAccount(ctx)
 	if acapp.Role == "team_leader" {
-		adminAccount := GetAdminAccount(ctx)
 		if adminAccount != nil && adminAccount.Superadmin {
 			logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
 			err = registerAccountByApplication(ctx, realDB, *acapp)
@@ -530,16 +586,19 @@ func PointVerifyAccountApplication(r *http.Request, ps httprouter.Params) (*http
 				ResponseType: http.StatusOK,
 				Body:         `{"status":"account verified and registered"}`,
 			}, nil
-		} else {
-			return &httpResult{
-				ResponseType: http.StatusForbidden,
-				Body:         `{"error":"only superadmin can verify team leader applications"}`,
-			}, nil
 		}
+		return &httpResult{
+			ResponseType: http.StatusForbidden,
+			Body:         `{"error":"only superadmin can verify team leader applications"}`,
+		}, nil
 	} else {
 		account := GetAccount(ctx)
-		if account != nil && account.Cilveks.Role == "team_leader" {
-			logrus.Infof("Team leader account found in context: %s", account.Username)
+		if (account != nil && account.Cilveks.Role == "team_leader") || (adminAccount != nil && adminAccount.Superadmin) {
+			if adminAccount != nil && adminAccount.Superadmin {
+				logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
+			} else {
+				logrus.Infof("Team leader account found in context: %s", account.Username)
+			}
 			err = registerAccountByApplication(ctx, realDB, *acapp)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to register account by application")
@@ -552,12 +611,11 @@ func PointVerifyAccountApplication(r *http.Request, ps httprouter.Params) (*http
 				ResponseType: http.StatusOK,
 				Body:         `{"status":"account verified and registered"}`,
 			}, nil
-		} else {
-			return &httpResult{
-				ResponseType: http.StatusForbidden,
-				Body:         `{"error":"only team leaders can verify member applications"}`,
-			}, nil
 		}
+		return &httpResult{
+			ResponseType: http.StatusForbidden,
+			Body:         `{"error":"only team leaders can verify member applications"}`,
+		}, nil
 	}
 }
 
@@ -588,13 +646,14 @@ func PointGetAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error
 	}
 
 	account := GetAccount(r.Context())
+	accounts, err := realDB.GetAccounts(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get accounts")
+	}
+
 	if account != nil && account.Cilveks.Role == "team_leader" {
 		logrus.Infof("Team leader account found in context: %s", account.Username)
 
-		accounts, err := realDB.GetAccounts(r.Context())
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get accounts")
-		}
 		var teamAccounts []models.Account
 		for _, acc := range accounts {
 			if acc.Cilveks.ID == account.Cilveks.ID {
@@ -604,6 +663,12 @@ func PointGetAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error
 		return &httpResult{
 			ResponseType: http.StatusOK,
 			Body:         teamAccounts,
+		}, nil
+	} else if account != nil {
+		logrus.Infof("Regular account found in context: %s", account.Username)
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         []models.Account{*account},
 		}, nil
 	}
 
@@ -639,6 +704,8 @@ func PointPatchAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult,
 		return nil, errors.New("account not found")
 	}
 
+	prevUsername := existingAccount.Username
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
@@ -654,6 +721,49 @@ func PointPatchAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult,
 		logrus.Infof("Admin account found in context: %+v", adminaccount)
 
 		logrus.Infof("Received account update (superadmin): %+v", existingAccount)
+
+		if existingAccount.Username != prevUsername {
+			duplicateAccount, err := realDB.GetAccountByUsername(r.Context(), existingAccount.Username)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to check account username")
+			}
+			if duplicateAccount != nil {
+				return &httpResult{
+					ResponseType: http.StatusConflict,
+					Body:         `{"error":"username already exists"}`,
+				}, nil
+			}
+		}
+
+		err = realDB.UpdateAccount(r.Context(), *existingAccount)
+		if err != nil {
+			return nil, errors.Wrap(err, "UpdateAccount")
+		}
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         "Account updated",
+		}, nil
+	}
+
+	account := GetAccount(r.Context())
+	if account != nil && account.Cilveks.Key == Key {
+		logrus.Infof("Account found in context: %+v", account)
+
+		logrus.Infof("Received account update (account owner): %+v", existingAccount)
+
+		if existingAccount.Username != prevUsername {
+			duplicateAccount, err := realDB.GetAccountByUsername(r.Context(), existingAccount.Username)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to check account username")
+			}
+			if duplicateAccount != nil {
+				return &httpResult{
+					ResponseType: http.StatusConflict,
+					Body:         `{"error":"username already exists"}`,
+				}, nil
+			}
+		}
+
 		err = realDB.UpdateAccount(r.Context(), *existingAccount)
 		if err != nil {
 			return nil, errors.Wrap(err, "UpdateAccount")
@@ -684,16 +794,24 @@ func PointGetAdminAccounts(r *http.Request, ps httprouter.Params) (*httpResult, 
 	realDB = &db.RealDB{}
 
 	adminAccount := GetAdminAccount(r.Context())
+	admins, err := realDB.GetAllAdmins(r.Context())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get admin accounts")
+	}
+
 	if adminAccount != nil && adminAccount.Superadmin {
 		logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
-		admins, err := realDB.GetAllAdmins(r.Context())
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get admin accounts")
-		}
 
 		return &httpResult{
 			ResponseType: http.StatusOK,
 			Body:         admins,
+		}, nil
+	} else if adminAccount != nil {
+		logrus.Infof("Admin account found in context: %s", adminAccount.Username)
+		// Return only the authenticated admin's own account info
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         []models.AdminAccount{*adminAccount},
 		}, nil
 	}
 
@@ -726,6 +844,7 @@ func PointPatchAdminAccount(r *http.Request, ps httprouter.Params) (*httpResult,
 			Body:         `{"error":"admin account not found"}`,
 		}, nil
 	}
+	prevUsername := existingAdmin.Username
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -733,18 +852,17 @@ func PointPatchAdminAccount(r *http.Request, ps httprouter.Params) (*httpResult,
 	}
 	defer r.Body.Close()
 
-	var updatedAdmin models.AdminAccount
-	if err := json.Unmarshal(body, &updatedAdmin); err != nil {
+	if err := json.Unmarshal(body, &existingAdmin); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
-	updatedAdmin.Key = key
+	existingAdmin.Key = key
 
 	adminAccount := GetAdminAccount(r.Context())
 	if adminAccount != nil && adminAccount.Superadmin {
 		logrus.Infof("Admin update requested by superadmin: %s", adminAccount.Username)
 
-		if updatedAdmin.Username != existingAdmin.Username {
-			duplicateAdmin, err := realDB.GetAdminAccountByUsername(r.Context(), updatedAdmin.Username)
+		if existingAdmin.Username != prevUsername {
+			duplicateAdmin, err := realDB.GetAdminAccountByUsername(r.Context(), existingAdmin.Username)
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to check admin username")
 			}
@@ -756,11 +874,33 @@ func PointPatchAdminAccount(r *http.Request, ps httprouter.Params) (*httpResult,
 			}
 		}
 
-		err = realDB.UpdateAdminAccount(r.Context(), updatedAdmin)
+		err = realDB.UpdateAdminAccount(r.Context(), *existingAdmin)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to update admin account")
 		}
 
+		return &httpResult{
+			ResponseType: http.StatusOK,
+			Body:         `{"status":"admin account updated"}`,
+		}, nil
+	} else if adminAccount != nil && adminAccount.Key == key {
+		logrus.Infof("Admin update requested by account owner: %s", adminAccount.Username)
+		if existingAdmin.Username != prevUsername {
+			duplicateAdmin, err := realDB.GetAdminAccountByUsername(r.Context(), existingAdmin.Username)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to check admin username")
+			}
+			if duplicateAdmin != nil {
+				return &httpResult{
+					ResponseType: http.StatusConflict,
+					Body:         `{"error":"username already exists"}`,
+				}, nil
+			}
+		}
+		err = realDB.UpdateAdminAccount(r.Context(), *existingAdmin)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to update admin account")
+		}
 		return &httpResult{
 			ResponseType: http.StatusOK,
 			Body:         `{"status":"admin account updated"}`,

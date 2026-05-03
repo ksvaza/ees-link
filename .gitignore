@@ -43,3 +43,5 @@ dockercompose/*
 fakedbdata/*
 realdbdata/*
 /dockercompose.zip
+
+backed-up-data/*

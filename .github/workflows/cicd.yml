@@ -19,16 +19,15 @@ jobs:
       - name: Analysis
         uses: uhafner/quality-monitor@v4.11.0
         with:
-          analysis-model: |
-            [
-              {
-                "id": "junit",
-                "name": "Unit Tests",
+          config: >
+            {
+              "tests": {
                 "tools": [
                   {
                     "id": "junit",
-                    "pattern": "bin/tests/tests.xml"
+                    "name": "Unit tests",
+                    "pattern": "bin/tests/tests.json"
                   }
                 ]
               }
-            ]
+            } 

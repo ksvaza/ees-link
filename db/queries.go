@@ -38,6 +38,12 @@ const (
 			status = $13
 		WHERE id = $14`
 
+	ApplicantReadRequestByTeamName = `
+		SELECT id, team_name, age_group, institution, city_or_region, members,
+			responsible_person, how_heard_about, comments,
+			confirm_truthful, confirm_rules, confirm_media, applied_at, status
+		FROM applicants WHERE team_name = $1`
+
 	// -------------------------------------------------------------------------
 	// Accounts (konti table)
 	// -------------------------------------------------------------------------
@@ -65,6 +71,15 @@ const (
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		FROM konti WHERE date_of_birth = $1`
 
+	AccountReadRequestByKey = `
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		FROM konti WHERE key = $1`
+
+	AccountUpdateRequest = `
+		UPDATE konti SET
+			fullname = $1, date_of_birth = $2, role = $3, id = $4,
+			password = $5, username = $6, email = $7, phone_number = $8, salt = $9
+		WHERE key = $10`
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------
@@ -80,9 +95,12 @@ const (
 		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		FROM kontu_pieteikumi`
 
-	AccountApplicationReadRequestByID = `
+	AccountApplicationReadRequestByKey = `
 		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
-		FROM kontu_pieteikumi WHERE id = $1`
+		FROM kontu_pieteikumi WHERE key = $1`
+
+	AccountApplicationDeleteRequestByKey = `
+		DELETE FROM kontu_pieteikumi WHERE key = $1`
 
 	// -------------------------------------------------------------------------
 	// Admins (admini table)
@@ -102,4 +120,13 @@ const (
 	AdminAccountReadRequestByUsername = `
 		SELECT username, password, salt, superadmin, key
 		FROM admini WHERE username = $1`
+
+	AdminAccountReadRequestByKey = `
+		SELECT username, password, salt, superadmin, key
+		FROM admini WHERE key = $1`
+
+	AdminAccountUpdateRequest = `
+		UPDATE admini SET
+			username = $1, password = $2, salt = $3, superadmin = $4
+		WHERE key = $5`
 )

@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/fakedb"
 	"github.com/ksvaza/ees-link/models"
@@ -162,7 +163,8 @@ func PointPatchTeamByID(r *http.Request, ps httprouter.Params) (*httpResult, err
 
 	logrus.Infof("Patching application with ID: %s", ID)
 
-	realDB := db.RealDB{}
+	var realDB data.Database
+	realDB = &db.RealDB{}
 
 	// Get application by ID from database
 	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)

@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS konti (
     fullname TEXT NOT NULL,
     date_of_birth TEXT NOT NULL,
     role TEXT NOT NULL,
-    id TEXT NOT NULL,
+    id TEXT,
     password TEXT NOT NULL,
     username TEXT NOT NULL,
     email TEXT NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     team_name TEXT NOT NULL,
-    key TEXT NOT NULL
+    key TEXT PRIMARY KEY
 );
 
 CREATE TABLE IF NOT EXISTS admini (
@@ -50,5 +50,5 @@ CREATE TABLE IF NOT EXISTS admini (
     password TEXT NOT NULL,
     salt TEXT NOT NULL,
     superadmin BOOLEAN NOT NULL DEFAULT false,
-    key TEXT NOT NULL
+    key TEXT PRIMARY KEY
 );

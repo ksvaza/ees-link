@@ -57,6 +57,8 @@ func impregnateDB(ctx context.Context, dbURL string) error {
 	return nil
 }
 
+// Health check
+
 func (DB *RealDB) TestHealthiness(ctx context.Context) error {
 	err := Pool.Ping(ctx)
 	if err != nil {
@@ -67,7 +69,7 @@ func (DB *RealDB) TestHealthiness(ctx context.Context) error {
 	return nil
 }
 
-// Applications, registration form data
+// Applications/teams, registration form data
 
 func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error {
 	a, err := DB.GetAllApplications(ctx)
@@ -260,6 +262,36 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 	return nil
 }
 
+func (DB *RealDB) GetApplicationByTeamName(ctx context.Context, teamName string) (*models.RegistrationFormData, error) {
+	a := &models.RegistrationFormData{}
+	var membersRaw []byte
+	var ResponsiblePersonRaw []byte
+	err := Pool.QueryRow(ctx, ApplicantReadRequestByTeamName, teamName).Scan(
+		&a.ID,
+		&a.TeamName,
+		&a.AgeGroup,
+		&a.Institution,
+		&a.CityOrRegion,
+		&membersRaw,
+		&ResponsiblePersonRaw,
+		&a.HowHeardAbout,
+		&a.Comments,
+		&a.ConfirmTruthful,
+		&a.ConfirmRules,
+		&a.ConfirmMedia,
+		&a.AppliedAt,
+		&a.Status,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan applicant row")
+		return nil, err
+	}
+	return a, nil
+}
+
 // User accounts
 
 func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Account) error {
@@ -360,6 +392,30 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 	return a, nil
 }
 
+func (DB *RealDB) GetAccountByKey(ctx context.Context, key string) (*models.Account, error) {
+	a := &models.Account{}
+	err := Pool.QueryRow(ctx, AccountReadRequestByKey, key).Scan(
+		&a.Cilveks.Key,
+		&a.Cilveks.FullName,
+		&a.Cilveks.DateOfBirth,
+		&a.Cilveks.Role,
+		&a.Cilveks.ID,
+		&a.Password,
+		&a.Username,
+		&a.Email,
+		&a.PhoneNumber,
+		&a.Salt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan account row")
+		return nil, err
+	}
+	return a, nil
+}
+
 func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 	rows, err := Pool.Query(ctx, AccountReadRequest)
 	if err != nil {
@@ -400,6 +456,27 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 	}
 
 	return accounts, nil
+}
+
+func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Account) error {
+	_, err := Pool.Exec(ctx, AccountUpdateRequest,
+		updatedAccount.Cilveks.FullName,
+		updatedAccount.Cilveks.DateOfBirth,
+		updatedAccount.Cilveks.Role,
+		updatedAccount.Cilveks.ID,
+		updatedAccount.Password,
+		updatedAccount.Username,
+		updatedAccount.Email,
+		updatedAccount.PhoneNumber,
+		updatedAccount.Salt,
+		updatedAccount.Cilveks.Key,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to update account: %w", err)
+	}
+
+	return nil
 }
 
 // Account applications for user creation
@@ -466,9 +543,9 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 	return nil
 }
 
-func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id string) (*models.AccountApplication, error) {
+func (DB *RealDB) GetAccountApplicationByKey(ctx context.Context, key string) (*models.AccountApplication, error) {
 	a := &models.AccountApplication{}
-	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByID, id).Scan(
+	err := Pool.QueryRow(ctx, AccountApplicationReadRequestByKey, key).Scan(
 		&a.FullName,
 		&a.DateOfBirth,
 		&a.Role,
@@ -488,6 +565,15 @@ func (DB *RealDB) GetAccountApplicationByID(ctx context.Context, id string) (*mo
 	}
 
 	return a, nil
+}
+
+func (DB *RealDB) DeleteAccountApplicationByKey(ctx context.Context, key string) error {
+	_, err := Pool.Exec(ctx, AccountApplicationDeleteRequestByKey, key)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to delete account application by key")
+		return err
+	}
+	return nil
 }
 
 // Admin accounts
@@ -570,4 +656,38 @@ func (DB *RealDB) GetAdminAccountByUsername(ctx context.Context, username string
 	}
 
 	return a, nil
+}
+
+func (DB *RealDB) GetAdminAccountByKey(ctx context.Context, key string) (*models.AdminAccount, error) {
+	a := &models.AdminAccount{}
+	err := Pool.QueryRow(ctx, AdminAccountReadRequestByKey, key).Scan(
+		&a.Username,
+		&a.Password,
+		&a.Salt,
+		&a.Superadmin,
+		&a.Key,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan admin account row")
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (DB *RealDB) UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error {
+	_, err := Pool.Exec(ctx, AdminAccountUpdateRequest,
+		updatedAccount.Username,
+		updatedAccount.Password,
+		updatedAccount.Salt,
+		updatedAccount.Superadmin,
+		updatedAccount.Key,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update admin account: %w", err)
+	}
+	return nil
 }

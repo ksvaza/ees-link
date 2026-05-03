@@ -92,3 +92,25 @@ type AccountApplication struct {
 	TeamName    string `json:"komandasNosaukums"`
 	Role        string `json:"role"`
 }
+
+type AccountVerificationCriteria struct {
+	// General requirements (visible to everyone)
+	RequiredFieldsPresent bool `json:"requiredFieldsPresent"`
+	UsernameAvailable     bool `json:"usernameAvailable"`
+
+	// Standalone account requirements (visible to everyone)
+	NoTeamNameProvided *bool `json:"noTeamNameProvided,omitempty"`
+	NotTeamLeaderRole  *bool `json:"notTeamLeaderRole,omitempty"`
+
+	// Team member linking requirements (visible to team leaders and superadmin)
+	TeamNameProvided         *bool `json:"teamNameProvided,omitempty"`
+	TeamApplicationExists    *bool `json:"teamApplicationExists,omitempty"`
+	TeamMemberFound          *bool `json:"teamMemberFound,omitempty"`
+	TeamMemberRoleMatches    *bool `json:"teamMemberRoleMatches,omitempty"`
+	NoMatchingTeamMember     *bool `json:"noMatchingTeamMember,omitempty"`
+
+	// Team leader requirements (visible to team leaders and superadmin)
+	TeamLeaderRole             *bool `json:"teamLeaderRole,omitempty"`
+	TeamLeaderMemberFound      *bool `json:"teamLeaderMemberFound,omitempty"`
+	TeamLeaderDateOfBirthMatch *bool `json:"teamLeaderDateOfBirthMatch,omitempty"`
+}

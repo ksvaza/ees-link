@@ -21,11 +21,12 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/register", Handler(PointRegister))
 	router.GET("/api/login", Handler(PointLogin))
 	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
-	// TODO: add GET and POST rqeuests for account applications and verified accounts
-
-	// Users
-	router.GET("/api/users", PointGetUsers)
-	// PATCH /api/users
+	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfo))
+	router.POST("/api/verify-account-application/:key", Handler(PointVerifyAccountApplication))
+	router.GET("/api/accounts", Handler(PointGetAccounts))
+	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
+	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
+	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccount))
 
 	// Competitors
 	router.GET("/api/cars", PointGetCars)

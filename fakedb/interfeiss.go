@@ -177,3 +177,27 @@ func (db *FSDatabase) UpdateAdminAccount(ctx context.Context, updatedAccount mod
 	fmt.Printf("fake db called")
 	return nil
 }
+
+func (db *FSDatabase) UpdateTeamDataByKey(ctx context.Context, key string, newTeamData models.TeamData) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) RegisterTeamData(ctx context.Context, newTeamData models.TeamData) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetTeamDataByKey(ctx context.Context, key string) (*models.TeamData, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil, nil
+}
+
+func (db *FSDatabase) AssignAccountsToTeamDataByUsername(ctx context.Context, teamKey string, accountUsernames []string) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}

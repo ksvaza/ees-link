@@ -239,7 +239,7 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 		return fmt.Errorf("failed to marshal responsible person: %w", err)
 	}
 
-	_, err = Pool.Exec(ctx, ApplicantUpdateRequest,
+	result, err := Pool.Exec(ctx, ApplicantUpdateRequest,
 		updatedApplicant.TeamName,
 		updatedApplicant.AgeGroup,
 		updatedApplicant.Institution,
@@ -257,6 +257,10 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update applicant: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no applicant found with ID: %s", updatedApplicant.ID)
 	}
 
 	return nil
@@ -459,7 +463,7 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 }
 
 func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Account) error {
-	_, err := Pool.Exec(ctx, AccountUpdateRequest,
+	result, err := Pool.Exec(ctx, AccountUpdateRequest,
 		updatedAccount.Cilveks.FullName,
 		updatedAccount.Cilveks.DateOfBirth,
 		updatedAccount.Cilveks.Role,
@@ -474,6 +478,10 @@ func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Accou
 
 	if err != nil {
 		return fmt.Errorf("failed to update account: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no account found with key: %s", updatedAccount.Cilveks.Key)
 	}
 
 	return nil
@@ -679,7 +687,7 @@ func (DB *RealDB) GetAdminAccountByKey(ctx context.Context, key string) (*models
 }
 
 func (DB *RealDB) UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error {
-	_, err := Pool.Exec(ctx, AdminAccountUpdateRequest,
+	result, err := Pool.Exec(ctx, AdminAccountUpdateRequest,
 		updatedAccount.Username,
 		updatedAccount.Password,
 		updatedAccount.Salt,
@@ -689,5 +697,163 @@ func (DB *RealDB) UpdateAdminAccount(ctx context.Context, updatedAccount models.
 	if err != nil {
 		return fmt.Errorf("failed to update admin account: %w", err)
 	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no admin account found with key: %s", updatedAccount.Key)
+	}
+	return nil
+}
+
+// Team data, car data
+
+func (DB *RealDB) GetTeamDataByKey(ctx context.Context, key string) (*models.TeamData, error) {
+
+	teamData := &models.TeamData{}
+	var memberKeys []string
+	var responsiblePersonRaw []byte
+	var carDataRaw []byte
+
+	err := Pool.QueryRow(ctx, TeamDataReadRequestByKey, key).Scan(
+		&teamData.Key,
+		&teamData.CarID,
+		&teamData.TeamName,
+		&memberKeys,
+		&teamData.AgeGroup,
+		&teamData.Institution,
+		&teamData.CityOrRegion,
+		&responsiblePersonRaw,
+		&carDataRaw,
+		&teamData.Avatar,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		logrus.WithError(err).Error("Failed to scan team data row")
+		return nil, err
+	}
+
+	for _, accountKey := range memberKeys {
+		account, err := DB.GetAccountByKey(ctx, accountKey)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to fetch account by key")
+			return nil, err
+		}
+		if account != nil {
+			teamData.Accounts = append(teamData.Accounts, *account)
+		}
+	}
+
+	err = json.Unmarshal(responsiblePersonRaw, &teamData.ResponsiblePerson)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal responsible person JSON")
+		return nil, err
+	}
+
+	err = json.Unmarshal(carDataRaw, &teamData.CarData)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to unmarshal car data JSON")
+		return nil, err
+	}
+
+	return teamData, nil
+}
+
+func (DB *RealDB) UpdateTeamDataByKey(ctx context.Context, key string, updatedData models.TeamData) error {
+	memberKeys := make([]string, len(updatedData.Accounts))
+	for i, a := range updatedData.Accounts {
+		memberKeys[i] = a.Cilveks.Key
+	}
+
+	responsiblePersonJSON, err := json.Marshal(updatedData.ResponsiblePerson)
+	if err != nil {
+		return fmt.Errorf("failed to marshal responsible person: %w", err)
+	}
+
+	carDataJSON, err := json.Marshal(updatedData.CarData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal car data: %w", err)
+	}
+
+	result, err := Pool.Exec(ctx, TeamDataUpdateRequest,
+		updatedData.CarID,
+		updatedData.TeamName,
+		memberKeys,
+		updatedData.AgeGroup,
+		updatedData.Institution,
+		updatedData.CityOrRegion,
+		responsiblePersonJSON,
+		carDataJSON,
+		updatedData.Avatar,
+		key,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update team data: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no team data found with key: %s", key)
+	}
+
+	return nil
+}
+
+func (DB *RealDB) AssignAccountsToTeamDataByUsername(ctx context.Context, teamKey string, accountUsernames []string) error {
+	// Fetch konti rows matching the given usernames
+	rows, err := Pool.Query(ctx, AccountReadRequestByUsername, accountUsernames)
+	if err != nil {
+		return fmt.Errorf("failed to query accounts by username: %w", err)
+	}
+	defer rows.Close()
+
+	var memberKeys []string
+	for rows.Next() {
+		var m models.Account
+		if err := rows.Scan(&m.Cilveks.Key, &m.Cilveks.FullName, &m.Cilveks.DateOfBirth, &m.Cilveks.Role, &m.Cilveks.ID, &m.Password, &m.Username, &m.Email, &m.PhoneNumber, &m.Salt); err != nil {
+			return fmt.Errorf("failed to scan account row: %w", err)
+		}
+		memberKeys = append(memberKeys, m.Cilveks.Key)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("failed iterating account rows: %w", err)
+	}
+
+	result, err := Pool.Exec(ctx, TeamMembersWriteRequest, memberKeys, teamKey)
+	if err != nil {
+		return fmt.Errorf("failed to assign members to team: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("no team found with key: %s", teamKey)
+	}
+
+	return nil
+}
+
+func (DB *RealDB) RegisterTeamData(ctx context.Context, newTeamData models.TeamData) error {
+
+	responsiblePersonJSON, err := json.Marshal(newTeamData.ResponsiblePerson)
+	if err != nil {
+		return fmt.Errorf("failed to marshal responsible person: %w", err)
+	}
+	carDataJSON, err := json.Marshal(newTeamData.CarData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal car data: %w", err)
+	}
+
+	_, err = Pool.Exec(ctx, TeamDataWriteRequest,
+		newTeamData.Key,
+		newTeamData.CarID,
+		newTeamData.TeamName,
+		[]string{},
+		newTeamData.AgeGroup,
+		newTeamData.Institution,
+		newTeamData.CityOrRegion,
+		responsiblePersonJSON,
+		carDataJSON,
+		newTeamData.Avatar,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to register team data: %w", err)
+	}
+
 	return nil
 }

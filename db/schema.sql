@@ -52,3 +52,16 @@ CREATE TABLE IF NOT EXISTS admini (
     superadmin BOOLEAN NOT NULL DEFAULT false,
     key TEXT PRIMARY KEY
 );
+
+CREATE TABLE IF NOT EXISTS komandas (
+    key TEXT PRIMARY KEY,
+    car_id TEXT NOT NULL,
+    team_name TEXT NOT NULL,
+    team_members TEXT[] NOT NULL DEFAULT '{}',
+    age_group TEXT NOT NULL,
+    institution TEXT,
+    city_or_region TEXT NOT NULL,
+    responsible_person JSONB NOT NULL DEFAULT '[]',
+    avatar TEXT NOT NULL,
+    car_data JSONB NOT NULL DEFAULT '{}'
+);

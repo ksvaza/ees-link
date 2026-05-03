@@ -114,3 +114,23 @@ type AccountVerificationCriteria struct {
 	TeamLeaderMemberFound      *bool `json:"teamLeaderMemberFound,omitempty"`
 	TeamLeaderDateOfBirthMatch *bool `json:"teamLeaderDateOfBirthMatch,omitempty"`
 }
+
+type TeamData struct {
+	Key		  string `json:"key"`
+	CarID	 string `json:"carId"`
+	TeamName string `json:"teamName"`
+	Accounts   []Account `json:"members"`
+	AgeGroup string `json:"ageGroup"`
+	Institution string `json:"institution,omitempty"`
+	CityOrRegion string `json:"cityOrRegion"`
+	ResponsiblePerson ResponsiblePerson `json:"responsiblePerson"`
+	Avatar string `json:"avatar"`
+	CarData Car `json:"carData,omitempty"`
+
+}
+
+type Car struct {
+	SetVoltage int `json:"setVoltage"`
+	MaxCurrent int `json:"maxCurrent"`
+	Mass	   float32 `json:"mass"`
+}

@@ -61,7 +61,7 @@ const (
 
 	AccountReadRequestByUsername = `
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
-		FROM konti WHERE username = $1`
+		FROM konti WHERE username = ANY($1)`
 
 	AccountReadRequestByFullname = `
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
@@ -129,4 +129,25 @@ const (
 		UPDATE admini SET
 			username = $1, password = $2, salt = $3, superadmin = $4
 		WHERE key = $5`
+
+	// Team data, cars
+
+	TeamDataReadRequestByKey = `SELECT
+    key, car_id, team_name, team_members, age_group, institution,
+    city_or_region, responsible_person, car_data, avatar
+FROM komandas
+WHERE key = $1;`
+
+	TeamDataUpdateRequest = `UPDATE komandas SET 
+    car_id = $1, team_name = $2, team_members = $3, age_group = $4, institution = $5,
+    city_or_region = $6, responsible_person = $7, car_data = $8, avatar = $9
+WHERE key = $10`
+
+	TeamMembersWriteRequest = `UPDATE komandas SET team_members = $1 WHERE key = $2`
+
+	TeamDataWriteRequest = `INSERT INTO komandas (
+	key, car_id, team_name, team_members, age_group, institution,
+	city_or_region, responsible_person, car_data, avatar
+) VALUES (
+	$1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
 )

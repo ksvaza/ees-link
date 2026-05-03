@@ -178,23 +178,7 @@ func PointGetUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 // Competitors
 // -----------
 
-func PointGetCars(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointGetCars called %+v", ps)
-	if !requireMethod(w, r, http.MethodGet) {
-		return
-	}
-	// TODO: implement get cars
-	sendNotImplemented(w)
-}
 
-func PointPostCars(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointPostCars called %+v", ps)
-	if !requireMethod(w, r, http.MethodPost) {
-		return
-	}
-	// TODO: implement post cars
-	sendNotImplemented(w)
-}
 
 // --------------------------------------------------------------------------------------------------------------------------------
 

@@ -29,8 +29,8 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccount))
 
 	// Competitors
-	router.GET("/api/cars", PointGetCars)
-	router.POST("/api/cars", PointPostCars)
+	// superadmins akceptē komandas , atsevisks strukts komandām
+	// router.POST("/api/cars", PointPostCars)
 
 	// Races
 	router.POST("/api/race/start", PointRaceStart)
@@ -70,7 +70,8 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// ir -- Pieteikumi
 	router.GET("/api/teams", Handler(PointGetTeams))
 	router.POST("/api/team-application", Handler(PointPostTeamApplication))
-	router.PATCH("/api/team/:id", Handler(PointPatchTeamByID))
+	router.PATCH("/api/team/:key", Handler(PointPatchTeamDataByKey))
+	router.POST("/api/team/:key", Handler(PointPostTeamDataByKey))
 	// Vēl vajag PATCH /api/account-applications manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
 
 	// Live websocket token endpoint (optional handler if needed)

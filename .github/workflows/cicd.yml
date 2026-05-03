@@ -5,17 +5,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
+
       - name: Setup JDK 14
         uses: actions/setup-java@v5
         with:
           java-version: '26'
           distribution: 'temurin'
+
+      - name: Cache Primes
+        id: cache-primes
+        uses: actions/cache@v5
+        with:
+          path: prime-numbers
+          key: ${{ runner.os }}-primes
+
       - run: ant build
+
       - name: Publish artefacts
         uses: actions/upload-artifact@v7.0.1
         with:
           name: bin
           path: bin
+
       - name: Analysis
         uses: uhafner/quality-monitor@v4.11.0
         with:
@@ -26,7 +37,7 @@ jobs:
                   {
                     "id": "junit",
                     "name": "Unit tests",
-                    "pattern": "bin/tests.json"
+                    "pattern": "bin/tests.xml"
                   }
                 ]
               }

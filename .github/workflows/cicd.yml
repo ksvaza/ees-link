@@ -26,7 +26,7 @@ jobs:
                   {
                     "id": "junit",
                     "name": "Unit tests",
-                    "pattern": "bin/tests/tests.json"
+                    "pattern": "bin/tests.json"
                   }
                 ]
               }

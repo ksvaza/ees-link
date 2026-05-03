@@ -21,6 +21,8 @@ jobs:
 
       - run: ant build
 
+      - run: tree
+
       - name: Publish artefacts
         uses: actions/upload-artifact@v7.0.1
         with:

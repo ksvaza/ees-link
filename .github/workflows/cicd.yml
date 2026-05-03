@@ -45,5 +45,5 @@ jobs:
       - name: Coverage Report
         uses: aGallea/tests-coverage-report@v1
         with:
-          cobertura-path: ./bin/coverage.xml
-          junit-path: ./bin/tests.xml
+          cobertura-path: bin/coverage.xml
+          junit-path: bin/tests.xml

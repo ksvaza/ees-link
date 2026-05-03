@@ -12,16 +12,17 @@ jobs:
           java-version: '26'
           distribution: 'temurin'
 
-      - name: Cache Primes
-        id: cache-primes
-        uses: actions/cache@v5
-        with:
-          path: prime-numbers
-          key: ${{ runner.os }}-primes
+#      - name: Cache Primes
+#        id: cache-primes
+#        uses: actions/cache@v5
+#        with:
+#          path: ~/go/pkg/mod
+#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: ${{ runner.os }}-go-
 
       - run: ant build
 
-      - run: tree
+      - run: docker buildx du --verbose
 
       - name: Publish artefacts
         uses: actions/upload-artifact@v7.0.1
@@ -29,18 +30,7 @@ jobs:
           name: bin
           path: bin
 
-      - name: Analysis
-        uses: uhafner/quality-monitor@v4.11.0
+      - name: Coverage Report
+        uses: aGallea/tests-coverage-report@v1.3.14
         with:
-          config: >
-            {
-              "tests": {
-                "tools": [
-                  {
-                    "id": "junit",
-                    "name": "Unit tests",
-                    "pattern": "bin/tests.xml"
-                  }
-                ]
-              }
-            } 
+          cobertura-path: bin/coverage.xml

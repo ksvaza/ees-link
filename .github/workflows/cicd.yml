@@ -12,14 +12,26 @@ jobs:
           java-version: '26'
           distribution: 'temurin'
 
-#      - name: Cache Primes
-#        id: cache-primes
-#        uses: actions/cache@v5
-#        with:
-#          path: ~/go/pkg/mod
-#          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: ${{ runner.os }}-go-
-
+      - uses: docker/setup-buildx-action@v4
+        id: setup-buildx
+      - name: Cache
+        uses: actions/cache@v5
+        id: cache
+        with:
+          path: cache-mount
+          key: cache-mount-${{ hashFiles('Dockerfile') }}
+      - name: Restore Cache
+        uses: reproducible-containers/buildkit-cache-dance@v3
+        with:
+          builder: ${{ steps.setup-buildx.outputs.name }}
+          cache-map: |
+            {
+              "gomodcache": "/go/pkg/mod"
+            }
+          cache-dir: cache-mount
+          dockerfile: Dockerfile
+          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+      
       - run: ant build
 
       - run: docker buildx du --verbose
@@ -33,4 +45,5 @@ jobs:
       - name: Coverage Report
         uses: aGallea/tests-coverage-report@v1
         with:
-          cobertura-path: bin/coverage.xml
+          cobertura-path: ./bin/coverage.xml
+          junit-path: ./bin/tests.xml

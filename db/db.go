@@ -458,6 +458,48 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 	return accounts, nil
 }
 
+func (DB *RealDB) GetAccountsByID(ctx context.Context, id string) ([]models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequestByID, id)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to query accounts table by ID")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []models.Account
+	for rows.Next() {
+		var a models.Account
+		err = rows.Scan(
+			&a.Cilveks.Key,
+			&a.Cilveks.FullName,
+			&a.Cilveks.DateOfBirth,
+			&a.Cilveks.Role,
+			&a.Cilveks.ID,
+			&a.Password,
+			&a.Username,
+			&a.Email,
+			&a.PhoneNumber,
+			&a.Salt,
+		)
+		if err != nil {
+			logrus.WithError(err).Error("Failed to scan account row")
+			return nil, err
+		}
+		accounts = append(accounts, a)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Error("Failed iterating account rows by ID")
+		return nil, err
+	}
+
+	if len(accounts) == 0 {
+		return nil, nil
+	}
+
+	return accounts, nil
+}
+
 func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Account) error {
 	_, err := Pool.Exec(ctx, AccountUpdateRequest,
 		updatedAccount.Cilveks.FullName,

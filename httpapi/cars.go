@@ -95,9 +95,14 @@ func PointPatchTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult
 
 	logrus.Infof("Admin account found in context: %s", adminaccount.Username)
 
-	key := ps.ByName("key")
-	if key == "" {
-		return nil, errors.New("missing team key")
+	// key := ps.ByName("key")
+	// if key == "" {
+	// 	return nil, errors.New("missing team key")
+	// }
+
+	key, err := GenerateSalt(16)
+	if err != nil {
+		return nil, errors.Wrap(err, "Generate salt")
 	}
 
 	var realDB data.Database

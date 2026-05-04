@@ -94,6 +94,8 @@ type AccountApplication struct {
 }
 
 type AccountVerificationCriteria struct {
+	CanRegister bool `json:"canRegister"`
+
 	// General requirements (visible to everyone)
 	RequiredFieldsPresent bool `json:"requiredFieldsPresent"`
 	UsernameAvailable     bool `json:"usernameAvailable"`

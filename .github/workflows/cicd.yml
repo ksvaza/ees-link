@@ -18,7 +18,7 @@ jobs:
         uses: actions/cache@v5
         id: cache
         with:
-          path: ./cache-mount
+          path: cache-mount
           key: gomodcache
       - name: Restore Cache
         uses: reproducible-containers/buildkit-cache-dance@v3
@@ -28,7 +28,7 @@ jobs:
             {
               "gomodcache": "/go/pkg/mod"
             }
-          cache-dir: ./cache-mount
+          cache-dir: cache-mount
           dockerfile: Dockerfile
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
       
@@ -43,13 +43,12 @@ jobs:
 
       - name: Debug
         run: |
-          tree > ./cache-mount/tree.txt
-          cat ./cache-mount/tree.txt
+          tree
 
-      - name: Coverage Report
-        uses: aGallea/tests-coverage-report@v1
-        with:
-          min-coverage-percentage: '100'
-          fail-under-coverage-percentage: 'false'
-          cobertura-path: ./bin/coverage.xml
-          junit-path: ./bin/tests.xml
+#      - name: Coverage Report
+#        uses: aGallea/tests-coverage-report@v1
+#        with:
+#          min-coverage-percentage: '100'
+#          fail-under-coverage-percentage: 'false'
+#          cobertura-path: ./bin/coverage.xml
+#          junit-path: ./bin/tests.xml

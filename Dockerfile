@@ -5,20 +5,21 @@ ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 
 WORKDIR /go/src
 COPY ./go.* .golangci.yaml /go/src
+RUN tree
+
 COPY ./.cache /go/pkg/mod
-RUN tree /go/src && \
-    go env -w GOMODCACHE=/go/pkg/mod
+RUN go env -w GOMODCACHE=/go/pkg/mod
 
 RUN go mod download -x && \
-    mkdir -p /go/src/bin && \
     go install github.com/jstemmer/go-junit-report/v2@v2.0.0 && \
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0 && \
     go install github.com/boumenot/gocover-cobertura@v1.4.0
 
 COPY --exclude=.cache . /go/src
-RUN tree /go/src
+RUN tree
 
-RUN go build -o bin/ees-link cmd/ees-link/main.go
+RUN mkdir -p /go/src/bin && \
+    go build -o bin/ees-link cmd/ees-link/main.go
 
 FROM build AS test
 

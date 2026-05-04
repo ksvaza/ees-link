@@ -12,6 +12,13 @@ jobs:
           java-version: '26'
           distribution: 'temurin'
 
+      - name: Cache
+        uses: actions/cache@v5
+        id: cache
+        with:
+          path: .cache
+          key: gomodcache
+
       - name: Build
         run: ant build
 
@@ -27,9 +34,6 @@ jobs:
           name: cache
           path: .cache
 
-      - name: Debug
-        run: |
-          tree
 
 #      - name: Coverage Report
 #        uses: aGallea/tests-coverage-report@v1

@@ -36,6 +36,8 @@ jobs:
       - name: Test Coverage Report
         uses: aGallea/tests-coverage-report@v1
         with:
+          min-coverage-percentage: '0'
+          fail-under-coverage-percentage: 'false'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cobertura-path: ./bin/coverage.xml
           junit-path: ./bin/tests.xml

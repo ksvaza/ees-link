@@ -42,3 +42,4 @@ dockercompose/*
 
 fakedbdata/*
 realdbdata/*
+.cache

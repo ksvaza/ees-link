@@ -36,7 +36,7 @@
 			<arg line="--rm" />
 			<arg line="-i" />
 			<arg line="ees-link-tmp" />
-			<arg line="cp -Rv /go/pkg/mod/. /opt/bin/" />
+			<arg line="cp -R /go/pkg/mod/. /opt/bin/" />
 		</exec>
 		<exec executable="docker" failonerror="true">
 			<arg line="build" />

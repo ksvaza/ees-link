@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - name: Setup JDK 14
+      - name: Setup JDK14 for build
         uses: actions/setup-java@v5
         with:
           java-version: '26'
@@ -28,17 +28,14 @@ jobs:
           name: bin
           path: bin
 
-      - name: Publish artefacts
-        uses: actions/upload-artifact@v7.0.1
+      - name: Debug
+        run: |
+          tree
+          env
+
+      - name: Test Coverage Report
+        uses: aGallea/tests-coverage-report@v1
         with:
-          name: cache
-          path: .cache
-
-
-#      - name: Coverage Report
-#        uses: aGallea/tests-coverage-report@v1
-#        with:
-#          min-coverage-percentage: '100'
-#          fail-under-coverage-percentage: 'false'
-#          cobertura-path: ./bin/coverage.xml
-#          junit-path: ./bin/tests.xml
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cobertura-path: ./bin/coverage.xml
+          junit-path: ./bin/tests.xml

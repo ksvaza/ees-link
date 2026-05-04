@@ -103,11 +103,11 @@ type AccountVerificationCriteria struct {
 	NotTeamLeaderRole  *bool `json:"notTeamLeaderRole,omitempty"`
 
 	// Team member linking requirements (visible to team leaders and superadmin)
-	TeamNameProvided         *bool `json:"teamNameProvided,omitempty"`
-	TeamApplicationExists    *bool `json:"teamApplicationExists,omitempty"`
-	TeamMemberFound          *bool `json:"teamMemberFound,omitempty"`
-	TeamMemberRoleMatches    *bool `json:"teamMemberRoleMatches,omitempty"`
-	NoMatchingTeamMember     *bool `json:"noMatchingTeamMember,omitempty"`
+	TeamNameProvided      *bool `json:"teamNameProvided,omitempty"`
+	TeamApplicationExists *bool `json:"teamApplicationExists,omitempty"`
+	TeamMemberFound       *bool `json:"teamMemberFound,omitempty"`
+	TeamMemberRoleMatches *bool `json:"teamMemberRoleMatches,omitempty"`
+	NoMatchingTeamMember  *bool `json:"noMatchingTeamMember,omitempty"`
 
 	// Team leader requirements (visible to team leaders and superadmin)
 	TeamLeaderRole             *bool `json:"teamLeaderRole,omitempty"`
@@ -116,21 +116,20 @@ type AccountVerificationCriteria struct {
 }
 
 type TeamData struct {
-	Key		  string `json:"key"`
-	CarID	 string `json:"carId"`
-	TeamName string `json:"teamName"`
-	Accounts   []Account `json:"members"`
-	AgeGroup string `json:"ageGroup"`
-	Institution string `json:"institution,omitempty"`
-	CityOrRegion string `json:"cityOrRegion"`
+	Key               string            `json:"key"`
+	CarID             string            `json:"carId"`
+	TeamName          string            `json:"teamName"`
+	Accounts          []Account         `json:"members"`
+	AgeGroup          string            `json:"ageGroup"`
+	Institution       string            `json:"institution,omitempty"`
+	CityOrRegion      string            `json:"cityOrRegion"`
 	ResponsiblePerson ResponsiblePerson `json:"responsiblePerson"`
-	Avatar string `json:"avatar"`
-	CarData Car `json:"carData,omitempty"`
-
+	Avatar            string            `json:"avatar"`
+	CarData           Car               `json:"carData,omitempty"`
 }
 
 type Car struct {
-	SetVoltage int `json:"setVoltage"`
-	MaxCurrent int `json:"maxCurrent"`
-	Mass	   float32 `json:"mass"`
+	SetVoltage int     `json:"setVoltage"`
+	MaxCurrent int     `json:"maxCurrent"`
+	Mass       float32 `json:"mass"`
 }

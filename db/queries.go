@@ -61,7 +61,7 @@ const (
 
 	AccountReadRequestByUsername = `
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
-		FROM konti WHERE username = ANY($1)`
+		FROM konti WHERE username = $1`
 
 	AccountReadRequestByFullname = `
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt

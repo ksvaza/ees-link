@@ -462,10 +462,10 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 	return accounts, nil
 }
 
-func (DB *RealDB) GetAccountsByID(ctx context.Context, id string) ([]models.Account, error) {
-	rows, err := Pool.Query(ctx, AccountReadRequestByID, id)
+func (DB *RealDB) GetAccountsByKey(ctx context.Context, key string) ([]models.Account, error) {
+	rows, err := Pool.Query(ctx, AccountReadRequestByKey, key)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to query accounts table by ID")
+		logrus.WithError(err).Error("Failed to query accounts table by key")
 		return nil, err
 	}
 	defer rows.Close()
@@ -493,7 +493,7 @@ func (DB *RealDB) GetAccountsByID(ctx context.Context, id string) ([]models.Acco
 	}
 
 	if err = rows.Err(); err != nil {
-		logrus.WithError(err).Error("Failed iterating account rows by ID")
+		logrus.WithError(err).Error("Failed iterating account rows by key")
 		return nil, err
 	}
 
@@ -528,7 +528,6 @@ func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Accou
 
 	return nil
 }
-
 
 // Account applications for user creation
 

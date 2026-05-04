@@ -52,6 +52,12 @@ jobs:
           name: bin
           path: bin
 
+      - name: Publish artefacts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: cache
+          path: cache-mount
+
       - name: Debug
         run: |
           tree

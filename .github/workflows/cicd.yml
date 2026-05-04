@@ -44,5 +44,7 @@ jobs:
       - name: Coverage Report
         uses: aGallea/tests-coverage-report@v1
         with:
+          min-coverage-percentage: '100'
+          fail-under-coverage-percentage: 'false'
           cobertura-path: ./bin/coverage.xml
           junit-path: ./bin/tests.xml

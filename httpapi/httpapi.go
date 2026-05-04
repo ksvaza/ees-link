@@ -17,13 +17,17 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/testdb", Handler(TestDatabase))
 	router.POST("/api/submit-form", TestPointReceiveForm)
 
-	// Auth
+	// Auth and account management
 	router.POST("/api/register", Handler(PointRegister))
 	router.GET("/api/login", Handler(PointLogin))
-	// TODO: add GET and POST rqeuests for account applications and verified accounts
-
-	// Users
-	router.GET("/api/users", PointGetUsers)
+	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
+	router.POST("/api/account-verification-info", Handler(PointGetAccountVerificationInfo))
+	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey))
+	router.POST("/api/verify-account-application/:key", Handler(PointVerifyAccountApplication))
+	router.GET("/api/accounts", Handler(PointGetAccounts))
+	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
+	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
+	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccount))
 
 	// Competitors
 	router.GET("/api/cars", PointGetCars)
@@ -65,10 +69,9 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.DELETE("/api/events/:id", PointDeleteEventByID)
 
 	// ir -- Pieteikumi
-	router.GET("/api/applications", Handler(PointGetApplications))
-	router.POST("/api/applications", Handler(PointPostApplications))
-	router.PATCH("/api/applications/:id", Handler(PointPatchApplicationByID))
-	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
+	router.GET("/api/teams", Handler(PointGetTeams))
+	router.POST("/api/team-application", Handler(PointPostTeamApplication))
+	router.PATCH("/api/team/:id", Handler(PointPatchTeamByID))
 	// Vēl vajag PATCH /api/account-applications manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
 
 	// Live websocket token endpoint (optional handler if needed)

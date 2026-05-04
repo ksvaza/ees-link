@@ -38,6 +38,12 @@ const (
 			status = $13
 		WHERE id = $14`
 
+	ApplicantReadRequestByTeamName = `
+		SELECT id, team_name, age_group, institution, city_or_region, members,
+			responsible_person, how_heard_about, comments,
+			confirm_truthful, confirm_rules, confirm_media, applied_at, status
+		FROM applicants WHERE team_name = $1`
+
 	// -------------------------------------------------------------------------
 	// Accounts (konti table)
 	// -------------------------------------------------------------------------
@@ -65,28 +71,36 @@ const (
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
 		FROM konti WHERE date_of_birth = $1`
 
-	AccountReadRequestByID = `
+	AccountReadRequestByKey = `
 		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
-		FROM konti WHERE id = $1`
+		FROM konti WHERE key = $1`
 
+	AccountUpdateRequest = `
+		UPDATE konti SET
+			fullname = $1, date_of_birth = $2, role = $3, id = $4,
+			password = $5, username = $6, email = $7, phone_number = $8, salt = $9
+		WHERE key = $10`
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------
 
 	AccountApplicationWriteRequest = `
 		INSERT INTO kontu_pieteikumi (
-			fullname, date_of_birth, role, password, username, email, phone_number, team_name
+			fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8
+			$1, $2, $3, $4, $5, $6, $7, $8, $9
 		)`
 
 	AccountApplicationReadRequest = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
 		FROM kontu_pieteikumi`
 
-	AccountApplicationReadRequestByUsername = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name
-		FROM kontu_pieteikumi WHERE username = $1`
+	AccountApplicationReadRequestByKey = `
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
+		FROM kontu_pieteikumi WHERE key = $1`
+
+	AccountApplicationDeleteRequestByKey = `
+		DELETE FROM kontu_pieteikumi WHERE key = $1`
 
 	// -------------------------------------------------------------------------
 	// Admins (admini table)
@@ -94,16 +108,25 @@ const (
 
 	AdminAccountWriteRequest = `
 		INSERT INTO admini (
-			username, password, salt, superadmin
+			username, password, salt, superadmin, key
 		) VALUES (
-			$1, $2, $3, $4
+			$1, $2, $3, $4, $5
 		)`
 
 	AdminAccountReadRequest = `
-		SELECT username, password, salt, superadmin
+		SELECT username, password, salt, superadmin, key
 		FROM admini`
 
 	AdminAccountReadRequestByUsername = `
-		SELECT username, password, salt, superadmin
+		SELECT username, password, salt, superadmin, key
 		FROM admini WHERE username = $1`
+
+	AdminAccountReadRequestByKey = `
+		SELECT username, password, salt, superadmin, key
+		FROM admini WHERE key = $1`
+
+	AdminAccountUpdateRequest = `
+		UPDATE admini SET
+			username = $1, password = $2, salt = $3, superadmin = $4
+		WHERE key = $5`
 )

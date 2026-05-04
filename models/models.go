@@ -70,9 +70,11 @@ type Account struct {
 	Email       string     `json:"epasts"`
 	PhoneNumber string     `json:"telefonanumurs"`
 	Salt        string     `json:"salt"`
+	// varbūt kaut kas trūkst tīri moderēšans pēc
 }
 
 type AdminAccount struct {
+	Key        string `json:"key"`
 	Username   string `json:"lietotajvards"`
 	Password   string `json:"parole"`
 	Salt       string `json:"salt"`
@@ -80,6 +82,7 @@ type AdminAccount struct {
 }
 
 type AccountApplication struct {
+	Key         string `json:"key"`
 	FullName    string `json:"fullName"`
 	DateOfBirth string `json:"dateOfBirth"` // Matches "YYYY-MM-DD" format
 	Password    string `json:"parole"`
@@ -88,4 +91,28 @@ type AccountApplication struct {
 	PhoneNumber string `json:"telefonanumurs"`
 	TeamName    string `json:"komandasNosaukums"`
 	Role        string `json:"role"`
+}
+
+type AccountVerificationCriteria struct {
+	CanRegister bool `json:"canRegister"`
+
+	// General requirements (visible to everyone)
+	RequiredFieldsPresent bool `json:"requiredFieldsPresent"`
+	UsernameAvailable     bool `json:"usernameAvailable"`
+
+	// Standalone account requirements (visible to everyone)
+	NoTeamNameProvided *bool `json:"noTeamNameProvided,omitempty"`
+	NotTeamLeaderRole  *bool `json:"notTeamLeaderRole,omitempty"`
+
+	// Team member linking requirements (visible to team leaders and superadmin)
+	TeamNameProvided      *bool `json:"teamNameProvided,omitempty"`
+	TeamApplicationExists *bool `json:"teamApplicationExists,omitempty"`
+	TeamMemberFound       *bool `json:"teamMemberFound,omitempty"`
+	TeamMemberRoleMatches *bool `json:"teamMemberRoleMatches,omitempty"`
+	NoMatchingTeamMember  *bool `json:"noMatchingTeamMember,omitempty"`
+
+	// Team leader requirements (visible to team leaders and superadmin)
+	TeamLeaderRole             *bool `json:"teamLeaderRole,omitempty"`
+	TeamLeaderMemberFound      *bool `json:"teamLeaderMemberFound,omitempty"`
+	TeamLeaderDateOfBirthMatch *bool `json:"teamLeaderDateOfBirthMatch,omitempty"`
 }

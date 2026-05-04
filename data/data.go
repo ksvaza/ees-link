@@ -7,22 +7,35 @@ import (
 )
 
 type Database interface {
+	// Health check
 	TestHealthiness(ctx context.Context) error
 
+	// Applications, registration form data
+	RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error
 	GetAllApplications(ctx context.Context) ([]models.RegistrationFormData, error)
 	GetApplicationByID(ctx context.Context, id string) (*models.RegistrationFormData, error)
-
-	RegisterNewApplication(ctx context.Context, newApplicant models.RegistrationFormData) error
 	UpdateApplication(ctx context.Context, updatedApplicant models.RegistrationFormData) error
+	GetApplicationByTeamName(ctx context.Context, teamName string) (*models.RegistrationFormData, error)
 
+	// User accounts
 	RegisterNewAccount(ctx context.Context, newAccount models.Account) error
-
-	RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) (models.AccountApplication, error)
-
+	GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error)
 	GetAccountByUsername(ctx context.Context, username string) (*models.Account, error)
 	GetAccountByDateOfBirth(ctx context.Context, dateOfBirth string) (*models.Account, error)
-	GetAccountByFullname(ctx context.Context, fullname string) (*models.Account, error)
+	GetAccountByKey(ctx context.Context, key string) (*models.Account, error)
+	GetAccounts(ctx context.Context) ([]models.Account, error)
+	UpdateAccount(ctx context.Context, updatedAccount models.Account) error
 
-	RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error
+	// Accounts applications for user creation
 	GetAccountApplications(ctx context.Context) ([]models.AccountApplication, error)
+	RegisterNewAccountApplication(ctx context.Context, newAccountApplication models.AccountApplication) error
+	GetAccountApplicationByKey(ctx context.Context, key string) (*models.AccountApplication, error)
+	DeleteAccountApplicationByKey(ctx context.Context, key string) error
+
+	// Admin accounts
+	RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error
+	GetAllAdmins(ctx context.Context) ([]models.AdminAccount, error)
+	GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error)
+	GetAdminAccountByKey(ctx context.Context, key string) (*models.AdminAccount, error)
+	UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error
 }

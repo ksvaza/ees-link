@@ -59,15 +59,6 @@ func main() {
 
 	// DB impregnācija ar testu datiem
 
-	if envreader.GetEnvBool("SEEDDATABASE") {
-		logrus.Info("Seeding database with test data...")
-		err = db.SeedTestData(ctx)
-		if err != nil {
-			logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
-			return
-		}
-	}
-
 	if envreader.GetEnvBool("CLEARSEEDDATA") {
 		logrus.Info("Clearing seeded test data from database...")
 		err = db.DeleteSeedData(ctx)
@@ -77,19 +68,29 @@ func main() {
 		}
 	}
 
-	logrus.Info("\nSveika, http aplikācija!\n")
-
 	// visadministratora atgūšana no vides mainīgajiem
 	var superadmin models.AdminAccount
 	superadmin.Username = envreader.GetEnvString("SUPERADMIN_USERNAME")
 	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
 	superadmin.Superadmin = true
+	//logrus.Infof("Superadmin credentials from environment: username='%s', password='%s'", superadmin.Username, superadmin.Password)
 
 	err = httpapi.RegisterAdminAccount(superadmin)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to register superadmin account")
 		return
 	}
+
+	if envreader.GetEnvBool("SEEDDATABASE") {
+		logrus.Info("Seeding database with test data...")
+		err = db.SeedTestData(ctx)
+		if err != nil {
+			logrus.WithError(errors.Wrap(err, "DB Seed")).Error("Error")
+			return
+		}
+	}
+
+	logrus.Info("\nSveika, http aplikācija!\n")
 
 	err = httpapi.SetupHTTPAPI()
 	if err != nil {

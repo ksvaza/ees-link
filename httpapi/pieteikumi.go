@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/fakedb"
 	"github.com/ksvaza/ees-link/models"
@@ -16,8 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointGetApplications called %+v", ps)
+func PointGetTeams(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointGetTeams called %+v", ps)
 	if r.Method != http.MethodGet {
 		return nil, errors.New("method not allowed")
 	}
@@ -102,8 +103,8 @@ func PointGetApplications(r *http.Request, ps httprouter.Params) (*httpResult, e
 	}
 }
 
-func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointPostApplications called %+v", ps)
+func PointPostTeamApplication(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointPostTeamApplication called %+v", ps)
 	if r.Method != http.MethodPost {
 		return nil, errors.New("method not allowed")
 	}
@@ -149,8 +150,8 @@ func PointPostApplications(r *http.Request, ps httprouter.Params) (*httpResult, 
 	}, nil
 }
 
-func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	logrus.Infof("PointPatchApplicationByID called %+v", ps)
+func PointPatchTeamByID(r *http.Request, ps httprouter.Params) (*httpResult, error) {
+	logrus.Infof("PointPatchTeamByID called %+v", ps)
 	if r.Method != http.MethodPatch {
 		return nil, errors.New("method not allowed")
 	}
@@ -162,7 +163,8 @@ func PointPatchApplicationByID(r *http.Request, ps httprouter.Params) (*httpResu
 
 	logrus.Infof("Patching application with ID: %s", ID)
 
-	realDB := db.RealDB{}
+	var realDB data.Database
+	realDB = &db.RealDB{}
 
 	// Get application by ID from database
 	existingApplication, err := realDB.GetApplicationByID(r.Context(), ID)

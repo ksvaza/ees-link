@@ -14,7 +14,7 @@ RUN go mod download -x && \
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0 && \
     go install github.com/boumenot/gocover-cobertura@v1.4.0
 
-COPY . /go/src
+COPY --exclude=.cache . /go/src
 RUN tree /go/src
 
 RUN go build -o bin/ees-link cmd/ees-link/main.go

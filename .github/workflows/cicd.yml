@@ -20,20 +20,31 @@ jobs:
         with:
           path: cache-mount
           key: gomodcache
-      - name: Restore Cache
-        uses: reproducible-containers/buildkit-cache-dance@v3
+      - name: inject cache into docker
+        uses: overmindtech/buildkit-cache-dance/inject@v1
         with:
-          builder: ${{ steps.setup-buildx.outputs.name }}
-          cache-map: |
-            {
-              "gomodcache": "/go/pkg/mod"
-            }
-          cache-dir: cache-mount
-          dockerfile: Dockerfile
-          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
+          cache-source: cache-mount
+          cache-target: /go/pkg/mod
+#      - name: Restore Cache
+#        uses: reproducible-containers/buildkit-cache-dance@v3
+#        with:
+#          builder: ${{ steps.setup-buildx.outputs.name }}
+#          cache-map: |
+#            {
+#              "gomodcache": "/go/pkg/mod"
+#            }
+#          cache-dir: cache-mount
+#          dockerfile: Dockerfile
+#          skip-extraction: ${{ steps.cache.outputs.cache-hit }}
       
       - name: Build
         run: ant build
+
+      - name: extract cache from docker
+        uses: overmindtech/buildkit-cache-dance/extract@v1
+        with:
+          cache-source: cache-mount
+          cache-target: /go/pkg/mod
 
       - name: Publish artefacts
         uses: actions/upload-artifact@v7.0.1

@@ -21,7 +21,7 @@ jobs:
           path: cache-mount
           key: gomodcache
       - name: inject cache into docker
-        uses: overmindtech/buildkit-cache-dance/inject@v1
+        uses: reproducible-containers/buildkit-cache-dance/inject@v1.0.1
         with:
           cache-source: cache-mount
           cache-target: /go/pkg/mod
@@ -41,7 +41,7 @@ jobs:
         run: ant build
 
       - name: extract cache from docker
-        uses: overmindtech/buildkit-cache-dance/extract@v1
+        uses: reproducible-containers/buildkit-cache-dance/extract@v1.0.1
         with:
           cache-source: cache-mount
           cache-target: /go/pkg/mod

@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     team_name TEXT NOT NULL,
-    key TEXT PRIMARY KEY
+    key TEXT PRIMARY KEY,
+    salt TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS admini (

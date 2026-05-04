@@ -510,6 +510,7 @@ func (DB *RealDB) GetAccountApplications(ctx context.Context) ([]models.AccountA
 			&a.PhoneNumber,
 			&a.TeamName,
 			&a.Key,
+			&a.Salt,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account application row")
@@ -541,6 +542,7 @@ func (DB *RealDB) RegisterNewAccountApplication(ctx context.Context, newAccountA
 		newAccountApplication.PhoneNumber,
 		newAccountApplication.TeamName,
 		newAccountApplication.Key,
+		newAccountApplication.Salt,
 	)
 
 	if err != nil {
@@ -563,6 +565,7 @@ func (DB *RealDB) GetAccountApplicationByKey(ctx context.Context, key string) (*
 		&a.PhoneNumber,
 		&a.TeamName,
 		&a.Key,
+		&a.Salt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {

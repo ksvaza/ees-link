@@ -86,17 +86,17 @@ const (
 
 	AccountApplicationWriteRequest = `
 		INSERT INTO kontu_pieteikumi (
-			fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
+			fullname, date_of_birth, role, password, username, email, phone_number, team_name, key, salt
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 		)`
 
 	AccountApplicationReadRequest = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key, salt
 		FROM kontu_pieteikumi`
 
 	AccountApplicationReadRequestByKey = `
-		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key
+		SELECT fullname, date_of_birth, role, password, username, email, phone_number, team_name, key, salt
 		FROM kontu_pieteikumi WHERE key = $1`
 
 	AccountApplicationDeleteRequestByKey = `

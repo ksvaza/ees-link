@@ -97,3 +97,47 @@ func TestPointReceiveFormWithNonJsonBody(t *testing.T) {
 	expected := `{"status":"success"}`
 	assert.Equal(t, expected, w.Body.String())
 }
+
+func TestPointRegisterMethodNotAllowed(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/api/register", nil)
+	w := httptest.NewRecorder()
+	ps := httprouter.Params{}
+
+	httpapi.Handler(httpapi.PointRegister)(w, req, ps)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+func TestPointRegisterEmptyBody(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewReader([]byte{}))
+	w := httptest.NewRecorder()
+	ps := httprouter.Params{}
+
+	httpapi.Handler(httpapi.PointRegister)(w, req, ps)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+}
+
+func TestPointRegisterInvalidJSON(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewReader([]byte("not json")))
+	w := httptest.NewRecorder()
+	ps := httprouter.Params{}
+
+	httpapi.Handler(httpapi.PointRegister)(w, req, ps)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+}
+
+func TestPointRegisterMissingRequiredFields(t *testing.T) {
+	body := []byte(`{"fullName":"Jānis Bērziņš"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+	ps := httprouter.Params{}
+
+	httpapi.Handler(httpapi.PointRegister)(w, req, ps)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+}

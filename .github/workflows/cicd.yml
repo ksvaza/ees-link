@@ -19,7 +19,7 @@ jobs:
         id: cache
         with:
           path: cache-mount
-          key: cache-mount-${{ hashFiles('Dockerfile') }}
+          key: gomodcache
       - name: Restore Cache
         uses: reproducible-containers/buildkit-cache-dance@v3
         with:
@@ -34,16 +34,15 @@ jobs:
       
       - run: ant build
 
-      - run: docker buildx du --verbose
-
       - name: Publish artefacts
         uses: actions/upload-artifact@v7.0.1
         with:
           name: bin
           path: bin
 
+      - run: tree
       - name: Coverage Report
         uses: aGallea/tests-coverage-report@v1
         with:
-          cobertura-path: bin/coverage.xml
-          junit-path: bin/tests.xml
+          cobertura-path: ./bin/coverage.xml
+          junit-path: ./bin/tests.xml

@@ -10,28 +10,43 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+func withCORS(h httprouter.Handle) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		w.Header().Set("Access-Control-Allow-Origin", "*") // or "http://localhost:5173"
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		h(w, r, ps)
+	}
+}
+
 func setupApiEndpoints(router *httprouter.Router) {
 
 	// Test endpoints
-	router.GET("/api/test", Handler(test))
-	router.GET("/api/testdb", Handler(TestDatabase))
-	router.POST("/api/submit-form", TestPointReceiveForm)
+	router.GET("/api/test", withCORS(Handler(test)))
+	router.GET("/api/testdb", withCORS(Handler(TestDatabase)))
+	router.POST("/api/submit-form", withCORS(TestPointReceiveForm))
 
 	// Auth and account management
-	router.POST("/api/register", Handler(PointRegister))
-	router.GET("/api/login", Handler(PointLogin))
-	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
-	router.POST("/api/account-verification-info", Handler(PointGetAccountVerificationInfo))
-	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey))
-	router.POST("/api/verify-account-application/:key", Handler(PointVerifyAccountApplication))
-	router.GET("/api/accounts", Handler(PointGetAccounts))
-	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
-	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
-	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccount))
+	router.POST("/api/register", withCORS(Handler(PointRegister)))
+	router.GET("/api/login", withCORS(Handler(PointLogin)))
+	router.GET("/api/account-applications", withCORS(Handler(PointGetAccountApplications)))
+	router.GET("/api/account-verification-info/:key", withCORS(Handler(PointGetAccountVerificationInfo)))
+	router.POST("/api/verify-account-application/:key", withCORS(Handler(PointVerifyAccountApplication)))
+	router.GET("/api/accounts", withCORS(Handler(PointGetAccounts)))
+	router.PATCH("/api/account/:key", withCORS(Handler(PointPatchAccountByKey)))
+	router.GET("/api/admin-accounts", withCORS(Handler(PointGetAdminAccounts)))
+	router.PATCH("/api/admin-account/:key", withCORS(Handler(PointPatchAdminAccount)))
 
 	// Competitors
-	router.GET("/api/cars", PointGetCars)
-	router.POST("/api/cars", PointPostCars)
+	// superadmins akceptē komandas , atsevisks strukts komandām
+	// router.POST("/api/cars", PointPostCars)
 
 	// Races
 	router.POST("/api/race/start", PointRaceStart)
@@ -68,10 +83,13 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.PUT("/api/events/:id", PointPutEventByID)
 	router.DELETE("/api/events/:id", PointDeleteEventByID)
 
-	// ir -- Pieteikumi
-	router.GET("/api/teams", Handler(PointGetTeams))
-	router.POST("/api/team-application", Handler(PointPostTeamApplication))
-	router.PATCH("/api/team/:id", Handler(PointPatchTeamByID))
+	// ir
+	// registrationFormData
+	router.GET("/api/teams", withCORS(Handler(PointGetTeams)))
+	router.POST("/api/team-application", withCORS(Handler(PointPostTeamApplication))) // pieteikšanās
+	// TeamData
+	router.PATCH("/api/team", withCORS(Handler(PointPatchTeamDataByKey)))
+	router.POST("/api/team/:key", withCORS(Handler(PointPostTeamDataByKey)))
 	// Vēl vajag PATCH /api/account-applications manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
 
 	// Live websocket token endpoint (optional handler if needed)

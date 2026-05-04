@@ -129,6 +129,8 @@ func PointPostTeamApplication(r *http.Request, ps httprouter.Params) (*httpResul
 
 	fmt.Printf("Registering new applicant:\n")
 
+	newApplicant.Status = "pending"
+
 	// FS Backup
 	err = fakedb.BackupApplication(newApplicant)
 	if err != nil {

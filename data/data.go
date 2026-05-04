@@ -32,6 +32,12 @@ type Database interface {
 	GetAccountApplicationByKey(ctx context.Context, key string) (*models.AccountApplication, error)
 	DeleteAccountApplicationByKey(ctx context.Context, key string) error
 
+	// Team data
+	GetTeamDataByKey(ctx context.Context, key string) (*models.TeamData, error)
+	UpdateTeamDataByKey(ctx context.Context, key string, updatedData models.TeamData) error
+	RegisterTeamData(ctx context.Context, newTeamData models.TeamData) error
+	AssignAccountsToTeamDataByUsername(ctx context.Context, teamKey string, accountUsernames []string) error
+
 	// Admin accounts
 	RegisterNewAdmin(ctx context.Context, newAccount models.AdminAccount) error
 	GetAllAdmins(ctx context.Context) ([]models.AdminAccount, error)

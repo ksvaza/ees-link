@@ -4,11 +4,11 @@ ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 
 WORKDIR /go/src
 COPY ./go.* .golangci.yaml /go/src
+COPY ./.cache /go/pkg/mod
 RUN tree /go/src && \
     go env -w GOMODCACHE=/go/pkg/mod
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    go mod download -x && \
+RUN go mod download -x && \
     mkdir -p /go/src/bin && \
     go install github.com/jstemmer/go-junit-report/v2@v2.0.0 && \
     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0 && \
@@ -17,14 +17,12 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 COPY . /go/src
 RUN tree /go/src
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-    go build -o bin/ees-link cmd/ees-link/main.go
+RUN go build -o bin/ees-link cmd/ees-link/main.go
 
 FROM build AS test
 
 WORKDIR /go/src
-RUN --mount=type=cache,target=/go/pkg/mod \
-    mkdir -p /go/src/bin/tests && \
+RUN mkdir -p /go/src/bin/tests && \
     go test ./... -o /dev/null -c && \
     sh -c 'go test ./... -json -count=1 -timeout 30s -cover -coverprofile=bin/tests/coverage.txt || true' > bin/tests/tests.json && \
     ${GOPATH}/bin/go-junit-report -parser gojson < bin/tests/tests.json > bin/tests/tests.xml && \

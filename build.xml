@@ -31,6 +31,14 @@
 			<arg line="cp -Rv /go/src/bin/tests/. /opt/bin/" />
 		</exec>
 		<exec executable="docker" failonerror="true">
+			<arg line="run" />
+			<arg line="-v ${basedir}${file.separator}.cache:/opt/bin" />
+			<arg line="--rm" />
+			<arg line="-i" />
+			<arg line="ees-link-tmp" />
+			<arg line="cp -Rv /go/pkg/mod/. /opt/bin/" />
+		</exec>
+		<exec executable="docker" failonerror="true">
 			<arg line="build" />
 			<arg line="-f Dockerfile" />
 			<arg line="-t ees-link" />

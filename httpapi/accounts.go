@@ -289,6 +289,8 @@ func PointRegister(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		return nil, errors.Wrap(err, "failed to generate salt for random key")
 	}
 
+	pieteikums.Password = hashPassword(pieteikums.Password, pieteikums.Key)
+
 	err = realDB.RegisterNewAccountApplication(r.Context(), pieteikums)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to register new account application")

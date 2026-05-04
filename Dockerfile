@@ -1,3 +1,4 @@
+#syntax=docker/dockerfile:1
 FROM golang:1.26.2-alpine3.23 AS build
 
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0

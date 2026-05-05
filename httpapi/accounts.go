@@ -552,7 +552,7 @@ func PointVerifyAccountApplication(r *http.Request, ps httprouter.Params) (*http
 		return nil, errors.New("method not allowed")
 	}
 
-	key := ps.ByName("key")
+	key := r.URL.Query().Get("key")
 	if key == "" {
 		return nil, errors.New("missing application key")
 	}

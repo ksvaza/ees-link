@@ -45,7 +45,7 @@ jobs:
                     "id": "cobertura",
                     "metric": "line",
                     "sourcePath": ".",
-                    "pattern": ".bin/coverage.xml"
+                    "pattern": "./bin/coverage.xml"
                   }]
                 }
               ]

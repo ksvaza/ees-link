@@ -37,7 +37,6 @@ jobs:
       - name: Publish reports
         uses: uhafner/quality-monitor@v3
         with:
-          pr-number: ${{ steps.pr.outputs.number }}
           config: >
             {
               "tests": {

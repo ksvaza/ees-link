@@ -39,11 +39,14 @@ jobs:
         with:
           config: >
             {
-              "tests": {
-                "tools": [{
-                  "id": "junit",
-                  "name": "Unit tests",
-                  "pattern": "./bin/tests.xml"
-                }]
-              }
+              "coverage": [
+                {
+                  "tools": [{
+                    "id": "cobertura",
+                    "metric": "line",
+                    "sourcePath": ".",
+                    "pattern": ".bin/coverage.xml"
+                  }]
+                }
+              ]
             } 

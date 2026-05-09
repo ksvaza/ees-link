@@ -46,26 +46,5 @@ jobs:
                   "name": "Unit tests",
                   "pattern": "./bin/tests.xml"
                 }]
-              },
-              "coverage": [
-                {
-                  "tools": [{
-                    "id": "cobertura",
-                    "metric": "line",
-                    "sourcePath": ".",
-                    "pattern": ".bin/coverage.xml"
-                  }]
-                }
-              ],
-              "analysis": [
-                {
-                  "name": "Linter",
-                  "id": "style",
-                  "tools": [{
-                    "id": "golangci-lint",
-                    "sourcePath": ".",
-                    "pattern": "./bin/linter.txt"
-                  }]
-                }
-              ]
+              }
             } 

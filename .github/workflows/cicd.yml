@@ -40,3 +40,39 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cobertura-path: ./bin/coverage.xml
           junit-path: ./bin/tests.xml
+
+      - name: Publish reports
+        uses: uhafner/quality-monitor@v3
+        with:
+          pr-number: ${{ steps.pr.outputs.number }}
+          config: >
+            {
+              "tests": {
+                "tools": [{
+                  "id": "junit",
+                  "name": "Unit tests",
+                  "pattern": "./bin/tests.xml"
+                }]
+              },
+              "coverage": [
+                {
+                  "tools": [{
+                    "id": "cobertura",
+                    "metric": "line",
+                    "sourcePath": ".",
+                    "pattern": ".bin/coverage.xml"
+                  }]
+                }
+              ],
+              "analysis": [
+                {
+                  "name": "Linter",
+                  "id": "style",
+                  "tools": [{
+                    "id": "golangci-lint",
+                    "sourcePath": ".",
+                    "pattern": "./bin/linter.txt"
+                  }]
+                }
+              ],
+            } 

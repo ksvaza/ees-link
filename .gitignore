@@ -43,3 +43,6 @@ dockercompose/*
 fakedbdata/*
 realdbdata/*
 .cache
+*.tmp
+*.bak
+ees-link

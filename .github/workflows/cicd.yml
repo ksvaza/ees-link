@@ -28,20 +28,10 @@ jobs:
           name: bin
           path: bin
 
-      - name: Publish reports
-        uses: uhafner/quality-monitor@v3
+      - name: check test coverage
+        uses: vladopajic/go-test-coverage@v2.18.8
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }})"
-          config: >
-            {
-              "coverage": [
-                {
-                  "tools": [{
-                    "id": "cobertura",
-                    "metric": "line",
-                    "sourcePath": ".",
-                    "pattern": "./bin/coverage.xml"
-                  }]
-                }
-              ]
-            } 
+          profile: ./bin/coverage.txt
+          threshold-file: 80
+          threshold-package: 80
+          threshold-total: 95

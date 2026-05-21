@@ -30,7 +30,11 @@ CREATE TABLE IF NOT EXISTS konti (
     username TEXT NOT NULL,
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
-    salt TEXT NOT NULL
+    salt TEXT NOT NULL,
+    educational_institution TEXT,
+    class_or_year TEXT,
+    pending_team_id TEXT,
+    registered BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS kontu_pieteikumi (

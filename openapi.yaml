@@ -8,9 +8,9 @@ info:
   contact:
     name: E-ES Link Team
 servers:
-  - url: https://izv.svaza.lv
+  - url: https://e-es.lv
     description: Production server
-  - url: http://localhost:8000
+  - url: http://localhost:6780
     description: Local development server
 
 tags:
@@ -82,8 +82,9 @@ paths:
     post:
       tags:
         - Test
-      summary: Submit test form data
-      description: Internal endpoint for test form submission.
+      summary: Submit test form data (inactive)
+      description: Inactive internal endpoint for test form submission.
+      deprecated: true
       requestBody:
         required: true
         content:
@@ -94,7 +95,7 @@ paths:
         '200':
           description: Received form data
 
-  /api/register:
+  /api/register_account:
     post:
       tags:
         - Accounts
@@ -163,7 +164,7 @@ paths:
     get:
       tags:
         - Accounts
-      summary: Get verification criteria for an account application
+      summary: Get verification criteria for an existing account application
       description: Returns verification metadata for a specific account application.
       security:
         - BearerAuth: []
@@ -183,6 +184,30 @@ paths:
                 $ref: '#/components/schemas/AccountVerificationCriteria'
         '404':
           description: Application not found
+        '401':
+          description: Unauthorized
+  
+  /api/account-verification-info:
+    get:
+      tags:
+        - Accounts
+      summary: Get verification criteria for an account application
+      description: Returns verification metadata for a given account application.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountApplication'
+      responses:
+        '200':
+          description: Verification criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountVerificationCriteria'
         '401':
           description: Unauthorized
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/data"
@@ -31,9 +32,14 @@ func PointPostTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult,
 		}, nil
 	}
 
-	key := ps.ByName("key")
-	if key == "" {
+	prekey := ps.ByName("key")
+	if prekey == "" {
 		return nil, errors.New("missing team key")
+	}
+
+	key, err := url.PathUnescape(prekey)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unescape team key")
 	}
 
 	var realDB data.Database
@@ -95,15 +101,20 @@ func PointPatchTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult
 
 	logrus.Infof("Admin account found in context: %s", adminaccount.Username)
 
-	// key := ps.ByName("key")
-	// if key == "" {
-	// 	return nil, errors.New("missing team key")
-	// }
-
-	key, err := GenerateSalt(16)
-	if err != nil {
-		return nil, errors.Wrap(err, "Generate salt")
+	prekey := ps.ByName("key")
+	if prekey == "" {
+		return nil, errors.New("missing team key")
 	}
+
+	key, err := url.PathUnescape(prekey)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unescape team key")
+	}
+
+	// key, err := GenerateSalt(16)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "Generate salt")
+	// }
 
 	var realDB data.Database
 	realDB = &db.RealDB{}

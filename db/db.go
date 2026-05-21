@@ -95,7 +95,7 @@ func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant model
 		return fmt.Errorf("failed to marshal responsible person: %w", err)
 	}
 
-	_, er := Pool.Exec(ctx, ApplicantWriteRequest,
+	_, er := Pool.Exec(ctx, TeamApplicationWriteRequest,
 		newApplicant.ID,              // $1 - id
 		newApplicant.TeamName,        // $2 - team_name
 		newApplicant.AgeGroup,        // $3 - age_group
@@ -121,7 +121,7 @@ func (DB *RealDB) RegisterNewApplication(ctx context.Context, newApplicant model
 }
 
 func (DB *RealDB) GetAllApplications(ctx context.Context) ([]models.RegistrationFormData, error) {
-	query := ApplicantReadRequest // Adjust the query to select all columns from the applicants table
+	query := TeamApplicationReadRequest // Adjust the query to select all columns from the applicants table
 	rows, err := Pool.Query(ctx, query)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query applicants table")
@@ -188,7 +188,7 @@ func (DB *RealDB) GetApplicationByID(ctx context.Context, id string) (*models.Re
 	var membersRaw []byte
 	var ResponsiblePersonRaw []byte
 
-	err := Pool.QueryRow(ctx, ApplicantReadRequestByID, id).Scan(
+	err := Pool.QueryRow(ctx, TeamApplicationReadRequestByID, id).Scan(
 		&a.ID,
 		&a.TeamName,
 		&a.AgeGroup,
@@ -239,7 +239,7 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 		return fmt.Errorf("failed to marshal responsible person: %w", err)
 	}
 
-	result, err := Pool.Exec(ctx, ApplicantUpdateRequest,
+	result, err := Pool.Exec(ctx, TeamApplicationUpdateRequest,
 		updatedApplicant.TeamName,
 		updatedApplicant.AgeGroup,
 		updatedApplicant.Institution,
@@ -270,7 +270,7 @@ func (DB *RealDB) GetApplicationByTeamName(ctx context.Context, teamName string)
 	a := &models.RegistrationFormData{}
 	var membersRaw []byte
 	var ResponsiblePersonRaw []byte
-	err := Pool.QueryRow(ctx, ApplicantReadRequestByTeamName, teamName).Scan(
+	err := Pool.QueryRow(ctx, TeamApplicationReadRequestByTeamName, teamName).Scan(
 		&a.ID,
 		&a.TeamName,
 		&a.AgeGroup,
@@ -310,6 +310,10 @@ func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Acco
 		newAccount.Email,
 		newAccount.PhoneNumber,
 		newAccount.Salt,
+		newAccount.EducationalInstitution,
+		newAccount.ClassOrYear,
+		newAccount.PendingTeamID,
+		newAccount.Verified,
 	)
 
 	if err != nil {
@@ -333,6 +337,10 @@ func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*m
 		&a.Email,
 		&a.PhoneNumber,
 		&a.Salt,
+		&a.EducationalInstitution,
+		&a.ClassOrYear,
+		&a.PendingTeamID,
+		&a.Verified,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -358,6 +366,10 @@ func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*m
 		&a.Email,
 		&a.PhoneNumber,
 		&a.Salt,
+		&a.EducationalInstitution,
+		&a.ClassOrYear,
+		&a.PendingTeamID,
+		&a.Verified,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -383,6 +395,10 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 		&a.Email,
 		&a.PhoneNumber,
 		&a.Salt,
+		&a.EducationalInstitution,
+		&a.ClassOrYear,
+		&a.PendingTeamID,
+		&a.Verified,
 	)
 
 	if err != nil {
@@ -409,6 +425,10 @@ func (DB *RealDB) GetAccountByKey(ctx context.Context, key string) (*models.Acco
 		&a.Email,
 		&a.PhoneNumber,
 		&a.Salt,
+		&a.EducationalInstitution,
+		&a.ClassOrYear,
+		&a.PendingTeamID,
+		&a.Verified,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -442,6 +462,10 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 			&a.Email,
 			&a.PhoneNumber,
 			&a.Salt,
+			&a.EducationalInstitution,
+			&a.ClassOrYear,
+			&a.PendingTeamID,
+			&a.Verified,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account row")
@@ -484,6 +508,10 @@ func (DB *RealDB) GetAccountsByKey(ctx context.Context, key string) ([]models.Ac
 			&a.Email,
 			&a.PhoneNumber,
 			&a.Salt,
+			&a.EducationalInstitution,
+			&a.ClassOrYear,
+			&a.PendingTeamID,
+			&a.Verified,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account row")
@@ -515,6 +543,10 @@ func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Accou
 		updatedAccount.Email,
 		updatedAccount.PhoneNumber,
 		updatedAccount.Salt,
+		updatedAccount.EducationalInstitution,
+		updatedAccount.ClassOrYear,
+		updatedAccount.PendingTeamID,
+		updatedAccount.Verified,
 		updatedAccount.Cilveks.Key,
 	)
 

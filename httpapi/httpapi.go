@@ -15,18 +15,19 @@ func setupApiEndpoints(router *httprouter.Router) {
 	// Test endpoints
 	router.GET("/api/test", Handler(test))
 	router.GET("/api/testdb", Handler(TestDatabase))
-	router.POST("/api/submit-form", TestPointReceiveForm)
+	//router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth and account management
-	router.POST("/api/register", Handler(PointRegister))
+	router.POST("/api/register_account/:uniqueID", Handler(PointRegister))
 	router.GET("/api/login", Handler(PointLogin))
-	router.GET("/api/account-applications", Handler(PointGetAccountApplications))
-	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfo))
-	router.POST("/api/verify-account-application", Handler(PointVerifyAccountApplication))
+	router.GET("/api/account-applications", Handler(PointGetUnregisteredAccounts))
+	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey)) // salabots ar http dekodēšanu
+	router.GET("/api/account-verification-info", Handler(PointGetAccountVerificationInfo))
+	router.POST("/api/verify-account-application/:key", Handler(PointVerifyAccountByKey)) // salabots ar http dekodēšanu
 	router.GET("/api/accounts", Handler(PointGetAccounts))
-	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
+	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey)) // salabots ar http dekodēšanu
 	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
-	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccount))
+	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccountByKey)) // salabots ar http dekodēšanu
 
 	// Competitors
 	// superadmins akceptē komandas , atsevisks strukts komandām
@@ -69,12 +70,12 @@ func setupApiEndpoints(router *httprouter.Router) {
 
 	// ir
 	// registrationFormData
-	router.GET("/api/teams", Handler(PointGetTeams))
+	router.GET("/api/team-applications", Handler(PointGetTeams))
 	router.POST("/api/team-application", Handler(PointPostTeamApplication)) // pieteikšanās
 	// TeamData
-	router.PATCH("/api/team", Handler(PointPatchTeamDataByKey))
-	router.POST("/api/team/:key", Handler(PointPostTeamDataByKey))
-	// Vēl vajag PATCH /api/account-applications manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
+	router.PATCH("/api/team/:key", Handler(PointPatchTeamDataByKey)) // salabots ar http dekodēšanu
+	router.POST("/api/team/:key", Handler(PointPostTeamDataByKey))   // salabots ar http dekodēšanu
+	// Vēl vajag PATCH /api/account-application manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.
 
 	// Live websocket token endpoint (optional handler if needed)
 	router.GET("/ws", PointWebSocket)

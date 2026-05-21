@@ -5,7 +5,7 @@ const (
 	// Applicants (applicants table)
 	// -------------------------------------------------------------------------
 
-	ApplicantWriteRequest = `
+	TeamApplicationWriteRequest = `
 		INSERT INTO applicants (
 			id, team_name, age_group, institution, city_or_region, members,
 			responsible_person, how_heard_about, comments,
@@ -17,19 +17,19 @@ const (
 			$13, $14
 		)`
 
-	ApplicantReadRequest = `
+	TeamApplicationReadRequest = `
 		SELECT id, team_name, age_group, institution, city_or_region, members,
 			responsible_person, how_heard_about, comments,
 			confirm_truthful, confirm_rules, confirm_media, applied_at, status
 		FROM applicants`
 
-	ApplicantReadRequestByID = `
+	TeamApplicationReadRequestByID = `
 		SELECT id, team_name, age_group, institution, city_or_region, members,
 			responsible_person, how_heard_about, comments,
 			confirm_truthful, confirm_rules, confirm_media, applied_at, status
 		FROM applicants WHERE id = $1`
 
-	ApplicantUpdateRequest = `
+	TeamApplicationUpdateRequest = `
 		UPDATE applicants SET
 			team_name = $1, age_group = $2, institution = $3, city_or_region = $4,
 			members = $5, responsible_person = $6,
@@ -38,7 +38,7 @@ const (
 			status = $13
 		WHERE id = $14`
 
-	ApplicantReadRequestByTeamName = `
+	TeamApplicationReadRequestByTeamName = `
 		SELECT id, team_name, age_group, institution, city_or_region, members,
 			responsible_person, how_heard_about, comments,
 			confirm_truthful, confirm_rules, confirm_media, applied_at, status
@@ -50,36 +50,37 @@ const (
 
 	AccountWriteRequest = `
 		INSERT INTO konti (
-			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 		)`
 
 	AccountReadRequest = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		FROM konti`
 
 	AccountReadRequestByUsername = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		FROM konti WHERE username = $1`
 
 	AccountReadRequestByFullname = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		FROM konti WHERE fullname = $1`
 
 	AccountReadRequestByDateOfBirth = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		FROM konti WHERE date_of_birth = $1`
 
 	AccountReadRequestByKey = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
 		FROM konti WHERE key = $1`
 
 	AccountUpdateRequest = `
 		UPDATE konti SET
 			fullname = $1, date_of_birth = $2, role = $3, id = $4,
-			password = $5, username = $6, email = $7, phone_number = $8, salt = $9
-		WHERE key = $10`
+			password = $5, username = $6, email = $7, phone_number = $8, salt = $9,
+			educational_institution = $10, class_or_year = $11, pending_team_id = $12, registered = $13
+		WHERE key = $14`
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------

@@ -185,14 +185,10 @@ func registerAccountByApplication(ctx context.Context, realDB data.Database, app
 			// id/pendingteamid maģija
 			//
 
-			// jāatjauno konta info
-			if newAccount.Cilveks.ID != newAccount.PendingTeamID {
-				return errors.New("account registration logic error: pending team ID does not match team member ID")
+			err = addOrRemoveAccountToTeam(ctx, &newAccount)
+			if err != nil {
+				return err
 			}
-
-			newAccount.Verified = true
-
-			err = realDB.UpdateAccount(ctx, newAccount)
 		} else {
 			logrus.Infof("Account registered with team association but pending verification: %s (team ID: %s)", app.FullName, teamID)
 		}
@@ -291,14 +287,10 @@ func registerTeamLeaderAccountByApplication(ctx context.Context, realDB data.Dat
 	// id/pendingteamid maģija
 	//
 
-	// jāatjauno konta info
-	if newAccount.Cilveks.ID != newAccount.PendingTeamID {
-		return errors.New("account registration logic error: pending team ID does not match team member ID")
+	err = addOrRemoveAccountToTeam(ctx, &newAccount)
+	if err != nil {
+		return err
 	}
-
-	newAccount.Verified = true
-
-	err = realDB.UpdateAccount(ctx, newAccount)
 
 	return nil
 }
@@ -956,20 +948,9 @@ func PointVerifyAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult
 			//
 			// id/pendingteamid maģija
 			//
-
-			// jāatjauno konta info
-			if acapp.Cilveks.ID != acapp.PendingTeamID {
-				return &httpResult{
-					ResponseType: http.StatusBadRequest,
-					Body:         `{"error":"failed to add account to team"}`,
-				}, nil
-			}
-
-			acapp.Verified = true
-
-			err = realDB.UpdateAccount(ctx, *acapp)
+			err = addOrRemoveAccountToTeam(ctx, acapp)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to update account")
+				return nil, err
 			}
 
 			return &httpResult{

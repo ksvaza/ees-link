@@ -73,6 +73,7 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/team-applications", Handler(PointGetTeams))
 	router.POST("/api/team-application", Handler(PointPostTeamApplication)) // pieteikšanās
 	// TeamData
+	router.GET("/api/team/:key", Handler(PointGetTeamDataByKey))
 	router.PATCH("/api/team/:key", Handler(PointPatchTeamDataByKey)) // salabots ar http dekodēšanu
 	router.POST("/api/team/:key", Handler(PointPostTeamDataByKey))   // salabots ar http dekodēšanu
 	// Vēl vajag PATCH /api/account-application manuālās verifikācijas ar pieteikuma pamainīšanu, kur visadministrators var verificēt visu, bet komandas līderis var tikai verificēt savas komandas pieteikumus.

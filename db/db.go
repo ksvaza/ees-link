@@ -882,7 +882,7 @@ func (DB *RealDB) AssignAccountsToTeamDataByUsername(ctx context.Context, teamKe
 	var memberKeys []string
 	for rows.Next() {
 		var m models.Account
-		if err := rows.Scan(&m.Cilveks.Key, &m.Cilveks.FullName, &m.Cilveks.DateOfBirth, &m.Cilveks.Role, &m.Cilveks.ID, &m.Password, &m.Username, &m.Email, &m.PhoneNumber, &m.Salt); err != nil {
+		if err := rows.Scan(&m.Cilveks.Key, &m.Cilveks.FullName, &m.Cilveks.DateOfBirth, &m.Cilveks.Role, &m.Cilveks.ID, &m.Password, &m.Username, &m.Email, &m.PhoneNumber, &m.Salt, &m.PendingTeamID, &m.Verified, &m.EducationalInstitution, &m.ClassOrYear); err != nil {
 			return fmt.Errorf("failed to scan account row: %w", err)
 		}
 		memberKeys = append(memberKeys, m.Cilveks.Key)

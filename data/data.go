@@ -44,4 +44,7 @@ type Database interface {
 	GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error)
 	GetAdminAccountByKey(ctx context.Context, key string) (*models.AdminAccount, error)
 	UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error
+
+	// Live race data
+	GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error)
 }

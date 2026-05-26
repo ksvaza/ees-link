@@ -267,6 +267,9 @@ func (DB *RealDB) UpdateApplication(ctx context.Context, updatedApplicant models
 }
 
 func (DB *RealDB) GetApplicationByTeamName(ctx context.Context, teamName string) (*models.RegistrationFormData, error) {
+	if teamName == "" {
+		return nil, nil
+	}
 	a := &models.RegistrationFormData{}
 	var membersRaw []byte
 	var ResponsiblePersonRaw []byte

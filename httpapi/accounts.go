@@ -98,7 +98,7 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 
 func registerAccountByApplication(ctx context.Context, realDB data.Database, app models.AccountApplication) error { // applicant guarranteed != "team_leader"
 	// Šeit var sarakstīt, kas ir un nav obliātie lauki.
-	if app.Key == "" || app.FullName == "" || app.DateOfBirth == "" || app.Password == "" || app.Username == "" || app.Email == "" || app.PhoneNumber == "" {
+	if app.Key == "" || app.FullName == "" || app.DateOfBirth == "" || app.Password == "" || app.Salt == "" || app.Username == "" || app.Email == "" || app.PhoneNumber == "" {
 		return errors.New("missing required fields")
 	}
 
@@ -523,6 +523,7 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, accoun
 	return criteria, nil
 }
 
+// nav gatavs
 func PointGetAccountVerificationInfo(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 	logrus.Infof("PointGetAccountVerificationInfo called %+v", ps)
 	if r.Method != http.MethodPost {
@@ -1054,8 +1055,8 @@ func PointRegisterAccount(r *http.Request, ps httprouter.Params) (*httpResult, e
 	}
 
 	if pieteikums.Role == "team_leader" {
-		// http://e-es.lv/api/register?uniqueID=1234567890
-		id := r.URL.Query().Get("uniqueID")
+		// http://e-es.lv/api/register/1234567890
+		id := ps.ByName("uniqueID")
 		if id != "" {
 			err = registerTeamLeaderAccountByApplication(r.Context(), realDB, pieteikums, id)
 			if err == nil {
@@ -1069,14 +1070,10 @@ func PointRegisterAccount(r *http.Request, ps httprouter.Params) (*httpResult, e
 		}
 	}
 
-	pieteikums.Key, err = GenerateSalt(16)
+	// register unverified account by application (for both team leaders and members, if team leader verification fails or is not attempted)
+	err = registerAccountByApplication(r.Context(), realDB, pieteikums)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to generate salt for random key")
-	}
-
-	err = realDB.RegisterNewAccountApplication(r.Context(), pieteikums)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to register new account application")
+		return nil, errors.Wrap(err, "failed to register account by application")
 	}
 
 	return &httpResult{

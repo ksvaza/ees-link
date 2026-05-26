@@ -18,13 +18,13 @@ func setupApiEndpoints(router *httprouter.Router) {
 	//router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth and account management
-	router.POST("/api/register_account", Handler(PointRegister))
-	router.POST("/api/register_account/:uniqueID", Handler(PointRegister)) // jau vajadzētu būt, ka komandas līderu verifikācijas nolūkos pārbauda vai unikālais identifikators (komandas ID) padots līdzi.
+	router.POST("/api/register-account", Handler(PointRegisterAccount))
+	router.POST("/api/register-account/:uniqueID", Handler(PointRegisterAccount)) // jau vajadzētu būt, ka komandas līderu verifikācijas nolūkos pārbauda vai unikālais identifikators (komandas ID) padots līdzi.
 	router.GET("/api/login", Handler(PointLogin))
 	router.GET("/api/unverified-accounts", Handler(PointGetUnregisteredAccounts))
 	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey))
-	router.GET("/api/account-verification-info", Handler(PointGetAccountVerificationInfo)) // maksimāli jāpārraksta
-	router.POST("/api/verify-account/:key", Handler(PointVerifyAccountByKey))              // maksimāli jāpārraksta
+	//router.POST("/api/account-verification-info", Handler(PointGetAccountVerificationInfo)) // vajadzētu pārrakstīt, lai saņem un apstrādā models.AccountApplication nevis models.Account.
+	router.POST("/api/verify-account/:key", Handler(PointVerifyAccountByKey))
 	router.GET("/api/accounts", Handler(PointGetAccounts))
 	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
 	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))

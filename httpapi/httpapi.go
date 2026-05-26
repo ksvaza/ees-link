@@ -18,16 +18,17 @@ func setupApiEndpoints(router *httprouter.Router) {
 	//router.POST("/api/submit-form", TestPointReceiveForm)
 
 	// Auth and account management
-	router.POST("/api/register_account/:uniqueID", Handler(PointRegister))
+	router.POST("/api/register_account", Handler(PointRegister))
+	router.POST("/api/register_account/:uniqueID", Handler(PointRegister)) // jau vajadzētu būt, ka komandas līderu verifikācijas nolūkos pārbauda vai unikālais identifikators (komandas ID) padots līdzi.
 	router.GET("/api/login", Handler(PointLogin))
-	router.GET("/api/account-applications", Handler(PointGetUnregisteredAccounts))
-	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey)) // salabots ar http dekodēšanu
-	router.GET("/api/account-verification-info", Handler(PointGetAccountVerificationInfo))
-	router.POST("/api/verify-account-application/:key", Handler(PointVerifyAccountByKey)) // salabots ar http dekodēšanu
+	router.GET("/api/unverified-accounts", Handler(PointGetUnregisteredAccounts))
+	router.GET("/api/account-verification-info/:key", Handler(PointGetAccountVerificationInfoByKey))
+	router.GET("/api/account-verification-info", Handler(PointGetAccountVerificationInfo)) // maksimāli jāpārraksta
+	router.POST("/api/verify-account/:key", Handler(PointVerifyAccountByKey))              // maksimāli jāpārraksta
 	router.GET("/api/accounts", Handler(PointGetAccounts))
-	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey)) // salabots ar http dekodēšanu
+	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
 	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
-	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccountByKey)) // salabots ar http dekodēšanu
+	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccountByKey))
 
 	// Competitors
 	// superadmins akceptē komandas , atsevisks strukts komandām

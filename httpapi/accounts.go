@@ -416,17 +416,18 @@ func PointGetAccountApplications(r *http.Request, ps httprouter.Params) (*httpRe
 	}, nil
 }
 
-func buildVerificationCriteria(ctx context.Context, realDB data.Database, app models.AccountApplication) (*models.AccountVerificationCriteria, error) {
+func buildVerificationCriteria(ctx context.Context, realDB data.Database, account *models.Account) (*models.AccountVerificationCriteria, error) {
 	criteria := &models.AccountVerificationCriteria{}
 
 	// General requirements - visible to everyone
-	criteria.RequiredFieldsPresent = app.Key != "" && app.FullName != "" && app.DateOfBirth != "" && app.Password != "" && app.Username != "" && app.Email != "" && app.PhoneNumber != "" && app.Role != ""
+	criteria.RequiredFieldsPresent = account.Cilveks.Key != "" && account.Cilveks.FullName != "" && account.Cilveks.DateOfBirth != "" && account.Password != "" && account.Username != "" && account.Email != "" && account.PhoneNumber != "" && account.Cilveks.Role != ""
 
-	existing, err := realDB.GetAccountByUsername(ctx, app.Username)
+	existing, err := realDB.GetAccountByUsername(ctx, account.Username)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check username availability")
 	}
-	criteria.UsernameAvailable = existing == nil
+	// For verification checking, we exclude the account itself from the availability check if it already exists
+	criteria.UsernameAvailable = existing == nil || existing.Cilveks.Key == account.Cilveks.Key
 
 	var teamExists bool
 	var memberFound bool
@@ -434,37 +435,38 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 	var roleMatches bool
 	var teamLeaderFound bool
 
-	if app.TeamName != "" {
-		teamApp, err := realDB.GetApplicationByTeamName(ctx, app.TeamName)
+	if account.PendingTeamID != "" {
+		teamApp, err := realDB.GetApplicationByID(ctx, account.PendingTeamID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get team application")
 		}
 		teamExists = teamApp != nil
 		if teamExists {
-			member := teamApp.FindTeamMemberByFullName(app.FullName)
+			member := teamApp.FindTeamMemberByFullName(account.Cilveks.FullName)
 			memberFound = member != nil
 			if memberFound {
-				dobMatches = member.DateOfBirth == app.DateOfBirth
-				roleMatches = member.Role == app.Role
+				dobMatches = member.DateOfBirth == account.Cilveks.DateOfBirth
+				roleMatches = member.Role == account.Cilveks.Role
 				teamLeaderFound = member.Role == "team_leader"
 			}
 		}
 	}
 
-	// Determine whether the application can be registered in principle
+	// Determine whether the account can be registered in principle
+	// Accounts can join a team even if not present in original RegistrationFormData
 	if criteria.RequiredFieldsPresent && criteria.UsernameAvailable {
-		if app.TeamName == "" {
-			criteria.CanRegister = app.Role != "team_leader"
-		} else if app.Role == "team_leader" {
-			criteria.CanRegister = teamExists && memberFound && teamLeaderFound && dobMatches
+		if account.PendingTeamID == "" {
+			// Standalone account: cannot be team_leader without a team
+			criteria.CanRegister = account.Cilveks.Role != "team_leader"
 		} else {
+			// Account joining a team: just need the team to exist
 			criteria.CanRegister = teamExists
 		}
 	}
 
 	// Check user context
 	adminAccount := GetAdminAccount(ctx)
-	account := GetAccount(ctx)
+	currentUser := GetAccount(ctx)
 
 	var isSuperadmin bool
 	var isTeamLeader bool
@@ -472,30 +474,30 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 
 	if adminAccount != nil && adminAccount.Superadmin {
 		isSuperadmin = true
-	} else if account != nil && account.Cilveks.Role == "team_leader" {
+	} else if currentUser != nil && currentUser.Cilveks.Role == "team_leader" {
 		isTeamLeader = true
-		teamLeaderTeamID = account.Cilveks.ID
+		teamLeaderTeamID = currentUser.Cilveks.ID
 	}
 
 	// If superadmin or team leader checking their own team's application, show detailed criteria
-	if isSuperadmin || (isTeamLeader && app.TeamName != "" && teamLeaderTeamID != "") {
+	if isSuperadmin || (isTeamLeader && account.PendingTeamID != "" && teamLeaderTeamID != "") {
 		// Check if this is for the team leader's team (if they're a team leader)
 		if isTeamLeader {
 			teamApp, err := realDB.GetApplicationByID(ctx, teamLeaderTeamID)
-			if err != nil || teamApp == nil || teamApp.TeamName != app.TeamName {
+			if err != nil || teamApp == nil || teamApp.ID != account.PendingTeamID {
 				// Not their team, only show general criteria
 				return criteria, nil
 			}
 		}
 
 		// Standalone account criteria
-		noTeamName := app.TeamName == ""
-		notTeamLeader := app.Role != "team_leader"
+		noTeamName := account.PendingTeamID == ""
+		notTeamLeader := account.Cilveks.Role != "team_leader"
 		criteria.NoTeamNameProvided = &noTeamName
 		criteria.NotTeamLeaderRole = &notTeamLeader
 
 		// Team-related criteria
-		teamNameProvided := app.TeamName != ""
+		teamNameProvided := account.PendingTeamID != ""
 		criteria.TeamNameProvided = &teamNameProvided
 
 		if teamNameProvided {
@@ -505,7 +507,7 @@ func buildVerificationCriteria(ctx context.Context, realDB data.Database, app mo
 				criteria.TeamLeaderDateOfBirthMatch = &dobMatches
 				criteria.TeamMemberRoleMatches = &roleMatches
 
-				isTeamLeaderRole := app.Role == "team_leader"
+				isTeamLeaderRole := account.Cilveks.Role == "team_leader"
 				criteria.TeamLeaderRole = &isTeamLeaderRole
 
 				if isTeamLeaderRole {
@@ -527,23 +529,23 @@ func PointGetAccountVerificationInfo(r *http.Request, ps httprouter.Params) (*ht
 		return nil, errors.New("method not allowed")
 	}
 
-	var pieteikums models.AccountApplication
+	var account models.Account
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
 	}
 	defer r.Body.Close()
 
-	if err := json.Unmarshal(body, &pieteikums); err != nil {
+	if err := json.Unmarshal(body, &account); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 
-	logrus.Infof("Received application data for verification info: %+v", pieteikums)
+	logrus.Infof("Received account data for verification info: %+v", account)
 
 	var realDB data.Database
 	realDB = &db.RealDB{}
 
-	criteria, err := buildVerificationCriteria(r.Context(), realDB, pieteikums)
+	criteria, err := buildVerificationCriteria(r.Context(), realDB, &account)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build verification criteria")
 	}
@@ -561,29 +563,29 @@ func PointGetAccountVerificationInfoByKey(r *http.Request, ps httprouter.Params)
 
 	prekey := ps.ByName("key")
 	if prekey == "" {
-		return nil, errors.New("missing application key")
+		return nil, errors.New("missing account key")
 	}
 
 	key, err := url.PathUnescape(prekey)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unescape application key")
+		return nil, errors.Wrap(err, "Unescape account key")
 	}
 
 	var realDB data.Database
 	realDB = &db.RealDB{}
 
-	acapp, err := realDB.GetAccountApplicationByKey(r.Context(), key)
+	account, err := realDB.GetAccountByKey(r.Context(), key)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get account application by key")
+		return nil, errors.Wrap(err, "failed to get account by key")
 	}
-	if acapp == nil {
+	if account == nil {
 		return &httpResult{
 			ResponseType: http.StatusNotFound,
-			Body:         `{"error":"account application not found"}`,
+			Body:         `{"error":"account not found"}`,
 		}, nil
 	}
 
-	criteria, err := buildVerificationCriteria(r.Context(), realDB, *acapp)
+	criteria, err := buildVerificationCriteria(r.Context(), realDB, account)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build verification criteria")
 	}
@@ -915,22 +917,22 @@ func PointVerifyAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult
 
 	prekey := ps.ByName("key")
 	if prekey == "" {
-		return nil, errors.New("missing application key")
+		return nil, errors.New("missing account key")
 	}
 
 	key, err := url.PathUnescape(prekey)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unescape application key")
+		return nil, errors.Wrap(err, "unescape account key")
 	}
 
 	var realDB data.Database
 	realDB = &db.RealDB{}
 
-	acapp, err := realDB.GetAccountByKey(ctx, key)
+	account, err := realDB.GetAccountByKey(ctx, key)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get account by key")
 	}
-	if acapp == nil {
+	if account == nil {
 		return &httpResult{
 			ResponseType: http.StatusNotFound,
 			Body:         `{"error":"account not found"}`,
@@ -938,68 +940,83 @@ func PointVerifyAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult
 	}
 
 	adminAccount := GetAdminAccount(ctx)
-	if acapp.Cilveks.Role == "team_leader" {
-		if adminAccount != nil && adminAccount.Superadmin {
-			logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
 
-			//
-			//
-			// add account to team
-			//
-			// id/pendingteamid maģija
-			//
-			err = addOrRemoveAccountToTeam(ctx, acapp)
-			if err != nil {
-				return nil, err
-			}
-
+	// Check authorization for verification
+	if account.Cilveks.Role == "team_leader" {
+		// Only superadmin can verify team leaders
+		if adminAccount == nil || !adminAccount.Superadmin {
 			return &httpResult{
-				ResponseType: http.StatusOK,
-				Body:         `{"status":"account verified and registered"}`,
+				ResponseType: http.StatusForbidden,
+				Body:         `{"error":"only superadmin can verify team leader accounts"}`,
 			}, nil
 		}
-		return &httpResult{
-			ResponseType: http.StatusForbidden,
-			Body:         `{"error":"only superadmin can verify team leader applications"}`,
-		}, nil
+		logrus.Infof("Superadmin %s verifying team leader account: %s", adminAccount.Username, account.Username)
 	} else {
-		account := GetAccount(ctx)
-		if (account != nil && account.Cilveks.Role == "team_leader") || (adminAccount != nil && adminAccount.Superadmin) {
-			if adminAccount != nil && adminAccount.Superadmin {
-				logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
-			} else {
-				logrus.Infof("Team leader account found in context: %s", account.Username)
-			}
-
-			//
-			//
-			// add account to team
-			//
-			// id/pendingteamid maģija
-			//
-
-			// jāatjauno konta info
-			if acapp.Cilveks.ID != acapp.PendingTeamID {
+		// Team members can be verified by their team leader or superadmin
+		currentUser := GetAccount(ctx)
+		if adminAccount == nil || !adminAccount.Superadmin {
+			// Not a superadmin, check if current user is the team leader
+			if currentUser == nil || currentUser.Cilveks.Role != "team_leader" {
 				return &httpResult{
-					ResponseType: http.StatusBadRequest,
-					Body:         `{"error":"failed to add account to team"}`,
+					ResponseType: http.StatusForbidden,
+					Body:         `{"error":"only team leaders or superadmins can verify member accounts"}`,
 				}, nil
 			}
+			logrus.Infof("Team leader %s verifying member account: %s", currentUser.Username, account.Username)
+		} else {
+			logrus.Infof("Superadmin %s verifying member account: %s", adminAccount.Username, account.Username)
+		}
+	}
 
-			acapp.Verified = true
+	// If account has a team, add it to the team
+	if account.PendingTeamID != "" {
+		// Try to optionally match/enrich from RegistrationFormData if available
+		teamApp, err := realDB.GetApplicationByID(ctx, account.PendingTeamID)
+		if err == nil && teamApp != nil {
+			// Optional: Try to find matching member for data enrichment
+			member := teamApp.FindTeamMemberByFullName(account.Cilveks.FullName)
+			if member != nil {
+				// Optionally validate/enrich from registration data (for merged accounts)
+				logrus.Debugf("Found matching member in team application for account %s", account.Username)
+				// Could enrich account data here if needed
 
-			err = realDB.UpdateAccount(ctx, *acapp)
+				// Check whether it is a first time registration
+				if account.Cilveks.ID == "" {
+					// Take info from member
+					account.EducationalInstitution = member.EducationalInstitution
+					account.ClassOrYear = member.ClassOrYear
+					logrus.Infof("Enriched account %s with educational institution and class/year from team application", account.Username)
+				}
+			}
+		}
 
+		// Add account to team
+		err = addOrRemoveAccountToTeam(ctx, account)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to add account to team")
+		}
+
+		// Verify that addOrRemoveAccountToTeam succeeded by checking if Cilveks.ID was set correctly
+		if account.Cilveks.ID != account.PendingTeamID {
 			return &httpResult{
-				ResponseType: http.StatusOK,
-				Body:         `{"status":"account verified and registered"}`,
+				ResponseType: http.StatusInternalServerError,
+				Body:         `{"error":"failed to confirm account assignment to team"}`,
 			}, nil
 		}
-		return &httpResult{
-			ResponseType: http.StatusForbidden,
-			Body:         `{"error":"only team leaders or superadmins can verify member applications"}`,
-		}, nil
 	}
+
+	// Mark account as verified
+	account.Verified = true
+
+	err = realDB.UpdateAccount(ctx, *account)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to update account verification status")
+	}
+
+	return &httpResult{
+		ResponseType: http.StatusOK,
+		Body:         `{"status":"account verified and registered"}`,
+	}, nil
 }
 
 func PointRegisterAccount(r *http.Request, ps httprouter.Params) (*httpResult, error) {

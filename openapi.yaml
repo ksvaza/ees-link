@@ -40,12 +40,15 @@ tags:
     description: Real-time live data streaming
   - name: Test
     description: Internal test endpoints
+  - name: Finished
+    description: Finished endpoints
 
 paths:
   /api/test:
     get:
       tags:
         - Test
+        - Finished
       summary: Health check and test endpoint
       description: Simple test endpoint used during development.
       responses:
@@ -64,6 +67,7 @@ paths:
     get:
       tags:
         - Test
+        - Finished
       summary: Database connectivity test
       description: Internal endpoint used to verify database connectivity.
       responses:
@@ -82,6 +86,7 @@ paths:
     post:
       tags:
         - Test
+        - Finished
       summary: Submit test form data (inactive)
       description: Inactive internal endpoint for test form submission.
       deprecated: true
@@ -99,6 +104,7 @@ paths:
     post:
       tags:
         - Accounts
+        - Finished
       summary: Register a new account or submit a new account application
       description: |
         Registers a new account directly for applications without a team,
@@ -123,6 +129,7 @@ paths:
     get:
       tags:
         - Auth
+        - Finished
       summary: Get current authenticated account
       description: Returns the authenticated admin or user account from the current request context.
       security:
@@ -143,9 +150,10 @@ paths:
     get:
       tags:
         - Accounts
+        - Finished
       summary: List pending account applications
       description: |
-        Returns all account applications for superadmins, or team-specific applications for team leaders.
+        Returns all account applications (unverified accounts) for superadmins, or team-specific applications for team leaders.
       security:
         - BearerAuth: []
       responses:
@@ -156,7 +164,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AccountApplication'
+                  $ref: '#/components/schemas/AccountInfo'
         '403':
           description: Forbidden
 
@@ -215,6 +223,7 @@ paths:
     post:
       tags:
         - Accounts
+        - Finished
       summary: Verify and register an account application
       description: |
         Verifies the account application identified by key and registers the account.
@@ -975,6 +984,9 @@ components:
           type: string
         id:
           type: string
+        email:
+          type: string
+          format: email
 
     ResponsiblePerson:
       type: object
@@ -993,12 +1005,24 @@ components:
       properties:
         dati:
           $ref: '#/components/schemas/TeamMember'
+        parole:
+          type: string
         lietotajvards:
           type: string
         epasts:
           type: string
           format: email
         telefonanumurs:
+          type: string
+        salt:
+          type: string
+        pendingTeamId:
+          type: string
+        registered:
+          type: boolean
+        educationalInstitution:
+          type: string
+        classOrYear:
           type: string
 
     AdminInfo:
@@ -1008,6 +1032,10 @@ components:
           type: string
         lietotajvards:
           type: string
+        parole:
+          type: string
+        salt:
+          type: string
         superadmin:
           type: boolean
 
@@ -1015,6 +1043,8 @@ components:
       type: object
       properties:
         canRegister:
+          type: boolean
+        canLinkToTeam:
           type: boolean
         requiredFieldsPresent:
           type: boolean

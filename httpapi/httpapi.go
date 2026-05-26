@@ -17,6 +17,10 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/testdb", Handler(TestDatabase))
 	//router.POST("/api/submit-form", TestPointReceiveForm)
 
+	// MQTT logs
+	router.GET("/api/mqtt-logs/:limit", Handler(PointGetMQTTLogs))
+	router.POST("/api/mqtt-message", Handler(PointPostMQTTMessage))
+
 	// Auth and account management
 	router.POST("/api/register-account", Handler(PointRegisterAccount))
 	router.POST("/api/register-account/:uniqueID", Handler(PointRegisterAccount)) // jau vajadzētu būt, ka komandas līderu verifikācijas nolūkos pārbauda vai unikālais identifikators (komandas ID) padots līdzi.

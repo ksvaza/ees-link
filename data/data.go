@@ -44,4 +44,8 @@ type Database interface {
 	GetAdminAccountByUsername(ctx context.Context, username string) (*models.AdminAccount, error)
 	GetAdminAccountByKey(ctx context.Context, key string) (*models.AdminAccount, error)
 	UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error
+
+	// MQTT log batching
+	SaveMQTTLog(ctx context.Context, log *models.MqttMessage) error
+	GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttMessage, error)
 }

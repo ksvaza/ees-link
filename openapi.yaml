@@ -67,6 +67,64 @@ paths:
               schema:
                 type: string
                 example: Database is healthy
+  
+  /api/mqtt-logs/{limit}:
+    get:
+      tags: [Test]
+      summary: Iegūt pēdējos MQTT logus
+      x-implemented: true
+      parameters:
+        - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          description: MQTT logu saraksts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MQTTMessage'
+        '500':
+          description: Iekšējā servera kļūme vai datubāzes piekļuves kļūme
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  /api/mqtt-message:
+    post:
+      tags: [Test]
+      summary: Iesniegt MQTT ziņu
+      x-implemented: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MQTTMessage'
+      responses:
+        '200':
+          description: MQTT ziņa veiksmīgi iesniegta
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: MQTT message sent successfully
+        '400':
+          description: Nekorekti dati vai kļūda JSON validācijā
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Iekšējā servera kļūme vai MQTT ziņas sūtīšanas kļūme
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /api/login:
     get:
@@ -647,6 +705,14 @@ paths:
 
 components:
   parameters:
+    limitParam:
+      name: limit
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        default: 100
     keyParam:
       name: key
       in: path
@@ -684,14 +750,24 @@ components:
       properties:
         status:
           type: string
-          example: {"status":"admin account updated"}
+          example: "admin account updated"
           
     ErrorResponse:
       type: object
       properties:
         error:
           type: string
-          example: {"error":"username already exists"}
+          example: "username already exists"
+    
+    MQTTMessage:
+      type: object
+      properties:
+        topic:
+          type: string
+          example: "test/topic"
+        payload:
+          type: string
+          example: "This is a test MQTT message"
 
     BilingualText:
       type: object

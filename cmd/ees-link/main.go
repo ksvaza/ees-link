@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/ksvaza/ees-link/db"
 	"github.com/ksvaza/ees-link/envreader"
 	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/ksvaza/ees-link/models"
+	"github.com/ksvaza/ees-link/myqtt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -74,12 +76,12 @@ func main() {
 	superadmin.Password = envreader.GetEnvString("SUPERADMIN_PASSWORD")
 	superadmin.Superadmin = true
 	//logrus.Infof("Superadmin credentials from environment: username='%s', password='%s'", superadmin.Username, superadmin.Password)
-
 	err = httpapi.RegisterAdminAccount(superadmin)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to register superadmin account")
 		return
 	}
+	// ----
 
 	if envreader.GetEnvBool("SEEDDATABASE") {
 		logrus.Info("Seeding database with test data...")
@@ -89,6 +91,24 @@ func main() {
 			return
 		}
 	}
+
+	// MQTT vides mainīgo iegūšana un inicializācija
+	mqttConfig := models.MqttConfig{
+		Host:     envreader.GetEnvString("MQTT_HOST"),
+		Port:     envreader.GetEnvInt("MQTT_PORT"),
+		Username: envreader.GetEnvString("MQTT_USERNAME"),
+		Password: envreader.GetEnvString("MQTT_PASSWORD"),
+	}
+	myqtt.InitMQTT(mqttConfig)
+	// ----
+
+	// wg un pavedienu uzdevumu inicializācija
+
+	wg := &sync.WaitGroup{}
+
+	myqtt.StartMQTTHost(ctx, wg)
+
+	// ----
 
 	logrus.Info("\nSveika, http aplikācija!\n")
 

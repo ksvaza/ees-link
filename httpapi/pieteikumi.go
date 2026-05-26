@@ -109,39 +109,39 @@ func PointPostTeamApplication(r *http.Request, ps httprouter.Params) (*httpResul
 		return nil, errors.New("method not allowed")
 	}
 
-	var newApplicant models.RegistrationFormData
+	var newTeamApp models.RegistrationFormData
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, errors.Wrap(err, "Read body")
 	}
 
-	if err := json.Unmarshal(body, &newApplicant); err != nil {
+	if err := json.Unmarshal(body, &newTeamApp); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
-	newApplicant.ID = uuid.New().String() // Assign a new unique ID to the application
+	newTeamApp.ID = uuid.New().String() // Assign a new unique ID to the application
 
-	for _, m := range newApplicant.Members {
-		m.ID = newApplicant.ID
+	for _, m := range newTeamApp.Members {
+		m.ID = newTeamApp.ID
 	}
 
-	newApplicant.AppliedAt = time.Now()
+	newTeamApp.AppliedAt = time.Now()
 	realDB := db.RealDB{}
 
 	fmt.Printf("Registering new applicant:\n")
 
-	newApplicant.Status = "pending"
+	newTeamApp.Status = "pending"
 
 	// FS Backup
-	err = fakedb.BackupApplication(newApplicant)
+	err = fakedb.BackupApplication(newTeamApp)
 	if err != nil {
 		return nil, errors.Wrap(err, "BackupApplication")
 	}
 
 	// New application handling logic here (e.g., save to database)
 
-	logrus.Infof("Received new application: %+v", newApplicant)
+	logrus.Infof("Received new application: %+v", newTeamApp)
 
-	err = realDB.RegisterNewApplication(r.Context(), newApplicant)
+	err = realDB.RegisterNewApplication(r.Context(), newTeamApp)
 	if err != nil {
 		return nil, errors.Wrap(err, "AddApplication")
 	}

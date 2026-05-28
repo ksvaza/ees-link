@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type MqttConfig struct {
 	Host     string
@@ -10,8 +13,8 @@ type MqttConfig struct {
 }
 
 type MqttMessage struct {
-	Topic   string `json:"topic"`
-	Payload []byte `json:"payload"`
+	Topic   string          `json:"topic"`
+	Payload json.RawMessage `json:"payload"`
 }
 
 type MqttLogEntry struct {

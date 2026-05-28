@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha512"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"time"
 
@@ -197,9 +196,9 @@ func seedApplications(ctx context.Context, realDB data.Database) error {
 		pievC++
 	}
 
-	if pievC <= 0 {
-		return errors.New("Neizdevās pievienot nevienu komandu pieteikumu")
-	}
+	// if pievC <= 0 {
+	// 	return errors.New("Neizdevās pievienot nevienu komandu pieteikumu")
+	// }
 
 	return nil
 }
@@ -344,9 +343,9 @@ func seedAccounts(ctx context.Context, realDB data.Database) error {
 		pievC++
 	}
 
-	if pievC <= 0 {
-		return errors.New("Neizdevās pievienot nevienu kontu")
-	}
+	// if pievC <= 0 {
+	// 	return errors.New("Neizdevās pievienot nevienu kontu")
+	// }
 
 	return nil
 }
@@ -501,9 +500,9 @@ func seedAccountApplications(ctx context.Context, realDB data.Database) error {
 		pievC++
 	}
 
-	if pievC <= 0 {
-		return errors.New("Neizdevās pievienot nevienu kontu pieteikumu")
-	}
+	// if pievC <= 0 {
+	// 	return errors.New("Neizdevās pievienot nevienu kontu pieteikumu")
+	// }
 
 	return nil
 }

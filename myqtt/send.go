@@ -10,7 +10,7 @@ func SendMQTTMessage(message models.MqttMessage) error {
 		return errors.New("MQTT client not connected")
 	}
 
-	token := mqttClient.Publish(message.Topic, 0, false, message.Payload)
+	token := mqttClient.Publish(message.Topic, 0, false, []byte(message.Payload))
 	token.Wait()
 	return token.Error()
 }

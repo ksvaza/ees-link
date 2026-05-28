@@ -164,6 +164,5 @@ WHERE key = $10`
 	MQTTLogsReadRequest = `
 		SELECT topic, payload, received_at
 		FROM mqtt_logs
-		ORDER BY id DESC
 		LIMIT $1`
 )

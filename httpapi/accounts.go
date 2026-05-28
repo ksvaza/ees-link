@@ -74,10 +74,14 @@ func PointLogin(r *http.Request, ps httprouter.Params) (*httpResult, error) {
 		logrus.Infof("Authenticated account: %+v", account)
 		accountInfo := models.Account{
 			// Key: account.Key,
-			Cilveks:     account.Cilveks,
-			Username:    account.Username,
-			Email:       account.Email,
-			PhoneNumber: account.PhoneNumber,
+			Cilveks:                account.Cilveks,
+			Username:               account.Username,
+			Email:                  account.Email,
+			PhoneNumber:            account.PhoneNumber,
+			PendingTeamID:          account.PendingTeamID,
+			Verified:               account.Verified,
+			EducationalInstitution: account.EducationalInstitution,
+			ClassOrYear:            account.ClassOrYear,
 		}
 		return &httpResult{
 			ResponseType: http.StatusOK,
@@ -223,11 +227,14 @@ func registerTeamLeaderAccountByApplication(ctx context.Context, realDB data.Dat
 	var teamID string = ""
 	newAccount := models.Account{
 		Cilveks: models.TeamMember{
-			Key:         app.Key,
-			FullName:    app.FullName,
-			DateOfBirth: app.DateOfBirth,
-			Role:        app.Role,
-			ID:          "",
+			Key:                    app.Key,
+			FullName:               app.FullName,
+			DateOfBirth:            app.DateOfBirth,
+			EducationalInstitution: "",
+			Role:                   app.Role,
+			ClassOrYear:            "",
+			ID:                     "",
+			Email:                  app.Email,
 		},
 		Password:               app.Password,
 		Username:               app.Username,
@@ -268,6 +275,8 @@ func registerTeamLeaderAccountByApplication(ctx context.Context, realDB data.Dat
 			}
 			newAccount.EducationalInstitution = member.EducationalInstitution
 			newAccount.ClassOrYear = member.ClassOrYear
+			newAccount.Cilveks.EducationalInstitution = member.EducationalInstitution
+			newAccount.Cilveks.ClassOrYear = member.ClassOrYear
 			logrus.Infof("Found matching team member in application for account registration: %s (team ID: %s)", app.FullName, teamID)
 			break
 		}

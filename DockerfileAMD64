@@ -14,6 +14,7 @@ COPY ./db /go/src/db
 COPY ./models /go/src/models
 COPY ./data /go/src/data
 COPY ./fakedb /go/src/fakedb
+COPY ./myqtt /go/src/myqtt
 
 RUN tree /go/src
 RUN go build -o ees-link cmd/ees-link/main.go

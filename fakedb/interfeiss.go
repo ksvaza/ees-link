@@ -202,14 +202,14 @@ func (db *FSDatabase) AssignAccountsToTeamDataByUsername(ctx context.Context, te
 	return nil
 }
 
-func (db *FSDatabase) SaveMQTTLog(ctx context.Context, log *models.MqttMessage) error {
+func (db *FSDatabase) SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) error {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
 	return nil
 }
 
-func (db *FSDatabase) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttMessage, error) {
+func (db *FSDatabase) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
-	return []models.MqttMessage{}, nil
+	return []models.MqttLogEntry{}, nil
 }

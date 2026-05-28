@@ -156,13 +156,13 @@ WHERE key = $10`
 
 	MQTTLogSaveRequest = `
 		INSERT INTO mqtt_logs (
-			topic, payload
+			topic, payload, received_at
 		) VALUES (
-			$1, $2
+			$1, $2, $3
 		)`
 
 	MQTTLogsReadRequest = `
-		SELECT topic, payload
+		SELECT topic, payload, received_at
 		FROM mqtt_logs
 		ORDER BY id DESC
 		LIMIT $1`

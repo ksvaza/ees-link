@@ -1,5 +1,5 @@
 # Stage 1: Build Go server
-FROM --platform=linux/arm64 golang:1.23.4-alpine3.21 AS build
+FROM --platform=linux/arm64 golang:1.26.1-alpine3.21 AS build
 
 ENV GOOS=linux GOARCH=arm64
 
@@ -14,6 +14,7 @@ COPY ./db /go/src/db
 COPY ./models /go/src/models
 COPY ./data /go/src/data
 COPY ./fakedb /go/src/fakedb
+COPY ./myqtt /go/src/myqtt
 
 RUN go build -o ees-link cmd/ees-link/main.go
 

@@ -7,10 +7,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func (db *RealDB) SaveMQTTLog(ctx context.Context, log *models.MqttMessage) error {
+func (db *RealDB) SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) error {
 	_, err := Pool.Exec(ctx, MQTTLogSaveRequest,
-		log.Topic,
-		log.Payload,
+		log.Message.Topic,
+		log.Message.Payload,
+		log.ReceivedAt,
 	)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to save MQTT log")
@@ -19,7 +20,7 @@ func (db *RealDB) SaveMQTTLog(ctx context.Context, log *models.MqttMessage) erro
 	return nil
 }
 
-func (db *RealDB) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttMessage, error) {
+func (db *RealDB) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error) {
 	rows, err := Pool.Query(ctx, MQTTLogsReadRequest, limit)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query MQTT logs table")
@@ -27,12 +28,13 @@ func (db *RealDB) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttMess
 	}
 	defer rows.Close()
 
-	var logs []models.MqttMessage
+	var logs []models.MqttLogEntry
 	for rows.Next() {
-		var log models.MqttMessage
+		var log models.MqttLogEntry
 		err = rows.Scan(
-			&log.Topic,
-			&log.Payload,
+			&log.Message.Topic,
+			&log.Message.Payload,
+			&log.ReceivedAt,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan MQTT log row")

@@ -202,16 +202,6 @@ func PointGetTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult, 
 		return nil, errors.New("method not allowed")
 	}
 
-	adminaccount := GetAdminAccount(r.Context())
-	if adminaccount == nil || !adminaccount.Superadmin || adminaccount.Username == "" || adminaccount.Password == "" || adminaccount.Salt == "" {
-		return &httpResult{
-			ResponseType: http.StatusForbidden,
-			Body:         `{"error":"forbidden"}`,
-		}, nil
-	}
-
-	logrus.Infof("Admin account found in context: %s", adminaccount.Username)
-
 	prekey := ps.ByName("key")
 	if prekey == "" {
 		return nil, errors.New("missing team key")
@@ -220,6 +210,28 @@ func PointGetTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult, 
 	key, err := url.PathUnescape(prekey)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unescape team key")
+	}
+
+	adminaccount := GetAdminAccount(r.Context())
+	if adminaccount == nil || !adminaccount.Superadmin || adminaccount.Username == "" || adminaccount.Password == "" || adminaccount.Salt == "" {
+		// tad paskatīties; iespējams, komandas līderis ir autentificējies
+		account := GetAccount(r.Context())
+		if account == nil || account.Username == "" || account.Password == "" || account.Salt == "" {
+			return &httpResult{
+				ResponseType: http.StatusForbidden,
+				Body:         `{"error":"forbidden"}`,
+			}, nil
+		} else {
+			logrus.Infof("Account found in context: %s", account.Username)
+		}
+		if account.Cilveks.Role != "team_leader" || account.Cilveks.ID != key {
+			return &httpResult{
+				ResponseType: http.StatusForbidden,
+				Body:         `{"error":"forbidden"}`,
+			}, nil
+		}
+	} else {
+		logrus.Infof("Admin account found in context: %s", adminaccount.Username)
 	}
 
 	// key, err := GenerateSalt(16)

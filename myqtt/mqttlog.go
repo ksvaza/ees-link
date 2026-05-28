@@ -2,6 +2,7 @@ package myqtt
 
 import (
 	"context"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ksvaza/ees-link/data"
@@ -12,9 +13,12 @@ import (
 var realDB data.Database = &db.RealDB{}
 
 func mqttGeneralHandler(c mqtt.Client, m mqtt.Message) {
-	entry := models.MqttMessage{
-		Topic:   m.Topic(),
-		Payload: m.Payload(),
+	entry := models.MqttLogEntry{
+		Message: models.MqttMessage{
+			Topic:   m.Topic(),
+			Payload: m.Payload(),
+		},
+		ReceivedAt: time.Now(),
 	}
 	realDB.SaveMQTTLog(context.Background(), &entry)
 }

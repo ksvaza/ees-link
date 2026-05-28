@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS konti (
     email TEXT NOT NULL,
     phone_number TEXT NOT NULL,
     salt TEXT NOT NULL,
-    educational_institution TEXT,
-    class_or_year TEXT,
-    pending_team_id TEXT,
+    educational_institution TEXT NOT NULL DEFAULT '',
+    class_or_year TEXT NOT NULL DEFAULT '',
+    pending_team_id TEXT NOT NULL DEFAULT '',
     registered BOOLEAN NOT NULL DEFAULT false
 );
 
@@ -68,4 +68,10 @@ CREATE TABLE IF NOT EXISTS komandas (
     responsible_person JSONB NOT NULL DEFAULT '[]',
     avatar TEXT NOT NULL,
     car_data JSONB NOT NULL DEFAULT '{}'
+);
+
+CREATE TABLE IF NOT EXISTS mqtt_logs (
+    topic TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

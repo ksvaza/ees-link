@@ -9,6 +9,7 @@ import (
 	"github.com/ksvaza/ees-link/httpapi"
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/ksvaza/ees-link/models"
+	"github.com/ksvaza/ees-link/websockets"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -91,6 +92,8 @@ func main() {
 	}
 
 	logrus.Info("\nSveika, http aplikācija!\n")
+
+	websockets.StartWebSocketServer()
 
 	err = httpapi.SetupHTTPAPI()
 	if err != nil {

@@ -1,5 +1,5 @@
 # Stage 1: Build Go server
-FROM --platform=linux/arm64 golang:1.23.4-alpine3.21 AS build
+FROM golang:1.25.4-alpine3.21 AS build
 
 ENV GOOS=linux GOARCH=arm64
 
@@ -14,11 +14,12 @@ COPY ./db /go/src/db
 COPY ./models /go/src/models
 COPY ./data /go/src/data
 COPY ./fakedb /go/src/fakedb
+COPY ./websockets /go/src/websockets
 
 RUN go build -o ees-link cmd/ees-link/main.go
 
 # Stage 2: Final stage
-FROM --platform=linux/arm/v8 alpine:3.21.0 AS final
+FROM alpine:3.21.0 AS final
 
 COPY --from=build ./go/src/ees-link ./
 

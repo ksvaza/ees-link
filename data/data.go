@@ -48,4 +48,7 @@ type Database interface {
 	// MQTT log batching
 	SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) error
 	GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error)
+	
+	// Live race data
+	GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error)
 }

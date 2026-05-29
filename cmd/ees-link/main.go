@@ -11,6 +11,7 @@ import (
 	"github.com/ksvaza/ees-link/logeris"
 	"github.com/ksvaza/ees-link/models"
 	"github.com/ksvaza/ees-link/myqtt"
+	"github.com/ksvaza/ees-link/websockets"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -107,10 +108,11 @@ func main() {
 	wg := &sync.WaitGroup{}
 
 	myqtt.StartMQTTHost(ctx, wg)
-
+	websockets.StartWebSocketServer()
 	// ----
 
 	logrus.Info("\nSveika, http aplikācija!\n")
+
 
 	err = httpapi.SetupHTTPAPI()
 	if err != nil {

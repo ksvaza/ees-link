@@ -6,11 +6,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/fakedb"
-
-	"github.com/julienschmidt/httprouter"
-
+	"github.com/ksvaza/ees-link/websockets"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -177,8 +176,6 @@ func PointGetUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 // Competitors
 // -----------
-
-
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
@@ -412,10 +409,11 @@ func PointDeleteEventByID(w http.ResponseWriter, r *http.Request, ps httprouter.
 // ---------
 
 func PointWebSocket(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointWebSocket called %+v", ps)
-	if !requireMethod(w, r, http.MethodGet) {
-		return
+	err := websockets.UpgradeWebSocket(w, r, ps)
+	if err != nil {
+		logrus.Errorf("Error upgrading WebSocket: %v", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "notika kļūme"}`))
 	}
-	// TODO: implement websocket upgrade/handler
-	sendNotImplemented(w)
 }

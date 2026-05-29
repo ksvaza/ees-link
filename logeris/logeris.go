@@ -98,7 +98,7 @@ func SetupLogger(logFile string, clearlog bool) (f *os.File, err error) {
 
 	logrus.AddHook(&StacktraceHook{})
 
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logrus.TraceLevel)
 
 	return
 }

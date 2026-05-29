@@ -66,6 +66,8 @@ func StartMQTTHost(ctx context.Context, wg *sync.WaitGroup) {
 
 func createMqttClient(ctx context.Context, config models.MqttConfig) mqtt.Client {
 	for {
+		logrus.Debugf("MQTT client (%s) connecting to %s", mqttInstance, mqttUrl)
+
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(mqttUrl)
 		if config.Username != "" && config.Password != "" {

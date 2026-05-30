@@ -201,6 +201,19 @@ func (db *FSDatabase) AssignAccountsToTeamDataByUsername(ctx context.Context, te
 	fmt.Printf("fake db called")
 	return nil
 }
+
+func (db *FSDatabase) SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.MqttLogEntry{}, nil
+}
+
 func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error) {
 	return []models.LiveRaceData{
 		{

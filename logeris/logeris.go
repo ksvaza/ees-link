@@ -98,7 +98,28 @@ func SetupLogger(logFile string, clearlog bool) (f *os.File, err error) {
 
 	logrus.AddHook(&StacktraceHook{})
 
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logrus.TraceLevel)
 
 	return
+}
+
+type LogrusLogger struct {
+	log   *logrus.Entry
+	level logrus.Level
+}
+
+func NewLogrusLogger(log *logrus.Entry, level logrus.Level) *LogrusLogger {
+	return &LogrusLogger{
+		log:   log,
+		level: level,
+	}
+}
+
+func (l *LogrusLogger) Println(v ...any) {
+	msg := fmt.Sprintln(v...)
+	l.log.Log(l.level, msg[:len(msg)-1])
+}
+
+func (l *LogrusLogger) Printf(format string, v ...any) {
+	l.log.Logf(l.level, format, v...)
 }

@@ -34,6 +34,9 @@ go.work.sum
 # logs
 logs/*
 
+# testu kurliņi
+test_curl/*
+
 # Docker compose files
 dockercompose/*
 
@@ -45,3 +48,4 @@ realdbdata/*
 /dockercompose.zip
 
 backed-up-data/*
+.vscode

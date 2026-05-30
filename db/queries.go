@@ -151,4 +151,18 @@ WHERE key = $10`
 	city_or_region, responsible_person, car_data, avatar
 ) VALUES (
 	$1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+
+	// MQTT things
+
+	MQTTLogSaveRequest = `
+		INSERT INTO mqtt_logs (
+			topic, payload, received_at
+		) VALUES (
+			$1, $2, $3
+		)`
+
+	MQTTLogsReadRequest = `
+		SELECT topic, payload, received_at
+		FROM mqtt_logs
+		LIMIT $1`
 )

@@ -144,7 +144,7 @@ WHERE key = $1;`
     city_or_region = $6, responsible_person = $7, car_data = $8, avatar = $9
 WHERE key = $10`
 
-	TeamMembersWriteRequest = `UPDATE komandas SET team_members = $1 WHERE key = $2`
+	TeamMembersWriteRequest = `UPDATE komandas SET team_members = $1::text[] WHERE key = $2`
 
 	TeamDataWriteRequest = `INSERT INTO komandas (
 	key, car_id, team_name, team_members, age_group, institution,
@@ -165,4 +165,15 @@ WHERE key = $10`
 		SELECT topic, payload, received_at
 		FROM mqtt_logs
 		LIMIT $1`
+
+	CarTelemetrySaveRequest = `
+		INSERT INTO car_telemetry (
+			id, rssi, 
+			timestamp, 
+			accel_x, accel_y, accel_z, 
+			gps_lat, gps_lon, gps_spd, gps_sat, 
+			psu_uop, psu_iop, psu_pop, psu_uip, psu_wh, 
+			sys_vbat, sys_dc, sys_err, 
+			meginajums
+		)`
 )

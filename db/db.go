@@ -875,23 +875,41 @@ func (DB *RealDB) UpdateTeamDataByKey(ctx context.Context, key string, updatedDa
 }
 
 func (DB *RealDB) AssignAccountsToTeamDataByUsername(ctx context.Context, teamKey string, accountUsernames []string) error {
-	// Fetch konti rows matching the given usernames
-	rows, err := Pool.Query(ctx, AccountReadRequestByUsername, accountUsernames)
-	if err != nil {
-		return fmt.Errorf("failed to query accounts by username: %w", err)
-	}
-	defer rows.Close()
+	memberKeys := []string{} // Initialize as empty slice, not nil
 
-	var memberKeys []string
-	for rows.Next() {
-		var m models.Account
-		if err := rows.Scan(&m.Cilveks.Key, &m.Cilveks.FullName, &m.Cilveks.DateOfBirth, &m.Cilveks.Role, &m.Cilveks.ID, &m.Password, &m.Username, &m.Email, &m.PhoneNumber, &m.Salt, &m.PendingTeamID, &m.Verified, &m.EducationalInstitution, &m.ClassOrYear); err != nil {
-			return fmt.Errorf("failed to scan account row: %w", err)
+	// For each username, query individually and collect the key
+	for _, username := range accountUsernames {
+		var (
+			key                    string
+			fullname               string
+			dateOfBirth            string
+			role                   string
+			id                     string
+			password               string
+			queryUsername          string
+			email                  string
+			phoneNumber            string
+			salt                   string
+			educationalInstitution string
+			classOrYear            string
+			pendingTeamID          *string
+			registered             bool
+		)
+
+		err := Pool.QueryRow(ctx, AccountReadRequestByUsername, username).Scan(
+			&key, &fullname, &dateOfBirth, &role, &id, &password, &queryUsername,
+			&email, &phoneNumber, &salt, &educationalInstitution, &classOrYear,
+			&pendingTeamID, &registered,
+		)
+		if err != nil {
+			// Skip accounts that don't exist
+			if err == pgx.ErrNoRows {
+				logrus.Warnf("Account with username %s not found, skipping", username)
+				continue
+			}
+			return fmt.Errorf("failed to query account by username %s: %w", username, err)
 		}
-		memberKeys = append(memberKeys, m.Cilveks.Key)
-	}
-	if err := rows.Err(); err != nil {
-		return fmt.Errorf("failed iterating account rows: %w", err)
+		memberKeys = append(memberKeys, key)
 	}
 
 	result, err := Pool.Exec(ctx, TeamMembersWriteRequest, memberKeys, teamKey)

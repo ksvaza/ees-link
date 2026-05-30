@@ -135,7 +135,7 @@ func registerAccountByApplication(ctx context.Context, realDB data.Database, app
 
 	admin := GetAdminAccount(ctx)
 	account := GetAccount(ctx)
-	if newAccount.Cilveks.FullName == account.Cilveks.FullName && newAccount.Cilveks.DateOfBirth == account.Cilveks.DateOfBirth {
+	if account != nil && newAccount.Cilveks.FullName == account.Cilveks.FullName && newAccount.Cilveks.DateOfBirth == account.Cilveks.DateOfBirth {
 		// lai iet pāris mājas tālāk un nelien, kur nevajag
 		return errors.New("account registration logic error: applicant information matches currently authenticated account - cannot register")
 	}
@@ -789,7 +789,7 @@ func PointGetUnregisteredAccounts(r *http.Request, ps httprouter.Params) (*httpR
 
 		var teamAccounts []models.Account
 		for _, acc := range unvaccounts {
-			if acc.Cilveks.ID == account.Cilveks.ID {
+			if (acc.PendingTeamID == account.Cilveks.ID) && acc.Cilveks.ID != "" && account.Cilveks.ID != "" {
 				teamAccounts = append(teamAccounts, acc)
 			}
 		}
@@ -849,10 +849,14 @@ func PointPatchAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult,
 		return nil, errors.Wrap(err, "Read body")
 	}
 
+	originalAccount := *existingAccount
+
 	if err := json.Unmarshal(body, existingAccount); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 	existingAccount.Cilveks.Key = key
+	existingAccount.Password = originalAccount.Password
+	existingAccount.Salt = originalAccount.Salt
 
 	adminaccount := GetAdminAccount(r.Context())
 	if adminaccount != nil && adminaccount.Superadmin && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {

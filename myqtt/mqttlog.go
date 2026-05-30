@@ -10,8 +10,6 @@ import (
 	"github.com/ksvaza/ees-link/models"
 )
 
-var realDB data.Database = &db.RealDB{}
-
 func mqttGeneralHandler(c mqtt.Client, m mqtt.Message) {
 	entry := models.MqttLogEntry{
 		Message: models.MqttMessage{
@@ -20,5 +18,6 @@ func mqttGeneralHandler(c mqtt.Client, m mqtt.Message) {
 		},
 		ReceivedAt: time.Now(),
 	}
+	var realDB data.Database = &db.RealDB{}
 	realDB.SaveMQTTLog(context.Background(), &entry)
 }

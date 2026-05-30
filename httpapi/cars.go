@@ -190,6 +190,19 @@ func PointPatchTeamDataByKey(r *http.Request, ps httprouter.Params) (*httpResult
 		return nil, errors.Wrap(err, "Update team data by key")
 	}
 
+	// Assign accounts to team if provided
+	if len(newTeamData.Accounts) > 0 {
+		var teamDataUsernames []string
+		for _, account := range newTeamData.Accounts {
+			teamDataUsernames = append(teamDataUsernames, account.Username)
+		}
+
+		err = realDB.AssignAccountsToTeamDataByUsername(r.Context(), key, teamDataUsernames)
+		if err != nil {
+			return nil, errors.Wrap(err, "Assign accounts to team data by username")
+		}
+	}
+
 	return &httpResult{
 		ResponseType: http.StatusOK,
 		Body:         "Team data updated",

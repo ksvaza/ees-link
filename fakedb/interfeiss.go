@@ -214,6 +214,12 @@ func (db *FSDatabase) GetMQTTLogs(ctx context.Context, limit int) ([]models.Mqtt
 	return []models.MqttLogEntry{}, nil
 }
 
+func (db *FSDatabase) SaveCarTelemetry(ctx context.Context, telemetry models.CarTelemetry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
 func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error) {
 	return []models.LiveRaceData{
 		{

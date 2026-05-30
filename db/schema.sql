@@ -75,3 +75,26 @@ CREATE TABLE IF NOT EXISTS mqtt_logs (
     payload JSONB NOT NULL,
     received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS car_telemetry (
+    id INTEGER NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rssi INTEGER NOT NULL,
+    accel_x SMALLINT NOT NULL,
+    accel_y SMALLINT NOT NULL,
+    accel_z SMALLINT NOT NULL,
+    gps_latitude INTEGER NOT NULL,
+    gps_longitude INTEGER NOT NULL,
+    gps_speed INTEGER NOT NULL,
+    gps_satellites INTEGER NOT NULL,
+    psu_voltage_out INTEGER NOT NULL,
+    psu_current_out INTEGER NOT NULL,
+    psu_power_out INTEGER NOT NULL,
+    psu_voltage_in INTEGER NOT NULL,
+    psu_watt_hours INTEGER NOT NULL,
+    sys_voltage_battery INTEGER NOT NULL,
+    sys_battery_connected BOOLEAN NOT NULL,
+    sys_error_code INTEGER NOT NULL,
+    PRIMARY KEY (id, timestamp)
+    meginajums TEXT NOT NULL
+)

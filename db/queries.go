@@ -162,9 +162,10 @@ WHERE key = $10`
 		)`
 
 	MQTTLogsReadRequest = `
-		SELECT topic, payload, received_at
-		FROM mqtt_logs
-		LIMIT $1`
+    	SELECT topic, payload, received_at
+    	FROM mqtt_logs
+    	ORDER BY received_at DESC
+    	LIMIT $1`
 
 	CarTelemetrySaveRequest = `
 		INSERT INTO car_telemetry (

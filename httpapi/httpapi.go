@@ -46,11 +46,10 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/car/finish", PointCarFinish)
 	router.GET("/api/races", PointGetRaces)
 	router.POST("/api/races", PointPostRaces)
-	router.GET("/api/race-config", PointGetRaceConfig)
 	router.GET("/api/categories", PointGetCategories)
 
 	// Results
-	router.GET("/api/results/:raceName", PointGetRaceResults)
+	router.GET("/api/race-results/:raceName", PointGetRaceResults)
 
 	// Points
 	router.POST("/api/points", Handler(PointPostPoints))

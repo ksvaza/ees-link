@@ -218,15 +218,6 @@ func PointPostRaces(w http.ResponseWriter, r *http.Request, ps httprouter.Params
 	sendNotImplemented(w)
 }
 
-func PointGetRaceConfig(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointGetRaceConfig called %+v", ps)
-	if !requireMethod(w, r, http.MethodGet) {
-		return
-	}
-	// TODO: implement get race config
-	sendNotImplemented(w)
-}
-
 func PointGetCategories(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	logrus.Infof("PointGetCategories called %+v", ps)
 	if !requireMethod(w, r, http.MethodGet) {

@@ -110,3 +110,8 @@ CREATE TABLE IF NOT EXISTS car_parameters (
     avatar BYTEA,
     finished_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS points (
+    race_name TEXT NOT NULL,
+    points_data JSONB NOT NULL
+)

@@ -278,3 +278,27 @@ func (db *FSDatabase) ReplaceAllCarParameters(ctx context.Context, carParams []m
 	fmt.Printf("fake db called")
 	return nil
 }
+
+func (db *FSDatabase) BuildLeaderboard(ctx context.Context, ageGroup string) ([]models.LeaderboardEntry, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.LeaderboardEntry{}, nil
+}
+
+func (db *FSDatabase) SavePoints(ctx context.Context, points models.Points) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetPointsByRaceName(ctx context.Context, raceName string) (*models.Points, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil, nil
+}
+
+func (db *FSDatabase) UpdatePointsByRaceName(ctx context.Context, raceName string, points models.Points) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}

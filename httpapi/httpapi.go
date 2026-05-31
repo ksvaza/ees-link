@@ -53,11 +53,11 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/results/:raceName", PointGetRaceResults)
 
 	// Points
-	router.POST("/api/points", PointPostPoints)
-	router.DELETE("/api/points", PointDeletePoints)
+	router.POST("/api/points", Handler(PointPostPoints))
+	//router.DELETE("/api/points", PointDeletePoints)
 
 	// Leaderboard
-	router.GET("/api/leaderboard/:ageGroup", PointGetLeaderboard)
+	router.GET("/api/leaderboard/:ageGroup", Handler(PointGetLeaderboard))
 
 	// Admin
 

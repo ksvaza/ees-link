@@ -255,15 +255,6 @@ func PointGetRaceResults(w http.ResponseWriter, r *http.Request, ps httprouter.P
 // Points
 // ------
 
-func PointPostPoints(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointPostPoints called %+v", ps)
-	if !requireMethod(w, r, http.MethodPost) {
-		return
-	}
-	// TODO: implement post points
-	sendNotImplemented(w)
-}
-
 func PointDeletePoints(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	logrus.Infof("PointDeletePoints called %+v", ps)
 	if !requireMethod(w, r, http.MethodDelete) {
@@ -272,27 +263,6 @@ func PointDeletePoints(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	// TODO: implement delete points
 	sendNotImplemented(w)
 }
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-// Leaderboard
-// -----------
-
-func PointGetLeaderboard(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointGetLeaderboard called %+v", ps)
-	if !requireMethod(w, r, http.MethodGet) {
-		return
-	}
-	// TODO: implement get leaderboard
-	sendNotImplemented(w)
-}
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-// Admin
-// -----
-
-// --------------------------------------------------------------------------------------------------------------------------------
 
 // News
 // ----

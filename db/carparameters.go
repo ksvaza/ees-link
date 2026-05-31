@@ -47,6 +47,46 @@ func (DB *RealDB) GetAllCarParameters(ctx context.Context) ([]models.CarParamete
 	return params, nil
 }
 
+func (DB *RealDB) GetCarParametersByAgeGroup(ctx context.Context, ageGroup string) ([]models.CarParameters, error) {
+	rows, err := Pool.Query(ctx, GetCarParametersByAgeGroupRequest, ageGroup)
+	if err != nil {
+		logrus.WithError(err).Errorf("Failed to query car parameters by age group %s", ageGroup)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var params []models.CarParameters
+	for rows.Next() {
+		var p models.CarParameters
+		err = rows.Scan(
+			&p.CarID,
+			&p.TeamName,
+			&p.SetVoltage,
+			&p.CalculatedCurrent,
+			&p.Mass,
+			&p.AgeGroup,
+			&p.Avatar,
+			&p.FinishedAt,
+		)
+		if err != nil {
+			logrus.WithError(err).Errorf("Failed to scan car parameters row for age group %s", ageGroup)
+			return nil, err
+		}
+		params = append(params, p)
+	}
+
+	if err = rows.Err(); err != nil {
+		logrus.WithError(err).Errorf("Failed iterating car parameters rows for age group %s", ageGroup)
+		return nil, err
+	}
+
+	if len(params) == 0 {
+		return nil, nil
+	}
+
+	return params, nil
+}
+
 func (DB *RealDB) ReplaceAllCarParameters(ctx context.Context, carParams []models.CarParameters) error {
 	tx, err := Pool.Begin(ctx)
 	if err != nil {

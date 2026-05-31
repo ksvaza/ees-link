@@ -181,6 +181,10 @@ WHERE key = $10`
 	GetAllCarParametersRequest = `
 		SELECT car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
 		FROM car_parameters`
+	GetCarParametersByAgeGroupRequest = `
+		SELECT car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		FROM car_parameters
+		WHERE age_group = $1`
 	DeleteAllCarParametersRequest = `
 		DELETE FROM car_parameters`
 	InsertCarParametersRequest = `
@@ -189,4 +193,23 @@ WHERE key = $10`
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8
 		)`
+
+	// Points
+	PointsSaveRequest = `
+		INSERT INTO points (
+			race_name, points_data
+		) VALUES (
+			$1, $2
+		)`
+	PointsReadAllRequest = `
+		SELECT race_name, points_data
+		FROM points`
+	PointsReadByRaceNameRequest = `
+		SELECT race_name, points_data
+		FROM points
+		WHERE race_name = $1`
+	PointsUpdateByRaceNameRequest = `
+		UPDATE points SET
+			points_data = $1
+		WHERE race_name = $2`
 )

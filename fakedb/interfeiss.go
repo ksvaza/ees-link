@@ -334,13 +334,13 @@ func (db *FSDatabase) SaveOrUpdateResultsEntry(ctx context.Context, resultsEntry
 	return nil
 }
 
-func (db *FSDatabase) GetResultsEntriesByRaceName(ctx context.Context, raceName string) ([]models.Points, error) {
+func (db *FSDatabase) GetResultsEntriesByRaceName(ctx context.Context, raceName string) ([]models.ResultsEntry, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
-	return []models.Points{}, nil
+	return []models.ResultsEntry{}, nil
 }
 
-func (db *FSDatabase) GetResultEntryByCarID(ctx context.Context, carID int) (*models.Points, error) {
+func (db *FSDatabase) GetResultEntryByCarID(ctx context.Context, carID int) (*models.ResultsEntry, error) {
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
 	return nil, nil

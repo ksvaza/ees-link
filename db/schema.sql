@@ -96,9 +96,9 @@ CREATE TABLE IF NOT EXISTS car_telemetry (
     sys_voltage_battery INTEGER NOT NULL,
     sys_battery_connected BOOLEAN NOT NULL,
     sys_error_code INTEGER NOT NULL,
+    meginajums TEXT NOT NULL,
     PRIMARY KEY (id, timestamp)
-    meginajums TEXT NOT NULL
-)
+);
 
 CREATE TABLE IF NOT EXISTS car_parameters (
     car_id INTEGER PRIMARY KEY, -- faktiski mašīnas ID 

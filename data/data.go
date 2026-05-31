@@ -45,10 +45,29 @@ type Database interface {
 	GetAdminAccountByKey(ctx context.Context, key string) (*models.AdminAccount, error)
 	UpdateAdminAccount(ctx context.Context, updatedAccount models.AdminAccount) error
 
-	// MQTT log batching
+	// MQTT logging
 	SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) error
 	GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error)
-	
+
+	// Car telemetry
+	SaveCarTelemetry(ctx context.Context, telemetry models.CarTelemetry) error
+
 	// Live race data
 	GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error)
+
+	// Admin settings
+	GetAdminSettings(ctx context.Context) (models.AdminSettings, error)
+	UpdateAdminSettings(ctx context.Context, newSettings models.AdminSettings) error
+
+	// Car parameters
+	GetAllCarParameters(ctx context.Context) ([]models.CarParameters, error)
+	ReplaceAllCarParameters(ctx context.Context, carParams []models.CarParameters) error
+
+	// Leaderboard
+	BuildLeaderboard(ctx context.Context, ageGroup string) ([]models.LeaderboardEntry, error)
+
+	// Points
+	SavePoints(ctx context.Context, points models.Points) error
+	GetPointsByRaceName(ctx context.Context, raceName string) (*models.Points, error)
+	UpdatePointsByRaceName(ctx context.Context, raceName string, points models.Points) error
 }

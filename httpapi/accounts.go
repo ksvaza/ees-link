@@ -131,11 +131,12 @@ func registerAccountByApplication(ctx context.Context, realDB data.Database, app
 		Verified:               false,
 		EducationalInstitution: "",
 		ClassOrYear:            "",
+		Avatar:                 nil,
 	}
 
 	admin := GetAdminAccount(ctx)
 	account := GetAccount(ctx)
-	if newAccount.Cilveks.FullName == account.Cilveks.FullName && newAccount.Cilveks.DateOfBirth == account.Cilveks.DateOfBirth {
+	if account != nil && newAccount.Cilveks.FullName == account.Cilveks.FullName && newAccount.Cilveks.DateOfBirth == account.Cilveks.DateOfBirth {
 		// lai iet pāris mājas tālāk un nelien, kur nevajag
 		return errors.New("account registration logic error: applicant information matches currently authenticated account - cannot register")
 	}
@@ -245,6 +246,7 @@ func registerTeamLeaderAccountByApplication(ctx context.Context, realDB data.Dat
 		Verified:               false,
 		EducationalInstitution: "",
 		ClassOrYear:            "",
+		Avatar:                 nil,
 	}
 
 	// Get the team application by name
@@ -789,7 +791,7 @@ func PointGetUnregisteredAccounts(r *http.Request, ps httprouter.Params) (*httpR
 
 		var teamAccounts []models.Account
 		for _, acc := range unvaccounts {
-			if acc.Cilveks.ID == account.Cilveks.ID {
+			if (acc.PendingTeamID == account.Cilveks.ID) && acc.Cilveks.ID != "" && account.Cilveks.ID != "" {
 				teamAccounts = append(teamAccounts, acc)
 			}
 		}
@@ -849,10 +851,14 @@ func PointPatchAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult,
 		return nil, errors.Wrap(err, "Read body")
 	}
 
+	originalAccount := *existingAccount
+
 	if err := json.Unmarshal(body, existingAccount); err != nil {
 		return nil, errors.Wrap(err, "Unmarshal")
 	}
 	existingAccount.Cilveks.Key = key
+	existingAccount.Password = originalAccount.Password
+	existingAccount.Salt = originalAccount.Salt
 
 	adminaccount := GetAdminAccount(r.Context())
 	if adminaccount != nil && adminaccount.Superadmin && adminaccount.Username != "" && adminaccount.Password != "" && adminaccount.Salt != "" {
@@ -1088,143 +1094,5 @@ func PointRegisterAccount(r *http.Request, ps httprouter.Params) (*httpResult, e
 	return &httpResult{
 		ResponseType: http.StatusOK,
 		Body:         `{"status":"pending verification"}`,
-	}, nil
-}
-
-// ----------------------------------------------------------------
-
-// Admin account management
-// ----------------------------------------------------------------
-
-func PointGetAdminAccounts(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	if r.Method != http.MethodGet {
-		return nil, errors.New("method not allowed")
-	}
-
-	var realDB data.Database
-	realDB = &db.RealDB{}
-
-	adminAccount := GetAdminAccount(r.Context())
-	admins, err := realDB.GetAllAdmins(r.Context())
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get admin accounts")
-	}
-
-	if adminAccount != nil && adminAccount.Superadmin {
-		logrus.Infof("Superadmin account found in context: %s", adminAccount.Username)
-
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         admins,
-		}, nil
-	} else if adminAccount != nil {
-		logrus.Infof("Admin account found in context: %s", adminAccount.Username)
-		// Return only the authenticated admin's own account info
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         []models.AdminAccount{*adminAccount},
-		}, nil
-	}
-
-	return &httpResult{
-		ResponseType: http.StatusForbidden,
-		Body:         `{"error":"forbidden"}`,
-	}, nil
-}
-
-func PointPatchAdminAccountByKey(r *http.Request, ps httprouter.Params) (*httpResult, error) {
-	if r.Method != http.MethodPatch {
-		return nil, errors.New("method not allowed")
-	}
-
-	preKey := ps.ByName("key")
-	if preKey == "" {
-		return nil, errors.New("missing admin key")
-	}
-
-	key, err := url.PathUnescape(preKey)
-	if err != nil {
-		return nil, errors.Wrap(err, "Unescape admin key")
-	}
-
-	var realDB data.Database
-	realDB = &db.RealDB{}
-
-	existingAdmin, err := realDB.GetAdminAccountByKey(r.Context(), key)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get admin account by key")
-	}
-	if existingAdmin == nil {
-		return &httpResult{
-			ResponseType: http.StatusNotFound,
-			Body:         `{"error":"admin account not found"}`,
-		}, nil
-	}
-	prevUsername := existingAdmin.Username
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "Read body")
-	}
-	defer r.Body.Close()
-
-	if err := json.Unmarshal(body, &existingAdmin); err != nil {
-		return nil, errors.Wrap(err, "Unmarshal")
-	}
-	existingAdmin.Key = key
-
-	adminAccount := GetAdminAccount(r.Context())
-	if adminAccount != nil && adminAccount.Superadmin {
-		logrus.Infof("Admin update requested by superadmin: %s", adminAccount.Username)
-
-		if existingAdmin.Username != prevUsername {
-			duplicateAdmin, err := realDB.GetAdminAccountByUsername(r.Context(), existingAdmin.Username)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to check admin username")
-			}
-			if duplicateAdmin != nil {
-				return &httpResult{
-					ResponseType: http.StatusConflict,
-					Body:         `{"error":"username already exists"}`,
-				}, nil
-			}
-		}
-
-		err = realDB.UpdateAdminAccount(r.Context(), *existingAdmin)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to update admin account")
-		}
-
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         `{"status":"admin account updated"}`,
-		}, nil
-	} else if adminAccount != nil && adminAccount.Key == key {
-		logrus.Infof("Admin update requested by account owner: %s", adminAccount.Username)
-		if existingAdmin.Username != prevUsername {
-			duplicateAdmin, err := realDB.GetAdminAccountByUsername(r.Context(), existingAdmin.Username)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to check admin username")
-			}
-			if duplicateAdmin != nil {
-				return &httpResult{
-					ResponseType: http.StatusConflict,
-					Body:         `{"error":"username already exists"}`,
-				}, nil
-			}
-		}
-		err = realDB.UpdateAdminAccount(r.Context(), *existingAdmin)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to update admin account")
-		}
-		return &httpResult{
-			ResponseType: http.StatusOK,
-			Body:         `{"status":"admin account updated"}`,
-		}, nil
-	}
-
-	return &httpResult{
-		ResponseType: http.StatusForbidden,
-		Body:         `{"error":"forbidden"}`,
 	}, nil
 }

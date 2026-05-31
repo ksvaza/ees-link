@@ -112,4 +112,11 @@ func subscribeMqtt(ctx context.Context) {
 	if err := token.Error(); err != nil {
 		logrus.WithError(errors.Wrap(err, "MQTT")).Error("Subscribe error")
 	}
+
+	// mašīnu telemetrijas apstrādāšanai
+	token = mqttClient.Subscribe(roottopic+"telemetry/#", 1, mqttCarTelemetryHandler)
+	token.Wait()
+	if err := token.Error(); err != nil {
+		logrus.WithError(errors.Wrap(err, "MQTT")).Error("Subscribe error")
+	}
 }

@@ -50,37 +50,37 @@ const (
 
 	AccountWriteRequest = `
 		INSERT INTO konti (
-			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 		)`
 
 	AccountReadRequest = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti`
 
 	AccountReadRequestByUsername = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE username = $1`
 
 	AccountReadRequestByFullname = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE fullname = $1`
 
 	AccountReadRequestByDateOfBirth = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE date_of_birth = $1`
 
 	AccountReadRequestByKey = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE key = $1`
 
 	AccountUpdateRequest = `
 		UPDATE konti SET
 			fullname = $1, date_of_birth = $2, role = $3, id = $4,
 			password = $5, username = $6, email = $7, phone_number = $8, salt = $9,
-			educational_institution = $10, class_or_year = $11, pending_team_id = $12, registered = $13
-		WHERE key = $14`
+			educational_institution = $10, class_or_year = $11, pending_team_id = $12, registered = $13, avatar = $14
+		WHERE key = $15`
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------
@@ -144,7 +144,7 @@ WHERE key = $1;`
     city_or_region = $6, responsible_person = $7, car_data = $8, avatar = $9
 WHERE key = $10`
 
-	TeamMembersWriteRequest = `UPDATE komandas SET team_members = $1 WHERE key = $2`
+	TeamMembersWriteRequest = `UPDATE komandas SET team_members = $1::text[] WHERE key = $2`
 
 	TeamDataWriteRequest = `INSERT INTO komandas (
 	key, car_id, team_name, team_members, age_group, institution,
@@ -165,4 +165,51 @@ WHERE key = $10`
 		SELECT topic, payload, received_at
 		FROM mqtt_logs
 		LIMIT $1`
+
+	CarTelemetrySaveRequest = `
+		INSERT INTO car_telemetry (
+			id, rssi, 
+			timestamp, 
+			accel_x, accel_y, accel_z, 
+			gps_lat, gps_lon, gps_spd, gps_sat, 
+			psu_uop, psu_iop, psu_pop, psu_uip, psu_wh, 
+			sys_vbat, sys_dc, sys_err, 
+			meginajums
+		)`
+
+	// Car parameters
+	GetAllCarParametersRequest = `
+		SELECT car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		FROM car_parameters`
+	GetCarParametersByAgeGroupRequest = `
+		SELECT car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		FROM car_parameters
+		WHERE age_group = $1`
+	DeleteAllCarParametersRequest = `
+		DELETE FROM car_parameters`
+	InsertCarParametersRequest = `
+		INSERT INTO car_parameters (
+			car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8
+		)`
+
+	// Points
+	PointsSaveRequest = `
+		INSERT INTO points (
+			race_name, points_data
+		) VALUES (
+			$1, $2
+		)`
+	PointsReadAllRequest = `
+		SELECT race_name, points_data
+		FROM points`
+	PointsReadByRaceNameRequest = `
+		SELECT race_name, points_data
+		FROM points
+		WHERE race_name = $1`
+	PointsUpdateByRaceNameRequest = `
+		UPDATE points SET
+			points_data = $1
+		WHERE race_name = $2`
 )

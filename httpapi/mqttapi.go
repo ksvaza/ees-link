@@ -43,7 +43,6 @@ func PointGetMQTTLogs(r *http.Request, ps httprouter.Params) (*httpResult, error
 		ResponseType: http.StatusOK,
 		Body:         logs,
 	}, nil
-
 }
 
 func PointPostMQTTMessage(r *http.Request, ps httprouter.Params) (*httpResult, error) {

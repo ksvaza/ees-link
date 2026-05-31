@@ -206,7 +206,7 @@ func seedApplications(ctx context.Context, realDB data.Database) error {
 func seedTeams(ctx context.Context, realDB data.Database) error {
 	teamData := models.TeamData{
 		Key:      "seed-team-001",
-		CarID:    "seed-car-001",
+		CarID:    1,
 		TeamName: "Seed Team Alpha",
 		Accounts: []models.Account{
 			{
@@ -261,7 +261,7 @@ func seedTeams(ctx context.Context, realDB data.Database) error {
 			Email:    "teacher.seed@example.com",
 			Status:   "teacher",
 		},
-		Avatar: "", // base64 iekodēta bilde
+		Avatar: nil, // base64 iekodēta bilde
 		CarData: models.Car{
 			SetVoltage: 12,
 			MaxCurrent: 100,

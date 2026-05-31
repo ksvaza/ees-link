@@ -31,14 +31,17 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/verify-account/:key", Handler(PointVerifyAccountByKey))
 	router.GET("/api/accounts", Handler(PointGetAccounts))
 	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
+
+	// Admin account things
 	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
 	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccountByKey))
+	router.GET("/api/settings", Handler(PointGetAdminSettings))
+	router.POST("/api/settings", Handler(PointPostAdminSettings))
 
-	// Competitors
-	// superadmins akceptē komandas , atsevisks strukts komandām
-	// router.POST("/api/cars", PointPostCars)
-
-	// Races
+	// Race things - arī tikai visadministratoriem faktiski.
+	//?// superadmins akceptē komandas , atsevisks strukts komandām
+	router.GET("/api/cars", Handler(PointGetCars))
+	router.POST("/api/cars", Handler(PointPostCars))
 	router.POST("/api/race/start", PointRaceStart)
 	router.POST("/api/car/finish", PointCarFinish)
 	router.GET("/api/races", PointGetRaces)
@@ -50,11 +53,11 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/results/:raceName", PointGetRaceResults)
 
 	// Points
-	router.POST("/api/points", PointPostPoints)
-	router.DELETE("/api/points", PointDeletePoints)
+	router.POST("/api/points", Handler(PointPostPoints))
+	//router.DELETE("/api/points", PointDeletePoints)
 
 	// Leaderboard
-	router.GET("/api/leaderboard/:ageGroup", PointGetLeaderboard)
+	router.GET("/api/leaderboard/:ageGroup", Handler(PointGetLeaderboard))
 
 	// Admin
 

@@ -214,6 +214,12 @@ func (db *FSDatabase) GetMQTTLogs(ctx context.Context, limit int) ([]models.Mqtt
 	return []models.MqttLogEntry{}, nil
 }
 
+func (db *FSDatabase) SaveCarTelemetry(ctx context.Context, telemetry models.CarTelemetry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
 func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error) {
 	return []models.LiveRaceData{
 		{
@@ -247,4 +253,52 @@ func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceDat
 			UpdatedAt:    "2024-06-01T12:05:00Z",
 		},
 	}, nil
+}
+
+func (db *FSDatabase) GetAdminSettings(ctx context.Context) (models.AdminSettings, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return models.AdminSettings{}, nil
+}
+
+func (db *FSDatabase) UpdateAdminSettings(ctx context.Context, newSettings models.AdminSettings) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetAllCarParameters(ctx context.Context) ([]models.CarParameters, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.CarParameters{}, nil
+}
+
+func (db *FSDatabase) ReplaceAllCarParameters(ctx context.Context, carParams []models.CarParameters) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) BuildLeaderboard(ctx context.Context, ageGroup string) ([]models.LeaderboardEntry, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.LeaderboardEntry{}, nil
+}
+
+func (db *FSDatabase) SavePoints(ctx context.Context, points models.Points) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetPointsByRaceName(ctx context.Context, raceName string) (*models.Points, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil, nil
+}
+
+func (db *FSDatabase) UpdatePointsByRaceName(ctx context.Context, raceName string, points models.Points) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
 }

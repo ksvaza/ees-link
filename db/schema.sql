@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS konti (
     educational_institution TEXT NOT NULL DEFAULT '',
     class_or_year TEXT NOT NULL DEFAULT '',
     pending_team_id TEXT NOT NULL DEFAULT '',
-    registered BOOLEAN NOT NULL DEFAULT false
+    registered BOOLEAN NOT NULL DEFAULT false,
+    avatar BYTEA
 );
 
 CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
@@ -59,14 +60,14 @@ CREATE TABLE IF NOT EXISTS admini (
 
 CREATE TABLE IF NOT EXISTS komandas (
     key TEXT PRIMARY KEY,
-    car_id TEXT NOT NULL,
+    car_id INTEGER NOT NULL,
     team_name TEXT NOT NULL,
     team_members TEXT[] NOT NULL DEFAULT '{}',
     age_group TEXT NOT NULL,
     institution TEXT,
     city_or_region TEXT NOT NULL,
     responsible_person JSONB NOT NULL DEFAULT '[]',
-    avatar TEXT NOT NULL,
+    avatar BYTEA,
     car_data JSONB NOT NULL DEFAULT '{}'
 );
 
@@ -75,3 +76,42 @@ CREATE TABLE IF NOT EXISTS mqtt_logs (
     payload JSONB NOT NULL,
     received_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS car_telemetry (
+    id INTEGER NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rssi INTEGER NOT NULL,
+    accel_x SMALLINT NOT NULL,
+    accel_y SMALLINT NOT NULL,
+    accel_z SMALLINT NOT NULL,
+    gps_latitude INTEGER NOT NULL,
+    gps_longitude INTEGER NOT NULL,
+    gps_speed INTEGER NOT NULL,
+    gps_satellites INTEGER NOT NULL,
+    psu_voltage_out INTEGER NOT NULL,
+    psu_current_out INTEGER NOT NULL,
+    psu_power_out INTEGER NOT NULL,
+    psu_voltage_in INTEGER NOT NULL,
+    psu_watt_hours INTEGER NOT NULL,
+    sys_voltage_battery INTEGER NOT NULL,
+    sys_battery_connected BOOLEAN NOT NULL,
+    sys_error_code INTEGER NOT NULL,
+    meginajums TEXT NOT NULL,
+    PRIMARY KEY (id, timestamp)
+);
+
+CREATE TABLE IF NOT EXISTS car_parameters (
+    car_id INTEGER PRIMARY KEY, -- faktiski mašīnas ID 
+    team_name TEXT NOT NULL,
+    set_voltage REAL NOT NULL,
+    calculated_current REAL NOT NULL,
+    mass REAL NOT NULL,
+    age_group TEXT NOT NULL,
+    avatar BYTEA,
+    finished_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS points (
+    race_name TEXT NOT NULL,
+    points_data JSONB NOT NULL
+)

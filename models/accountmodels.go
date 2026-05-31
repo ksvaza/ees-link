@@ -22,6 +22,7 @@ type Account struct {
 	Verified               bool       `json:"registered"`
 	EducationalInstitution string     `json:"educationalInstitution"`
 	ClassOrYear            string     `json:"classOrYear"`
+	Avatar                 []byte     `json:"avatar"` // tehniski base64 enkodēts binārs fails - bilde
 	// varbūt kaut kas trūkst tīri moderēšans pēc
 }
 

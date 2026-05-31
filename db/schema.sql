@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS admini (
 
 CREATE TABLE IF NOT EXISTS komandas (
     key TEXT PRIMARY KEY,
-    car_id TEXT NOT NULL,
+    car_id INTEGER NOT NULL,
     team_name TEXT NOT NULL,
     team_members TEXT[] NOT NULL DEFAULT '{}',
     age_group TEXT NOT NULL,
@@ -99,3 +99,14 @@ CREATE TABLE IF NOT EXISTS car_telemetry (
     PRIMARY KEY (id, timestamp)
     meginajums TEXT NOT NULL
 )
+
+CREATE TABLE IF NOT EXISTS car_parameters (
+    car_id INTEGER PRIMARY KEY, -- faktiski mašīnas ID 
+    team_name TEXT NOT NULL,
+    set_voltage REAL NOT NULL,
+    calculated_current REAL NOT NULL,
+    mass REAL NOT NULL,
+    age_group TEXT NOT NULL,
+    avatar BYTEA,
+    finished_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

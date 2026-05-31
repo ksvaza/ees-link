@@ -266,3 +266,15 @@ func (db *FSDatabase) UpdateAdminSettings(ctx context.Context, newSettings model
 	fmt.Printf("fake db called")
 	return nil
 }
+
+func (db *FSDatabase) GetAllCarParameters(ctx context.Context) ([]models.CarParameters, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.CarParameters{}, nil
+}
+
+func (db *FSDatabase) ReplaceAllCarParameters(ctx context.Context, carParams []models.CarParameters) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}

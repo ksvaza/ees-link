@@ -2,7 +2,7 @@ package models
 
 type TeamData struct {
 	Key               string            `json:"key"`
-	CarID             string            `json:"carId"`
+	CarID             int               `json:"carId"`
 	TeamName          string            `json:"teamName"`
 	Accounts          []Account         `json:"members"`
 	AgeGroup          string            `json:"ageGroup"`

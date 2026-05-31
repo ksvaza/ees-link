@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// {"RaceName":"EkoRace","Points":[{"ID":1,"Points":12},{"ID":2,"Points":11},{"ID":3,"Points":10},{"ID":4,"Points":9},{"ID":5,"Points":8},{"ID":6,"Points":7},{"ID":7,"Points":6},{"ID":8,"Points":5},{"ID":9,"Points":4},{"ID":10,"Points":3},{"ID":11,"Points":2},{"ID":12,"Points":1}]}
 type PointEntry struct {
 	CarID   int    `json:"car_id"`
 	Points  int    `json:"points"`

@@ -38,10 +38,10 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.GET("/api/settings", Handler(PointGetAdminSettings))
 	router.POST("/api/settings", Handler(PointPostAdminSettings))
 
-	// Race things
+	// Race things - arī tikai visadministratoriem faktiski.
 	//?// superadmins akceptē komandas , atsevisks strukts komandām
-	//router.GET("/api/cars", PointGetCars)
-	//router.POST("/api/cars", PointPostCars)
+	router.GET("/api/cars", Handler(PointGetCars))
+	router.POST("/api/cars", Handler(PointPostCars))
 	router.POST("/api/race/start", PointRaceStart)
 	router.POST("/api/car/finish", PointCarFinish)
 	router.GET("/api/races", PointGetRaces)

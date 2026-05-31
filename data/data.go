@@ -58,4 +58,8 @@ type Database interface {
 	// Admin settings
 	GetAdminSettings(ctx context.Context) (models.AdminSettings, error)
 	UpdateAdminSettings(ctx context.Context, newSettings models.AdminSettings) error
+
+	// Car parameters
+	GetAllCarParameters(ctx context.Context) ([]models.CarParameters, error)
+	ReplaceAllCarParameters(ctx context.Context, carParams []models.CarParameters) error
 }

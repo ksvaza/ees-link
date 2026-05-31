@@ -176,4 +176,17 @@ WHERE key = $10`
 			sys_vbat, sys_dc, sys_err, 
 			meginajums
 		)`
+
+	// Car parameters
+	GetAllCarParametersRequest = `
+		SELECT car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		FROM car_parameters`
+	DeleteAllCarParametersRequest = `
+		DELETE FROM car_parameters`
+	InsertCarParametersRequest = `
+		INSERT INTO car_parameters (
+			car_id, team_name, set_voltage, calculated_current, mass, age_group, avatar, finished_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8
+		)`
 )

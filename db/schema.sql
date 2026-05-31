@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS konti (
     educational_institution TEXT NOT NULL DEFAULT '',
     class_or_year TEXT NOT NULL DEFAULT '',
     pending_team_id TEXT NOT NULL DEFAULT '',
-    registered BOOLEAN NOT NULL DEFAULT false
+    registered BOOLEAN NOT NULL DEFAULT false,
+    avatar BYTEA
 );
 
 CREATE TABLE IF NOT EXISTS kontu_pieteikumi (
@@ -66,7 +67,7 @@ CREATE TABLE IF NOT EXISTS komandas (
     institution TEXT,
     city_or_region TEXT NOT NULL,
     responsible_person JSONB NOT NULL DEFAULT '[]',
-    avatar TEXT NOT NULL,
+    avatar BYTEA,
     car_data JSONB NOT NULL DEFAULT '{}'
 );
 

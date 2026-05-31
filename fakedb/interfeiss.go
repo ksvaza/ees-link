@@ -254,3 +254,15 @@ func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceDat
 		},
 	}, nil
 }
+
+func (db *FSDatabase) GetAdminSettings(ctx context.Context) (models.AdminSettings, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return models.AdminSettings{}, nil
+}
+
+func (db *FSDatabase) UpdateAdminSettings(ctx context.Context, newSettings models.AdminSettings) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}

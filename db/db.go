@@ -317,6 +317,7 @@ func (DB *RealDB) RegisterNewAccount(ctx context.Context, newAccount models.Acco
 		newAccount.ClassOrYear,
 		newAccount.PendingTeamID,
 		newAccount.Verified,
+		newAccount.Avatar,
 	)
 
 	if err != nil {
@@ -344,6 +345,7 @@ func (DB *RealDB) GetAccountByFullname(ctx context.Context, fullname string) (*m
 		&a.ClassOrYear,
 		&a.PendingTeamID,
 		&a.Verified,
+		&a.Avatar,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -373,6 +375,7 @@ func (DB *RealDB) GetAccountByUsername(ctx context.Context, username string) (*m
 		&a.ClassOrYear,
 		&a.PendingTeamID,
 		&a.Verified,
+		&a.Avatar,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -402,6 +405,7 @@ func (DB *RealDB) GetAccountByDateOfBirth(ctx context.Context, dateOfBirth strin
 		&a.ClassOrYear,
 		&a.PendingTeamID,
 		&a.Verified,
+		&a.Avatar,
 	)
 
 	if err != nil {
@@ -432,6 +436,7 @@ func (DB *RealDB) GetAccountByKey(ctx context.Context, key string) (*models.Acco
 		&a.ClassOrYear,
 		&a.PendingTeamID,
 		&a.Verified,
+		&a.Avatar,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -469,6 +474,7 @@ func (DB *RealDB) GetAccounts(ctx context.Context) ([]models.Account, error) {
 			&a.ClassOrYear,
 			&a.PendingTeamID,
 			&a.Verified,
+			&a.Avatar,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account row")
@@ -515,6 +521,7 @@ func (DB *RealDB) GetAccountsByKey(ctx context.Context, key string) ([]models.Ac
 			&a.ClassOrYear,
 			&a.PendingTeamID,
 			&a.Verified,
+			&a.Avatar,
 		)
 		if err != nil {
 			logrus.WithError(err).Error("Failed to scan account row")
@@ -551,6 +558,7 @@ func (DB *RealDB) UpdateAccount(ctx context.Context, updatedAccount models.Accou
 		updatedAccount.PendingTeamID,
 		updatedAccount.Verified,
 		updatedAccount.Cilveks.Key,
+		updatedAccount.Avatar,
 	)
 
 	if err != nil {
@@ -894,12 +902,13 @@ func (DB *RealDB) AssignAccountsToTeamDataByUsername(ctx context.Context, teamKe
 			classOrYear            string
 			pendingTeamID          *string
 			registered             bool
+			avatar                 []byte
 		)
 
 		err := Pool.QueryRow(ctx, AccountReadRequestByUsername, username).Scan(
 			&key, &fullname, &dateOfBirth, &role, &id, &password, &queryUsername,
 			&email, &phoneNumber, &salt, &educationalInstitution, &classOrYear,
-			&pendingTeamID, &registered,
+			&pendingTeamID, &registered, &avatar,
 		)
 		if err != nil {
 			// Skip accounts that don't exist

@@ -54,4 +54,8 @@ type Database interface {
 
 	// Live race data
 	GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error)
+
+	// Admin settings
+	GetAdminSettings(ctx context.Context) (models.AdminSettings, error)
+	UpdateAdminSettings(ctx context.Context, newSettings models.AdminSettings) error
 }

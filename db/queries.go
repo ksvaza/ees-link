@@ -50,37 +50,37 @@ const (
 
 	AccountWriteRequest = `
 		INSERT INTO konti (
-			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+			key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
 		)`
 
 	AccountReadRequest = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti`
 
 	AccountReadRequestByUsername = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE username = $1`
 
 	AccountReadRequestByFullname = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE fullname = $1`
 
 	AccountReadRequestByDateOfBirth = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE date_of_birth = $1`
 
 	AccountReadRequestByKey = `
-		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered
+		SELECT key, fullname, date_of_birth, role, id, password, username, email, phone_number, salt, educational_institution, class_or_year, pending_team_id, registered, avatar
 		FROM konti WHERE key = $1`
 
 	AccountUpdateRequest = `
 		UPDATE konti SET
 			fullname = $1, date_of_birth = $2, role = $3, id = $4,
 			password = $5, username = $6, email = $7, phone_number = $8, salt = $9,
-			educational_institution = $10, class_or_year = $11, pending_team_id = $12, registered = $13
-		WHERE key = $14`
+			educational_institution = $10, class_or_year = $11, pending_team_id = $12, registered = $13, avatar = $14
+		WHERE key = $15`
 	// -------------------------------------------------------------------------
 	// Account applications (kontu_pieteikumi table)
 	// -------------------------------------------------------------------------

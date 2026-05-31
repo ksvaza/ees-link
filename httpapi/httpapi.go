@@ -31,14 +31,17 @@ func setupApiEndpoints(router *httprouter.Router) {
 	router.POST("/api/verify-account/:key", Handler(PointVerifyAccountByKey))
 	router.GET("/api/accounts", Handler(PointGetAccounts))
 	router.PATCH("/api/account/:key", Handler(PointPatchAccountByKey))
+
+	// Admin account things
 	router.GET("/api/admin-accounts", Handler(PointGetAdminAccounts))
 	router.PATCH("/api/admin-account/:key", Handler(PointPatchAdminAccountByKey))
+	router.GET("/api/settings", Handler(PointGetAdminSettings))
+	router.POST("/api/settings", Handler(PointPostAdminSettings))
 
-	// Competitors
-	// superadmins akceptē komandas , atsevisks strukts komandām
-	// router.POST("/api/cars", PointPostCars)
-
-	// Races
+	// Race things
+	//?// superadmins akceptē komandas , atsevisks strukts komandām
+	//router.GET("/api/cars", PointGetCars)
+	//router.POST("/api/cars", PointPostCars)
 	router.POST("/api/race/start", PointRaceStart)
 	router.POST("/api/car/finish", PointCarFinish)
 	router.GET("/api/races", PointGetRaces)

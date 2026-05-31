@@ -45,6 +45,10 @@ type ResultsEntry struct {
 	CarID    int    `json:"car_id"`    // ID
 	TeamName string `json:"team_name"` // Komanda
 
+	// laiki
+	StartTime  time.Time `json:"start_time"`
+	FinishTime time.Time `json:"finish_time"`
+
 	// Manual entry
 	Penalties       time.Duration `json:"penalties"`        // Sodi (s) 					// EkoRace, MainRace, ShuttleRun, SteeringTest
 	UsedTime        time.Duration `json:"used_time"`        // Patērētais laiks 			// EkoRace, MainRace, ShuttleRun, SteeringTest
@@ -69,4 +73,30 @@ type ResultsEntry struct {
 type AdminSettings struct {
 	PowerCoefficient float64 `json:"PowerCoef"`
 	MaximumSpeed     float64 `json:"MaxSpd"`
+	FullRaceLength   float64 `json:"FullRaceLength"`
+	DragRaceLength   float64 `json:"DragRaceLength"`
 }
+
+// Sacensību starts un finišs
+
+type RaceStart struct {
+	RaceName  string `json:"raceName"`
+	AttemptNr int    `json:"attempt"`
+	CarID     int    `json:"ID"`
+}
+
+type CarFinish struct {
+	CarID int `json:"ID"`
+}
+
+type RaceInstance struct {
+	RaceName  string `json:"raceName"`
+	AttemptNr int    `json:"attempt"`
+}
+
+type RaceStartFinishTableEntry struct {
+	StartTime  time.Time `json:"startTime"`
+	FinishTime time.Time `json:"finishTime"`
+}
+
+type RaceStartFinishTable map[int] /*CarID*/ map[RaceInstance]RaceStartFinishTableEntry

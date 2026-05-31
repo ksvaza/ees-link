@@ -54,13 +54,12 @@ type TelemetrySYS struct {
 }
 
 type CarTelemetry struct {
-	ID         int            `json:"ID"`
-	RSSI       int            `json:"RSSI"`
-	AccelData  TelemetryAccel `json:"Accel"`
-	GPSData    TelemetryGPS   `json:"GPS"`
-	PSUData    TelemetryPSU   `json:"PSU"`
-	SYSData    TelemetrySYS   `json:"SYS"`
-	Meginajums string         `json:"-"`
+	ID        int            `json:"ID"`
+	RSSI      int            `json:"RSSI"`
+	AccelData TelemetryAccel `json:"Accel"`
+	GPSData   TelemetryGPS   `json:"GPS"`
+	PSUData   TelemetryPSU   `json:"PSU"`
+	SYSData   TelemetrySYS   `json:"SYS"`
 }
 
 // Bloku konfigurācijas/kontroles datu struktūras

@@ -21,7 +21,7 @@ func mqttCarTelemetryHandler(c mqtt.Client, m mqtt.Message) {
 
 	logrus.Debugf("Car telemetry data structure %+v", telemetry)
 
-	// Update livedata?
+	// Update livedata
 	//websockets.UpdateLiveData(telemetry)
 
 	var realDB data.Database = &db.RealDB{}

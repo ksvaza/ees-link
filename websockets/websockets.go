@@ -11,6 +11,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/ksvaza/ees-link/data"
 	"github.com/ksvaza/ees-link/db"
+	"github.com/ksvaza/ees-link/models"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )

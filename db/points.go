@@ -64,7 +64,6 @@ func (DB *RealDB) GetAllPoints(ctx context.Context) ([]models.Points, error) {
 }
 
 func (DB *RealDB) GetPointsByRaceName(ctx context.Context, raceName string) (*models.Points, error) {
-
 	var points models.Points
 	var pointsData []byte
 	err := Pool.QueryRow(ctx, PointsReadByRaceNameRequest, raceName).Scan(&points.RaceName, &pointsData)

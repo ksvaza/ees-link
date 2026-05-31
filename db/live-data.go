@@ -2,41 +2,56 @@ package db
 
 import (
 	"context"
+	"math"
+	"time"
 
 	"github.com/ksvaza/ees-link/models"
 )
 
+var (
+	localLiveData map[int]models.LiveRaceData = make(map[int]models.LiveRaceData)
+)
+
 func (db *RealDB) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceData, error) {
-	return []models.LiveRaceData{
-		{
-			Key:          "1",
-			ID:           1,
-			Username:     "team1",
-			Avatar:       "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
-			Status:       "online",
-			Position:     1,
-			Lat:          56.9496,
-			Lon:          24.1052,
-			Spd:          10.5,
-			Power:        100.0,
-			Acceleration: 2.5,
-			Voltage:      12.0,
-			UpdatedAt:    "2024-06-01T12:00:00Z",
-		},
-		{
-			Key:          "2",
-			ID:           2,
-			Username:     "team2",
-			Avatar:       "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
-			Status:       "offline",
-			Position:     3,
-			Lat:          56.9501,
-			Lon:          24.1060,
-			Spd:          9.8,
-			Power:        98.7,
-			Acceleration: 2.3,
-			Voltage:      11.9,
-			UpdatedAt:    "2024-06-01T12:05:00Z",
-		},
-	}, nil
+	var arr []models.LiveRaceData = make([]models.LiveRaceData, 0)
+	for _, e := range localLiveData {
+		arr = append(arr, e)
+	}
+	return arr, nil
+}
+
+func (DB *RealDB) UpdateLiveData(ctx context.Context, telemetry models.CarTelemetry) error {
+	carID := telemetry.ID
+
+	val, err := DB.GetAllCarParameters(ctx)
+	if err != nil {
+		return err
+	}
+
+	var params models.CarParameters
+	for _, v := range val {
+		if v.CarID == carID {
+			params = v
+		}
+	}
+
+	//DB.GetApplicationByTeamName()
+	lrd := models.LiveRaceData{
+		Key:          "",
+		ID:           telemetry.ID,
+		Username:     params.TeamName,
+		Avatar:       params.Avatar,
+		Status:       "online",
+		Position:     0,
+		Lat:          float64(telemetry.GPSData.Latitude),
+		Lon:          float64(telemetry.GPSData.Longitute),
+		Spd:          float32(telemetry.GPSData.Speed),
+		Power:        float32(telemetry.PSUData.PowerOut) / float32(100),
+		Acceleration: float32(math.Sqrt(float64(telemetry.AccelData.X)*float64(telemetry.AccelData.X) + float64(telemetry.AccelData.Y)*float64(telemetry.AccelData.Y) + float64(telemetry.AccelData.Z)*float64(telemetry.AccelData.Z))),
+		Voltage:      float32(telemetry.PSUData.VoltageOut) / float32(100),
+		UpdatedAt:    time.Now(),
+	}
+
+	localLiveData[carID] = lrd
+	return nil
 }

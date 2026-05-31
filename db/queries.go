@@ -174,7 +174,7 @@ WHERE key = $10`
 			gps_lat, gps_lon, gps_spd, gps_sat, 
 			psu_uop, psu_iop, psu_pop, psu_uip, psu_wh, 
 			sys_vbat, sys_dc, sys_err, 
-			meginajums
+			attempt, raceName
 		)`
 
 	// Car parameters
@@ -212,4 +212,92 @@ WHERE key = $10`
 		UPDATE points SET
 			points_data = $1
 		WHERE race_name = $2`
+
+	// Result Entries
+	/*
+	   type ResultsEntry struct {
+	   	// filtri
+	   	RaceName  string `json:"race_name"`
+	   	AttemptNr int    `json:"attempt_nr"` // Mēģinājuma Nr. 				// EkoRace, DragRace, ShuttleRun, SteeringTest, BrakingTest
+
+	   	// mašīnas dati
+	   	CarID    int    `json:"car_id"`    // ID
+	   	TeamName string `json:"team_name"` // Komanda
+
+	   	// laiki
+	   	StartTime  time.Time `json:"start_time"`
+	   	FinishTime time.Time `json:"finish_time"`
+
+	   	// Manual entry
+	   	Penalties       time.Duration `json:"penalties"`        // Sodi (s) 					// EkoRace, MainRace, ShuttleRun, SteeringTest
+	   	UsedTime        time.Duration `json:"used_time"`        // Patērētais laiks 			// EkoRace, MainRace, ShuttleRun, SteeringTest
+	   	MaxSpeed        float64       `json:"max_speed"`        // Maks. ātrums (km/h) 			// DragRace
+	   	Valid           bool          `json:"valid"`            // Derīgs 						// EkoRace, DragRace, ShuttleRun, SteeringTest, BrakingTest
+	   	BrakingDistance float64       `json:"braking_distance"` // Bremzēšanas distance (m) 	// BrakingTest
+	   	DriveinSpeed    float64       `json:"drivein_speed"`    // Iebraukšanas ātrums (km/h)	// BrakingTest
+
+	   	// Calculated fields
+	   	AverageSpeed    float64       `json:"average_speed"`    // Vid. ātrums = distance / TotalTime 					// EkoRace, MainRace
+	   	TotalTime       time.Duration `json:"total_time"`       // Kopējais laiks = patērētais laiks + sodi 			// EkoRace, MainRace, DragRace, ShuttleRun, SteeringTest
+	   	Placement       int           `json:"placement"`        // Vieta = mainrace:totaltime, ekorace: skatās secību 	// EkoRace, MainRace
+	   	UsedEnergy      float64       `json:"used_energy"`      // Patērētā enerģija (Wh) 								// EkoRace
+	   	Efficiency      float64       `json:"efficiency"`       // Efektivitāte (Wh/kg) 								// EkoRace
+	   	ShellEfficiency float64       `json:"shell_efficiency"` // "Shell" efektivitāte (km/kWh) 						// EkoRace
+	   }
+	*/
+	ResultsEntryWriteRequest = `
+		INSERT INTO results_entries (
+			race_name, attempt_nr, car_id, team_name, start_time, finish_time, penalties, used_time, max_speed, valid, braking_distance, drivein_speed, average_speed, total_time, placement, used_energy, efficiency, shell_efficiency
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+		)`
+
+	ResultsEntryUpdateRequest = `
+		UPDATE results_entries SET
+			team_name = $4,
+			start_time = $5,
+			finish_time = $6,
+			penalties = $7,
+			used_time = $8,
+			max_speed = $9,
+			valid = $10,
+			braking_distance = $11,
+			drivein_speed = $12,
+			average_speed = $13,
+			total_time = $14,
+			placement = $15,
+			used_energy = $16,
+			efficiency = $17,
+			shell_efficiency = $18
+		WHERE race_name = $1 AND attempt_nr = $2 AND car_id = $3`
+
+	ResultsEntryUpsertRequest = `
+		INSERT INTO results_entries (
+			race_name, attempt_nr, car_id, team_name, start_time, finish_time, penalties, used_time, max_speed, valid, braking_distance, drivein_speed, average_speed, total_time, placement, used_energy, efficiency, shell_efficiency
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+		) ON CONFLICT (race_name, attempt_nr, car_id) DO UPDATE SET
+			team_name = EXCLUDED.team_name,
+			start_time = EXCLUDED.start_time,
+			finish_time = EXCLUDED.finish_time,
+			penalties = EXCLUDED.penalties,
+			used_time = EXCLUDED.used_time,
+			max_speed = EXCLUDED.max_speed,
+			valid = EXCLUDED.valid,
+			braking_distance = EXCLUDED.braking_distance,
+			drivein_speed = EXCLUDED.drivein_speed,
+			average_speed = EXCLUDED.average_speed,
+			total_time = EXCLUDED.total_time,
+			placement = EXCLUDED.placement,
+			used_energy = EXCLUDED.used_energy,
+			efficiency = EXCLUDED.efficiency,
+			shell_efficiency = EXCLUDED.shell_efficiency`
+
+	ResultsEntriesReadByRaceNameRequest = `
+		SELECT race_name, attempt_nr, car_id, team_name, start_time, finish_time, penalties, used_time, max_speed, valid, braking_distance, drivein_speed, average_speed, total_time, placement, used_energy, efficiency, shell_efficiency
+		FROM results_entries WHERE race_name = $1`
+
+	ResultsEntryReadByCarID = `
+		SELECT race_name, attempt_nr, car_id, team_name, start_time, finish_time, penalties, used_time, max_speed, valid, braking_distance, drivein_speed, average_speed, total_time, placement, used_energy, efficiency, shell_efficiency
+		FROM results_entries WHERE car_id = $1`
 )

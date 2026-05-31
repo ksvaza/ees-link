@@ -5,10 +5,26 @@ import (
 	"time"
 
 	"github.com/ksvaza/ees-link/models"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 func (DB *RealDB) SaveCarTelemetry(ctx context.Context, telemetry models.CarTelemetry) error {
+	var (
+		attempt  int    = 0
+		raceName string = ""
+	)
+
+	if intermediate, exists := currentRaceInfo[telemetry.ID]; exists {
+		attempt = intermediate.AttemptNr
+		raceName = intermediate.RaceName
+	}
+
+	// Update livedata - super fake and inefficient
+	if err := DB.UpdateLiveData(ctx, telemetry); err != nil {
+		return errors.Wrap(err, "failed to update live telemetry data")
+	}
+
 	_, err := Pool.Exec(ctx, CarTelemetrySaveRequest,
 		telemetry.ID,
 		telemetry.RSSI,
@@ -28,7 +44,8 @@ func (DB *RealDB) SaveCarTelemetry(ctx context.Context, telemetry models.CarTele
 		telemetry.SYSData.VoltageBat,
 		telemetry.SYSData.BatConnected > 0,
 		telemetry.SYSData.ErrorCode,
-		telemetry.Meginajums,
+		attempt,
+		raceName,
 	)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to save Car Telemetry")

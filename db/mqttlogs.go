@@ -21,7 +21,7 @@ func (db *RealDB) SaveMQTTLog(ctx context.Context, log *models.MqttLogEntry) err
 }
 
 func (db *RealDB) GetMQTTLogs(ctx context.Context, limit int) ([]models.MqttLogEntry, error) {
-	rows, err := Pool.Query(ctx, MQTTLogsReadRequest, limit)
+	rows, err := Pool.Query(ctx, MQTTLogsReadRequest, limit) // ļoti jābūt pēdējiem, šobrīd nāk pirmie limit logi
 	if err != nil {
 		logrus.WithError(err).Error("Failed to query MQTT logs table")
 		return nil, err

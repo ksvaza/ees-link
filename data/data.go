@@ -70,4 +70,15 @@ type Database interface {
 	SavePoints(ctx context.Context, points models.Points) error
 	GetPointsByRaceName(ctx context.Context, raceName string) (*models.Points, error)
 	UpdatePointsByRaceName(ctx context.Context, raceName string, points models.Points) error
+
+	// Race start and finish
+	StartRace(ctx context.Context, raceStarts []models.RaceStart) error
+	FinishCar(ctx context.Context, carID int) error
+
+	// Race results
+	SaveResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error
+	UpdateResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error
+	SaveOrUpdateResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error
+	GetResultsEntriesByRaceName(ctx context.Context, raceName string) ([]models.ResultsEntry, error)
+	GetResultEntryByCarID(ctx context.Context, carID int) (*models.ResultsEntry, error)
 }

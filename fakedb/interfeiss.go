@@ -3,6 +3,7 @@ package fakedb
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/ksvaza/ees-link/models"
 	"github.com/sirupsen/logrus"
@@ -226,7 +227,7 @@ func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceDat
 			Key:          "1",
 			ID:           1,
 			Username:     "team1",
-			Avatar:       "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
+			Avatar:       []byte("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"),
 			Status:       "online",
 			Position:     1,
 			Lat:          56.9496,
@@ -235,13 +236,13 @@ func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceDat
 			Power:        100.0,
 			Acceleration: 2.5,
 			Voltage:      12.0,
-			UpdatedAt:    "2024-06-01T12:00:00Z",
+			UpdatedAt:    time.Now(),
 		},
 		{
 			Key:          "2",
 			ID:           2,
 			Username:     "team2",
-			Avatar:       "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y",
+			Avatar:       []byte("https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"),
 			Status:       "offline",
 			Position:     3,
 			Lat:          56.9501,
@@ -250,7 +251,7 @@ func (db *FSDatabase) GetLiveRaceData(ctx context.Context) ([]models.LiveRaceDat
 			Power:        98.7,
 			Acceleration: 2.3,
 			Voltage:      11.9,
-			UpdatedAt:    "2024-06-01T12:05:00Z",
+			UpdatedAt:    time.Now(),
 		},
 	}, nil
 }
@@ -301,4 +302,46 @@ func (db *FSDatabase) UpdatePointsByRaceName(ctx context.Context, raceName strin
 	logrus.Info("fake db called")
 	fmt.Printf("fake db called")
 	return nil
+}
+
+func (db *FSDatabase) StartRace(ctx context.Context, raceStarts []models.RaceStart) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) FinishCar(ctx context.Context, carID int) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) SaveResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) UpdateResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) SaveOrUpdateResultsEntry(ctx context.Context, resultsEntry models.ResultsEntry) error {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil
+}
+
+func (db *FSDatabase) GetResultsEntriesByRaceName(ctx context.Context, raceName string) ([]models.Points, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return []models.Points{}, nil
+}
+
+func (db *FSDatabase) GetResultEntryByCarID(ctx context.Context, carID int) (*models.Points, error) {
+	logrus.Info("fake db called")
+	fmt.Printf("fake db called")
+	return nil, nil
 }

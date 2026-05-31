@@ -174,32 +174,6 @@ func PointGetUsers(w http.ResponseWriter, r *http.Request, ps httprouter.Params)
 
 // --------------------------------------------------------------------------------------------------------------------------------
 
-// Competitors
-// -----------
-
-// --------------------------------------------------------------------------------------------------------------------------------
-
-// Races
-// -----
-
-func PointRaceStart(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointRaceStart called %+v", ps)
-	if !requireMethod(w, r, http.MethodPost) {
-		return
-	}
-	// TODO: implement race start
-	sendNotImplemented(w)
-}
-
-func PointCarFinish(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	logrus.Infof("PointCarFinish called %+v", ps)
-	if !requireMethod(w, r, http.MethodPost) {
-		return
-	}
-	// TODO: implement car finish
-	sendNotImplemented(w)
-}
-
 func PointGetRaces(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	logrus.Infof("PointGetRaces called %+v", ps)
 	if !requireMethod(w, r, http.MethodGet) {

@@ -60,17 +60,17 @@ type Car struct {
 }
 
 type LiveRaceData struct {
-	Key          string  `json:"key"`
-	ID           int     `json:"ID"`
-	Username     string  `json:"username"`
-	Avatar       string  `json:"avatar"`
-	Status       string  `json:"status"`
-	Position     int     `json:"position"`
-	Lat          float64 `json:"lat"`
-	Lon          float64 `json:"lon"`
-	Spd          float32 `json:"spd"`
-	Power        float32 `json:"power"`
-	Acceleration float32 `json:"acceleration"`
-	Voltage      float32 `json:"voltage"`
-	UpdatedAt    string  `json:"updatedAt"`
+	Key          string    `json:"key"`
+	ID           int       `json:"ID"`
+	Username     string    `json:"username"`
+	Avatar       []byte    `json:"avatar"`
+	Status       string    `json:"status"`
+	Position     int       `json:"position"`
+	Lat          float64   `json:"lat"`
+	Lon          float64   `json:"lon"`
+	Spd          float32   `json:"spd"`
+	Power        float32   `json:"power"`
+	Acceleration float32   `json:"acceleration"`
+	Voltage      float32   `json:"voltage"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }

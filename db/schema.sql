@@ -96,7 +96,8 @@ CREATE TABLE IF NOT EXISTS car_telemetry (
     sys_voltage_battery INTEGER NOT NULL,
     sys_battery_connected BOOLEAN NOT NULL,
     sys_error_code INTEGER NOT NULL,
-    meginajums TEXT NOT NULL,
+    attempt INTEGER NOT NULL,
+    race_name TEXT NOT NULL,
     PRIMARY KEY (id, timestamp)
 );
 

@@ -29,6 +29,7 @@ RUN mkdir -p /go/src/bin/tests && \
     sh -c 'go test ./... -json -count=1 -timeout 30s -cover -coverprofile=bin/tests/coverage.txt || true' > bin/tests/tests.json && \
     ${GOPATH}/bin/go-junit-report -parser gojson < bin/tests/tests.json > bin/tests/tests.xml && \
     ${GOPATH}/bin/gocover-cobertura < bin/tests/coverage.txt > bin/tests/coverage.xml && \
+    go tool cover -html=bin/tests/coverage.txt -o bin/tests/coverage.html && \
     ${GOPATH}/bin/golangci-lint --config .golangci.yaml run ./... --show-stats=false --output.text.print-issued-lines=false --output.text.colors=false --output.sarif.path=bin/tests/linter.sarif --issues-exit-code=0 --max-same-issues=0 > bin/tests/linter.txt
 
 FROM alpine:3.23.0 AS final

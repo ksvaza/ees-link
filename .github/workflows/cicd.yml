@@ -29,12 +29,12 @@ jobs:
       - name: Build
         run: ant build
 
-      - name: Publish artefacts
-        if: always()
+      - name: Publish docker image
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: bin
-          path: bin
+          name: ees-link-image
+          path: bin/ees-link.tar
+          archive: false
 
       # Jenkins "JUnit" plugin equivalent
       - name: Publish unit test results
@@ -61,7 +61,6 @@ jobs:
         run: |
           echo "## Code coverage" >> $GITHUB_STEP_SUMMARY
           cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
-          echo "Detailed report: \`coverage.html\` in the **bin** artifact." >> $GITHUB_STEP_SUMMARY
 
       # Jenkins "Warnings NG" plugin equivalent
       - name: Publish linter warnings summary

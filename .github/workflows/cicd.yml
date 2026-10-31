@@ -1,12 +1,19 @@
 ﻿name: CI Pipeline
 on: [push]
+
+permissions:
+  contents: read
+  checks: write           # publish unit test results as a check run
+  pull-requests: write    # test result comments on PRs
+  security-events: write  # upload linter warnings to code scanning
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
 
-      - name: Setup JDK14 for build
+      - name: Setup JDK for build
         uses: actions/setup-java@v5
         with:
           java-version: '26'
@@ -23,15 +30,52 @@ jobs:
         run: ant build
 
       - name: Publish artefacts
+        if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
           name: bin
           path: bin
 
-      - name: check test coverage
-        uses: vladopajic/go-test-coverage@v2.18.8
+      # Jenkins "JUnit" plugin equivalent
+      - name: Publish unit test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          profile: ./bin/coverage.txt
-          threshold-file: 80
-          threshold-package: 80
-          threshold-total: 95
+          check_name: Unit tests
+          files: bin/tests.xml
+
+      # Jenkins "Coverage" plugin equivalent
+      - name: Code coverage summary
+        if: always()
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: bin/coverage.xml
+          badge: true
+          format: markdown
+          output: both
+          thresholds: '60 80'
+          fail_below_min: false
+
+      - name: Publish code coverage summary
+        if: always()
+        run: |
+          echo "## Code coverage" >> $GITHUB_STEP_SUMMARY
+          cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+          echo "Detailed report: \`coverage.html\` in the **bin** artifact." >> $GITHUB_STEP_SUMMARY
+
+      # Jenkins "Warnings NG" plugin equivalent
+      - name: Publish linter warnings summary
+        if: always()
+        run: |
+          COUNT=$(grep -cE '^[^ ]+:[0-9]+:[0-9]+: ' bin/linter.txt || true)
+          echo "## golangci-lint: ${COUNT} warnings" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat bin/linter.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload linter warnings to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: bin/linter.sarif
+          category: golangci-lint
